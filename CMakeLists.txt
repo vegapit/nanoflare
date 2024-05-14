@@ -10,9 +10,9 @@ find_package(nlohmann_json 3.11.3 REQUIRED)
 
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/include )
 
-add_executable(lstm_test lstm_test.cpp)
+add_executable(lib_test lib_test.cpp)
 target_link_libraries(
-    lstm_test
+    lib_test
     PUBLIC
     Catch2::Catch2WithMain
     nlohmann_json::nlohmann_json

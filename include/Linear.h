@@ -28,10 +28,12 @@ namespace MicroTorch
         {
             assert(x.cols() == m_inChannels);
             RowMatrixXf y( x.rows(), m_outChannels );
-            for(int i = 0; i < x.rows(); i++)
-                y.row(i) = x.row(i) * m_w.transpose();
             if(m_bias)
-                y.rowwise() += m_b;
+                for(int i = 0; i < x.rows(); i++)
+                    y.row(i).noalias() = x.row(i) * m_w.transpose() + m_b;
+            else
+                for(int i = 0; i < x.rows(); i++)
+                    y.row(i).noalias() = x.row(i) * m_w.transpose();
             return y;
         }
 

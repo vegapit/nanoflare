@@ -35,13 +35,17 @@ namespace MicroTorch
             assert(x.rows() == m_inChannels);
             RowMatrixXf y(m_outChannels, x.cols());
             y.setZero();
-            for(int i = 0; i < m_outChannels; i++)
-            {
-                for(int j = 0; j < m_inChannels; j++)
-                    y.row(i) += convolve1d(x.row(j), m_w[i].row(j));
-                if(m_bias)
+            if(m_bias)
+                for(int i = 0; i < m_outChannels; i++)
+                {
+                    for(int j = 0; j < m_inChannels; j++)
+                        y.row(i) += convolve1d(x.row(j), m_w[i].row(j));
                     y.row(i).array() += m_b(i);
-            }
+                }
+            else
+                for(int i = 0; i < m_outChannels; i++)
+                    for(int j = 0; j < m_inChannels; j++)
+                        y.row(i) += convolve1d(x.row(j), m_w[i].row(j));
             return y;
         }
 
@@ -59,12 +63,11 @@ namespace MicroTorch
             setBias( b );
         }
 
-        std::vector<RowMatrixXf> m_w; // W = [Outs, Ins, Kernel]
-
     private:
         int m_inChannels, m_outChannels, m_kernelSize;
         bool m_bias;
-
+        
+        std::vector<RowMatrixXf> m_w; // W = [Outs, Ins, Kernel]
         Eigen::VectorXf m_b; // B = [Outs]
     };
 

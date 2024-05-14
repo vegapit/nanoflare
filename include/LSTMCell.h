@@ -48,10 +48,10 @@ namespace MicroTorch
             float (*sigmoidPtr)(float) { &sigmoid };
             float (*tanhPtr)(float) { &tanh };
 
-            RowMatrixXf i = m_wih.block(0,0,m_hiddenSize,m_inputSize) * x + m_whh.block(0,0,m_hiddenSize,m_hiddenSize) * h;
-            RowMatrixXf f = m_wih.block(m_hiddenSize,0,m_hiddenSize,m_inputSize) * x + m_whh.block(m_hiddenSize,0,m_hiddenSize,m_hiddenSize) * h;
-            RowMatrixXf g = m_wih.block(2*m_hiddenSize,0,m_hiddenSize,m_inputSize) * x + m_whh.block(2*m_hiddenSize,0,m_hiddenSize,m_hiddenSize) * h;
-            RowMatrixXf o = m_wih.block(3*m_hiddenSize,0,m_hiddenSize,m_inputSize) * x + m_whh.block(3*m_hiddenSize,0,m_hiddenSize,m_hiddenSize) * h;
+            RowMatrixXf i = m_wih.middleRows(0,m_hiddenSize) * x + m_whh.middleRows(0,m_hiddenSize) * h;
+            RowMatrixXf f = m_wih.middleRows(m_hiddenSize,m_hiddenSize) * x + m_whh.middleRows(m_hiddenSize,m_hiddenSize) * h;
+            RowMatrixXf g = m_wih.middleRows(2*m_hiddenSize,m_hiddenSize) * x + m_whh.middleRows(2*m_hiddenSize,m_hiddenSize) * h;
+            RowMatrixXf o = m_wih.middleRows(3*m_hiddenSize,m_hiddenSize) * x + m_whh.middleRows(3*m_hiddenSize,m_hiddenSize) * h;
                 
             if(m_bias)
             {

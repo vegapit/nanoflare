@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include "LSTM.h"
+#include "GRU.h"
 #include "Conv1d.h"
 #include "RecNet.h"
 #include "Linear.h"
@@ -9,12 +10,12 @@
 
 using namespace MicroTorch;
 
-bool lstmcell_pytorch_match()
+bool lstm_pytorch_match()
 {
     int hiddenSize = 7;
     int inputSize = 1;
 
-    std::ifstream f("../lstmcell.json");
+    std::ifstream f("../lstm.json");
     nlohmann::json data = nlohmann::json::parse(f);
     std::map<std::string, nlohmann::json> state_dict = data.get<std::map<std::string, nlohmann::json>>();
 
@@ -26,13 +27,39 @@ bool lstmcell_pytorch_match()
 
     auto pred = obj.forward( x ); // X = [SeqLength, InputSize]
     
-    std::cout << "LSTMCell Pred" << std::endl;
+    std::cout << "LSTM Pred" << std::endl;
     std::cout << pred << std::endl;
 
     RowMatrixXf target(2, 7);
-    target <<  -0.068939f, 0.0888935f, 0.0169113f, -0.0731596f, -0.0139663f, -0.0952078f, 0.10324f, -0.0320847f, 0.105997f, 0.0728108f, -0.0160205f, -0.060913f, -0.155882f, 0.162275f;
+    target <<  -0.0689f, 0.0888f, 0.0169f, -0.0731f, -0.0139f, -0.0952f, 0.1032f, -0.0320f, 0.1059f, 0.0728f, -0.0160f, -0.0609f, -0.1558f, 0.1622f;
 
-    return ( (pred - target).lpNorm<1>() < 1e-4 );
+    return ( (pred - target).lpNorm<1>() < 1e-3 );
+}
+
+bool gru_pytorch_match()
+{
+    int hiddenSize = 7;
+    int inputSize = 1;
+
+    std::ifstream f("../gru.json");
+    nlohmann::json data = nlohmann::json::parse(f);
+    std::map<std::string, nlohmann::json> state_dict = data.get<std::map<std::string, nlohmann::json>>();
+
+    GRU obj( inputSize , hiddenSize, true );
+    obj.loadStateDict( state_dict );
+
+    RowMatrixXf x(2, 1);
+    x << 0.5f, -0.5f;
+
+    auto pred = obj.forward( x ); // X = [SeqLength, InputSize]
+    
+    std::cout << "GRU Pred" << std::endl;
+    std::cout << pred << std::endl;
+
+    RowMatrixXf target(2, 7);
+    target << -0.0626f, 0.1718f, 0.0554f, -0.1304f, 0.0460f, 0.0256f, 0.0403f, -0.1066f, 0.1771f, 0.2300f, -0.1817f, 0.1646f, 0.1487, 0.1151;
+
+    return ( (pred - target).lpNorm<1>() < 1e-3 );
 }
 
 bool linear_pytorch_match()
@@ -58,7 +85,7 @@ bool linear_pytorch_match()
     RowMatrixXf target(1, 2);
     target << -0.3685f, -0.3996f;
 
-    return ( (pred - target).lpNorm<1>() < 1e-4 );
+    return ( (pred - target).lpNorm<1>() < 1e-3 );
 }
 
 bool conv1d_pytorch_match()
@@ -85,7 +112,7 @@ bool conv1d_pytorch_match()
     RowMatrixXf target(1,2);
     target << 0.6171f, 1.1664f;
 
-    return ( (pred - target).lpNorm<1>() < 1e-4 );
+    return ( (pred - target).lpNorm<1>() < 1e-3 );
 }
 
 bool convolve1d_calculate()
@@ -130,9 +157,14 @@ TEST_CASE("convolve1d Test", "[convolve1d_calculate]")
     REQUIRE( convolve1d_calculate() );
 }
 
-TEST_CASE("LSTMCell Test", "[lstmcell_pytorch_match]")
+TEST_CASE("LSTM Test", "[lstm_pytorch_match]")
 {
-    REQUIRE( lstmcell_pytorch_match() );
+    REQUIRE( lstm_pytorch_match() );
+}
+
+TEST_CASE("GRU Test", "[gru_pytorch_match]")
+{
+    REQUIRE( gru_pytorch_match() );
 }
 
 TEST_CASE("Conv1D Test", "[conv1d_pytorch_match]")

@@ -31,7 +31,7 @@ namespace MicroTorch
                     matrix(j, k) = values[i * shape[1] + j * shape[2] + k];
             tensor.push_back( matrix );
         }
-        
+
         return tensor;
     }
 
@@ -66,8 +66,8 @@ namespace MicroTorch
         int numCalculations = in.size() - weights.size() + 1;
         std::vector<float> values;
         for(int i = 0; i < numCalculations; i++)
-            values.push_back( (in.segment(i, weights.size()).array() * weights.array()).sum() );
-        return Eigen::Map<Eigen::VectorXf>( values.data(), numCalculations );
+            values.push_back( in.segment(i, weights.size()).dot(weights) );
+        return Eigen::Map<Eigen::RowVectorXf>( values.data(), numCalculations );
     }
 
 }
