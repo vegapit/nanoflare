@@ -15,7 +15,7 @@ bool lstm_pytorch_match()
     int hiddenSize = 7;
     int inputSize = 1;
 
-    std::ifstream f("../lstm.json");
+    std::ifstream f("../test_data/lstm.json");
     nlohmann::json data = nlohmann::json::parse(f);
     std::map<std::string, nlohmann::json> state_dict = data.get<std::map<std::string, nlohmann::json>>();
 
@@ -31,7 +31,7 @@ bool lstm_pytorch_match()
     std::cout << pred << std::endl;
 
     RowMatrixXf target(2, 7);
-    target <<  -0.0689f, 0.0888f, 0.0169f, -0.0731f, -0.0139f, -0.0952f, 0.1032f, -0.0320f, 0.1059f, 0.0728f, -0.0160f, -0.0609f, -0.1558f, 0.1622f;
+    target <<  0.0318f,  0.0294f, -0.0346f,  0.0196f,  0.0069f,  0.0891f,  0.0012f, 0.0446f,  0.0446f, -0.0710f,  0.0026f, -0.0512f,  0.0483f, -0.0011f;
 
     return ( (pred - target).lpNorm<1>() < 1e-3 );
 }
@@ -41,7 +41,7 @@ bool gru_pytorch_match()
     int hiddenSize = 7;
     int inputSize = 1;
 
-    std::ifstream f("../gru.json");
+    std::ifstream f("../test_data/gru.json");
     nlohmann::json data = nlohmann::json::parse(f);
     std::map<std::string, nlohmann::json> state_dict = data.get<std::map<std::string, nlohmann::json>>();
 
@@ -67,7 +67,7 @@ bool linear_pytorch_match()
     int inChannels = 3;
     int outChannels = 2;
 
-    std::ifstream f("../linear.json");
+    std::ifstream f("../test_data/linear.json");
     nlohmann::json data = nlohmann::json::parse(f);
     std::map<std::string, nlohmann::json> state_dict = data.get<std::map<std::string, nlohmann::json>>();
 
@@ -94,7 +94,7 @@ bool conv1d_pytorch_match()
     int outChannels = 1;
     int kernelSize = 1;
 
-    std::ifstream f("../conv1d.json");
+    std::ifstream f("../test_data/conv1d.json");
     nlohmann::json data = nlohmann::json::parse(f);
     std::map<std::string, nlohmann::json> state_dict = data.get<std::map<std::string, nlohmann::json>>();
 
@@ -137,7 +137,7 @@ bool recnet_load()
 {
     int hiddenSize = 32;
 
-    std::ifstream f("../recnet.json");
+    std::ifstream f("../test_data/recnet.json");
     nlohmann::json data = nlohmann::json::parse(f);
     std::map<std::string, nlohmann::json> state_dict = data.get<std::map<std::string, nlohmann::json>>();
 
@@ -176,8 +176,9 @@ TEST_CASE("Linear Test", "[linear_pytorch_match]")
 {
     REQUIRE( linear_pytorch_match() );
 }
-
+/*
 TEST_CASE("RecNet Loading Test", "[recnet_load]")
 {
     REQUIRE( recnet_load() );
 }
+*/

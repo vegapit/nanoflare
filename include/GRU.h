@@ -9,7 +9,7 @@ namespace MicroTorch
     class GRU
     {
     public:
-        GRU(int input_size, int hidden_size, bool bias) : m_cell(input_size, hidden_size, bias), m_h(Eigen::VectorXf::Zero(3*hidden_size)) {}
+        GRU(int input_size, int hidden_size, bool bias) : m_cell(input_size, hidden_size, bias), m_h(Eigen::VectorXf::Zero(hidden_size)) {}
         ~GRU() = default;
 
         void reset()
@@ -17,9 +17,8 @@ namespace MicroTorch
             m_h.setZero();
         }
 
-        RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x )
+        inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept
         {
-            assert(x.cols() == m_cell.getInputSize());
             RowMatrixXf y( x.rows(), m_cell.getHiddenSize() );
             for(int i = 0; i < x.rows(); i++)
             {
@@ -37,7 +36,7 @@ namespace MicroTorch
             m_cell.setWeightIH( wih );
             m_cell.setWeightHH( whh );
             
-            if(m_cell.getBias())
+            if(m_cell.isBiased())
             {
                 auto bih = loadVector( std::string("bias_ih_l0"), state_dict );
                 auto bhh = loadVector( std::string("bias_hh_l0"), state_dict );
@@ -47,7 +46,7 @@ namespace MicroTorch
         }
         
     private:
-        Eigen::RowVectorXf m_h;
+        Eigen::VectorXf m_h;
         GRUCell m_cell;
     };
 

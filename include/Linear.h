@@ -1,6 +1,7 @@
 #pragma once
 
 #include <eigen3/Eigen/Dense>
+#include <assert.h>
 #include "utils.h"
 
 namespace MicroTorch
@@ -24,22 +25,19 @@ namespace MicroTorch
             m_b = v;
         }
 
-        RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const
+        inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const noexcept
         {
-            assert(x.cols() == m_inChannels);
             RowMatrixXf y( x.rows(), m_outChannels );
+            for(int i = 0; i < x.rows(); i++)
+                y.row(i).noalias() = x.row(i) * m_w.transpose();
             if(m_bias)
-                for(int i = 0; i < x.rows(); i++)
-                    y.row(i).noalias() = x.row(i) * m_w.transpose() + m_b;
-            else
-                for(int i = 0; i < x.rows(); i++)
-                    y.row(i).noalias() = x.row(i) * m_w.transpose();
+                y.rowwise() += m_b;
             return y;
         }
 
-        int getInChannels() { return m_inChannels; }
-        int getOutChannels() { return m_outChannels; }
-        int getBias() { return m_bias; }
+        int getInChannels() const { return m_inChannels; }
+        int getOutChannels() const { return m_outChannels; }
+        int getBias() const { return m_bias; }
         
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)
         {

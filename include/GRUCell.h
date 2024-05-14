@@ -10,7 +10,12 @@ namespace MicroTorch
     class GRUCell
     {
     public:
-        GRUCell(int inputSize, int hiddenSize, bool bias) : m_hiddenSize(hiddenSize), m_inputSize(inputSize), m_bias(bias) {}
+        GRUCell(int input_size, int hidden_size, bool bias) : m_hiddenSize(hidden_size), m_inputSize(input_size), m_bias(bias),
+            m_wih(RowMatrixXf::Zero(3*hidden_size,input_size)),
+            m_whh(RowMatrixXf::Zero(3*hidden_size,hidden_size)),
+            m_bih(Eigen::VectorXf::Zero(3*hidden_size)),
+            m_bhh(Eigen::VectorXf::Zero(3*hidden_size))
+        {}
         ~GRUCell() = default;
 
         void setWeightIH(const Eigen::Ref<RowMatrixXf>& m)
@@ -41,28 +46,33 @@ namespace MicroTorch
 
         int getInputSize() const { return m_inputSize; } 
         int getHiddenSize() const { return m_hiddenSize; }
-        bool getBias() const { return m_bias; }
+        bool isBiased() const { return m_bias; }
 
-        void forward( const Eigen::Ref<Eigen::RowVectorXf>& x, Eigen::Ref<Eigen::VectorXf> h ) const
+        inline void forward( const Eigen::Ref<Eigen::VectorXf>& x, Eigen::Ref<Eigen::VectorXf> h ) const noexcept
         {
-            float (*sigmoidPtr)(float) { &sigmoid };
-            float (*tanhPtr)(float) { &tanh };
+            Eigen::VectorXf r_inner = m_wih.middleRows(0,m_hiddenSize) * x + m_whh.middleRows(0,m_hiddenSize) * h;
+            Eigen::VectorXf z_inner = m_wih.middleRows(m_hiddenSize,m_hiddenSize) * x + m_whh.middleRows(m_hiddenSize,m_hiddenSize) * h;
+            Eigen::VectorXf nx_inner = m_wih.middleRows(2*m_hiddenSize,m_hiddenSize) * x;
+            Eigen::VectorXf nh_inner = m_whh.middleRows(2*m_hiddenSize,m_hiddenSize) * h;
 
-            RowMatrixXf r = m_wih.middleRows(0,m_hiddenSize) * x + m_whh.middleRows(0,m_hiddenSize) * h;
-            RowMatrixXf z = m_wih.middleRows(m_hiddenSize,m_hiddenSize) * x + m_whh.middleRows(m_hiddenSize,m_hiddenSize) * h;
-            RowMatrixXf nx = m_wih.middleRows(2*m_hiddenSize,m_hiddenSize) * x;
-            RowMatrixXf nh = m_whh.middleRows(2*m_hiddenSize,m_hiddenSize) * h;
-                
             if(m_bias)
             {
-                r += m_bih.segment(0,m_hiddenSize) + m_bhh.segment(0,m_hiddenSize);
-                z += m_bih.segment(m_hiddenSize,m_hiddenSize) + m_bhh.segment(m_hiddenSize,m_hiddenSize);
-                nx += m_bih.segment(2*m_hiddenSize,m_hiddenSize);
-                nh += m_bhh.segment(2*m_hiddenSize,m_hiddenSize);
+                r_inner += m_bih.segment(0,m_hiddenSize) + m_bhh.segment(0,m_hiddenSize);
+                z_inner += m_bih.segment(m_hiddenSize,m_hiddenSize) + m_bhh.segment(m_hiddenSize,m_hiddenSize);
+                nx_inner += m_bih.segment(2*m_hiddenSize,m_hiddenSize);
+                nh_inner += m_bhh.segment(2*m_hiddenSize,m_hiddenSize);
             }
 
-            z = z.unaryExpr(sigmoidPtr);
-            RowMatrixXf n = (nx + r.unaryExpr(sigmoidPtr).cwiseProduct(nh)).unaryExpr(tanhPtr);
+            Eigen::VectorXf z(m_hiddenSize);
+            Eigen::VectorXf r(m_hiddenSize);
+            Eigen::VectorXf n(m_hiddenSize);
+
+            xSigmoid(z_inner, z);
+            xSigmoid(r_inner, r);
+
+            Eigen::VectorXf n_inner = nx_inner + r.cwiseProduct( nh_inner );
+            xTanh(n_inner, n);
+
             h = (Eigen::MatrixXf::Ones(1,m_hiddenSize) - z).cwiseProduct(n) + z.cwiseProduct(h);
         }
 

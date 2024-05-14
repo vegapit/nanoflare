@@ -2,16 +2,92 @@
 
 #include <eigen3/Eigen/Dense>
 #include <nlohmann/json.hpp>
-#include <assert.h>
 #include <iostream>
+#include "xsimd/xsimd.hpp"
 
 namespace MicroTorch
 {
     typedef Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMatrixXf;
 
-    inline float sigmoid( float xx ) { return 1.f / (1.f + std::exp(-xx) ); }
+    inline float sigmoid( float xx ) noexcept { return 1.f / (1.f + std::exp(-xx) ); }
+    inline float tanh( float xx ) noexcept { return std::tanh( xx ); }
 
-    inline float tanh( float xx ) { return std::tanh(xx); }
+    inline constexpr float (*sigmoidPtr)(float) { &sigmoid };
+    inline constexpr float (*tanhPtr)(float) { &tanh };
+
+    inline void xSigmoid( const Eigen::Ref<Eigen::VectorXf>& in, Eigen::Ref<Eigen::VectorXf> out )
+    {
+        using b_type = xsimd::batch<float>;
+        std::size_t inc = b_type::size;
+        std::size_t size = out.size();
+        // size for which the vectorization is possible
+        std::size_t vec_size = size - size % inc;
+        for (std::size_t i = 0; i < vec_size; i += inc)
+        {
+            b_type xvec = b_type::load_unaligned(in.data() + i);
+            b_type rvec = 1.f / (1.f + xsimd::exp(-xvec));
+            rvec.store_unaligned(out.data() + i);
+        }
+        // Remaining part that cannot be vectorize
+        for (std::size_t i = vec_size; i < size; ++i)
+            out(i) = 1.f / (1.f + std::exp(-in(i)));
+    }
+
+    inline void xTanh( const Eigen::Ref<Eigen::VectorXf>& in, Eigen::Ref<Eigen::VectorXf> out )
+    {
+        using b_type = xsimd::batch<float>;
+        std::size_t inc = b_type::size;
+        std::size_t size = out.size();
+        // size for which the vectorization is possible
+        std::size_t vec_size = size - size % inc;
+        for (std::size_t i = 0; i < vec_size; i += inc)
+        {
+            b_type xvec = b_type::load_unaligned(in.data() + i);
+            b_type rvec = xsimd::tanh(xvec);
+            rvec.store_unaligned(out.data() + i);
+        }
+        // Remaining part that cannot be vectorize
+        for (std::size_t i = vec_size; i < size; ++i)
+            out(i) = std::tanh(in(i));
+    }
+
+    inline void xMul( const Eigen::Ref<Eigen::VectorXf>& in1, const Eigen::Ref<Eigen::VectorXf>& in2, Eigen::Ref<Eigen::VectorXf> out )
+    {
+        using b_type = xsimd::batch<float>;
+        std::size_t inc = b_type::size;
+        std::size_t size = out.size();
+        // size for which the vectorization is possible
+        std::size_t vec_size = size - size % inc;
+        for (std::size_t i = 0; i < vec_size; i += inc)
+        {
+            b_type xvec1 = b_type::load_unaligned(in1.data() + i);
+            b_type xvec2 = b_type::load_unaligned(in2.data() + i);
+            b_type rvec = xvec1 * xvec2;
+            rvec.store_unaligned(out.data() + i);
+        }
+        // Remaining part that cannot be vectorize
+        for (std::size_t i = vec_size; i < size; ++i)
+            out(i) = in1(i) * in2(i);
+    }
+
+    inline void xAdd( const Eigen::Ref<Eigen::VectorXf>& in1, const Eigen::Ref<Eigen::VectorXf>& in2, Eigen::Ref<Eigen::VectorXf> out )
+    {
+        using b_type = xsimd::batch<float>;
+        std::size_t inc = b_type::size;
+        std::size_t size = out.size();
+        // size for which the vectorization is possible
+        std::size_t vec_size = size - size % inc;
+        for (std::size_t i = 0; i < vec_size; i += inc)
+        {
+            b_type xvec1 = b_type::load_unaligned(in1.data() + i);
+            b_type xvec2 = b_type::load_unaligned(in2.data() + i);
+            b_type rvec = xvec1 + xvec2;
+            rvec.store_unaligned(out.data() + i);
+        }
+        // Remaining part that cannot be vectorize
+        for (std::size_t i = vec_size; i < size; ++i)
+            out(i) = in1(i) + in2(i);
+    }
 
     inline std::vector<RowMatrixXf> loadTensor( std::string name, std::map<std::string, nlohmann::json> state_dict )
     {
@@ -40,16 +116,7 @@ namespace MicroTorch
         auto data = state_dict[name].get<std::map<std::string, nlohmann::json>>();
         auto shape = data[std::string("shape")].get<std::vector<int>>();
         auto values = data[std::string("values")].get<std::vector<float>>();
-
-        // Create the Eigen matrix
-        RowMatrixXf matrix(shape[0], shape[1]);
-
-        // Loop through the vector and assign elements to rows
-        for (int i = 0; i < shape[0]; ++i)
-            for (int j = 0; j < shape[1]; ++j)
-                matrix(i, j) = values[i * shape[1] + j];
-
-        return matrix;
+        return Eigen::Map<RowMatrixXf>(values.data(), shape[0], shape[1]);
     }
 
     inline Eigen::VectorXf loadVector( std::string name, std::map<std::string, nlohmann::json> state_dict )
@@ -62,11 +129,10 @@ namespace MicroTorch
 
     inline Eigen::RowVectorXf convolve1d(const Eigen::RowVectorXf& in, const Eigen::RowVectorXf& weights)
     {
-        assert(in.size() >= weights.size());
         int numCalculations = in.size() - weights.size() + 1;
-        std::vector<float> values;
+        std::vector<float> values(numCalculations);
         for(int i = 0; i < numCalculations; i++)
-            values.push_back( in.segment(i, weights.size()).dot(weights) );
+            values[i] = in.segment(i, weights.size()).dot(weights);
         return Eigen::Map<Eigen::RowVectorXf>( values.data(), numCalculations );
     }
 

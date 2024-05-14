@@ -24,35 +24,29 @@ namespace MicroTorch
             m_w[channel] = m;
         }
 
-        void setBias(const Eigen::Ref<Eigen::VectorXf>& v)
+        void setBias(const Eigen::Ref<Eigen::RowVectorXf>& v)
         {
             assert(v.size() == m_outChannels);
             m_b = v;
         }
 
-        RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const
+        inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const noexcept
         {
-            assert(x.rows() == m_inChannels);
-            RowMatrixXf y(m_outChannels, x.cols());
-            y.setZero();
-            if(m_bias)
-                for(int i = 0; i < m_outChannels; i++)
-                {
-                    for(int j = 0; j < m_inChannels; j++)
-                        y.row(i) += convolve1d(x.row(j), m_w[i].row(j));
-                    y.row(i).array() += m_b(i);
-                }
-            else
-                for(int i = 0; i < m_outChannels; i++)
-                    for(int j = 0; j < m_inChannels; j++)
-                        y.row(i) += convolve1d(x.row(j), m_w[i].row(j));
+            float f_bias = static_cast<float>(m_bias);
+            RowMatrixXf y = Eigen::MatrixXf::Zero(m_outChannels, x.cols());
+            for(int i = 0; i < m_outChannels; i++)
+            {
+                for(int j = 0; j < m_inChannels; j++)
+                    y.row(i) += convolve1d(x.row(j), m_w[i].row(j));
+                y.row(i).array() += f_bias * m_b(i);
+            }
             return y;
         }
 
-        int getInChannels() { return m_inChannels; }
-        int getOutChannels() { return m_outChannels; }
-        int getKernelSize() { return m_kernelSize; }
-        int getBias() { return m_bias; }
+        int getInChannels() const { return m_inChannels; }
+        int getOutChannels() const { return m_outChannels; }
+        int getKernelSize() const { return m_kernelSize; }
+        int getBias() const { return m_bias; }
         
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)
         {
@@ -66,9 +60,9 @@ namespace MicroTorch
     private:
         int m_inChannels, m_outChannels, m_kernelSize;
         bool m_bias;
-        
+
         std::vector<RowMatrixXf> m_w; // W = [Outs, Ins, Kernel]
-        Eigen::VectorXf m_b; // B = [Outs]
+        Eigen::RowVectorXf m_b; // B = [Outs]
     };
 
 }

@@ -13,7 +13,7 @@ namespace MicroTorch
         RecNet(int hidden_size) : m_hiddenSize(hidden_size), m_lstm(1, hidden_size, false), m_linear(hidden_size, 1, true) {}
         ~RecNet() = default;
 
-        RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x )
+        inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept
         {
             RowMatrixXf transposed_x = x.transpose();
             RowMatrixXf y = m_lstm.forward( transposed_x );
