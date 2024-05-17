@@ -9,12 +9,6 @@ namespace MicroTorch
 {
     typedef Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMatrixXf;
 
-    inline float sigmoid( float xx ) noexcept { return 1.f / (1.f + std::exp(-xx) ); }
-    inline float tanh( float xx ) noexcept { return std::tanh( xx ); }
-
-    inline constexpr float (*sigmoidPtr)(float) { &sigmoid };
-    inline constexpr float (*tanhPtr)(float) { &tanh };
-
     inline void xSigmoid( const Eigen::Ref<Eigen::VectorXf>& in, Eigen::Ref<Eigen::VectorXf> out )
     {
         using b_type = xsimd::batch<float>;
@@ -49,44 +43,6 @@ namespace MicroTorch
         // Remaining part that cannot be vectorize
         for (std::size_t i = vec_size; i < size; ++i)
             out(i) = std::tanh(in(i));
-    }
-
-    inline void xMul( const Eigen::Ref<Eigen::VectorXf>& in1, const Eigen::Ref<Eigen::VectorXf>& in2, Eigen::Ref<Eigen::VectorXf> out )
-    {
-        using b_type = xsimd::batch<float>;
-        std::size_t inc = b_type::size;
-        std::size_t size = out.size();
-        // size for which the vectorization is possible
-        std::size_t vec_size = size - size % inc;
-        for (std::size_t i = 0; i < vec_size; i += inc)
-        {
-            b_type xvec1 = b_type::load_unaligned(in1.data() + i);
-            b_type xvec2 = b_type::load_unaligned(in2.data() + i);
-            b_type rvec = xvec1 * xvec2;
-            rvec.store_unaligned(out.data() + i);
-        }
-        // Remaining part that cannot be vectorize
-        for (std::size_t i = vec_size; i < size; ++i)
-            out(i) = in1(i) * in2(i);
-    }
-
-    inline void xAdd( const Eigen::Ref<Eigen::VectorXf>& in1, const Eigen::Ref<Eigen::VectorXf>& in2, Eigen::Ref<Eigen::VectorXf> out )
-    {
-        using b_type = xsimd::batch<float>;
-        std::size_t inc = b_type::size;
-        std::size_t size = out.size();
-        // size for which the vectorization is possible
-        std::size_t vec_size = size - size % inc;
-        for (std::size_t i = 0; i < vec_size; i += inc)
-        {
-            b_type xvec1 = b_type::load_unaligned(in1.data() + i);
-            b_type xvec2 = b_type::load_unaligned(in2.data() + i);
-            b_type rvec = xvec1 + xvec2;
-            rvec.store_unaligned(out.data() + i);
-        }
-        // Remaining part that cannot be vectorize
-        for (std::size_t i = vec_size; i < size; ++i)
-            out(i) = in1(i) + in2(i);
     }
 
     inline std::vector<RowMatrixXf> loadTensor( std::string name, std::map<std::string, nlohmann::json> state_dict )

@@ -9,7 +9,10 @@ namespace MicroTorch
     class Linear
     {
     public:
-        Linear(int in_channels, int out_channels, bool bias) : m_inChannels(in_channels), m_outChannels(out_channels), m_bias(bias) {}
+        Linear(int in_channels, int out_channels, bool bias) : m_inChannels(in_channels), m_outChannels(out_channels), m_bias(bias),
+            m_w(RowMatrixXf::Zero(out_channels,in_channels)),
+            m_b(Eigen::RowVectorXf::Zero(out_channels))
+        {}
         ~Linear() = default;
 
         void setWeight(const Eigen::Ref<RowMatrixXf>& m)

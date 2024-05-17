@@ -10,7 +10,8 @@ namespace MicroTorch
     class Conv1d
     {
     public:
-        Conv1d(int in_channels, int out_channels, int kernel_size, bool bias) : m_inChannels(in_channels), m_outChannels(out_channels), m_kernelSize(kernel_size), m_bias(bias)
+        Conv1d(int in_channels, int out_channels, int kernel_size, bool bias) : m_inChannels(in_channels), m_outChannels(out_channels), 
+            m_kernelSize(kernel_size), m_bias(bias),m_b(Eigen::RowVectorXf::Zero(out_channels))
         {
             for(int i = 0; i < out_channels; i++)
                 m_w.push_back( RowMatrixXf::Zero(in_channels, kernel_size) );
@@ -33,7 +34,7 @@ namespace MicroTorch
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const noexcept
         {
             float f_bias = static_cast<float>(m_bias);
-            RowMatrixXf y = Eigen::MatrixXf::Zero(m_outChannels, x.cols());
+            RowMatrixXf y = RowMatrixXf::Zero(m_outChannels, x.cols());
             for(int i = 0; i < m_outChannels; i++)
             {
                 for(int j = 0; j < m_inChannels; j++)

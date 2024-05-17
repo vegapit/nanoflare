@@ -1,4 +1,5 @@
-#include "RecNet.h"
+#include "models/ResRNN.h"
+#include "LSTM.h"
 #include <nlohmann/json.hpp>
 #include <iostream>
 #include <fstream>
@@ -25,13 +26,11 @@ private:
 
 int main()
 {
-    int hiddenSize = 32;
-
-    std::ifstream f("../test_data/recnet.json");
+    std::ifstream f("../test_data/resrnn.json");
     nlohmann::json data = nlohmann::json::parse(f);
     std::map<std::string, nlohmann::json> state_dict = data.get<std::map<std::string, nlohmann::json>>();
 
-    RecNet obj(hiddenSize);
+    ResRNN<LSTM> obj(1, 32, 1, false, true);
     obj.loadStateDict( state_dict );
 
     RowMatrixXf x = Eigen::MatrixXf::Random(1, 512);
@@ -41,6 +40,6 @@ int main()
         for(int i = 0; i < 100; i++)
             obj.forward(x);
     }
-    
+
     return 0;
 }

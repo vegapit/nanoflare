@@ -2,7 +2,6 @@
 #include "LSTM.h"
 #include "GRU.h"
 #include "Conv1d.h"
-#include "RecNet.h"
 #include "Linear.h"
 #include <nlohmann/json.hpp>
 #include <iostream>
@@ -133,25 +132,6 @@ bool convolve1d_calculate()
     return (diff < 1e-5);
 }
 
-bool recnet_load()
-{
-    int hiddenSize = 32;
-
-    std::ifstream f("../test_data/recnet.json");
-    nlohmann::json data = nlohmann::json::parse(f);
-    std::map<std::string, nlohmann::json> state_dict = data.get<std::map<std::string, nlohmann::json>>();
-
-    RecNet obj(hiddenSize);
-    obj.loadStateDict( state_dict );
-
-    RowMatrixXf x(1, 4);
-    x << 0.f, 1.f, 2.f, 3.f;
-
-    auto res = obj.forward(x);
-
-    return (res.rows() == x.rows()) && (res.cols() == x.cols());
-}
-
 TEST_CASE("convolve1d Test", "[convolve1d_calculate]")
 {
     REQUIRE( convolve1d_calculate() );
@@ -176,9 +156,3 @@ TEST_CASE("Linear Test", "[linear_pytorch_match]")
 {
     REQUIRE( linear_pytorch_match() );
 }
-/*
-TEST_CASE("RecNet Loading Test", "[recnet_load]")
-{
-    REQUIRE( recnet_load() );
-}
-*/

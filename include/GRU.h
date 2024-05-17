@@ -12,10 +12,7 @@ namespace MicroTorch
         GRU(int input_size, int hidden_size, bool bias) : m_cell(input_size, hidden_size, bias), m_h(Eigen::VectorXf::Zero(hidden_size)) {}
         ~GRU() = default;
 
-        void reset()
-        {
-            m_h.setZero();
-        }
+        void resetState() { m_h.setZero(); }
 
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept
         {

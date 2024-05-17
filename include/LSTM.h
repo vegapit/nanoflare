@@ -12,7 +12,7 @@ namespace MicroTorch
         LSTM(int input_size, int hidden_size, bool bias) : m_cell(input_size, hidden_size, bias), m_h(Eigen::VectorXf::Zero(hidden_size)), m_c(Eigen::VectorXf::Zero(hidden_size)) {}
         ~LSTM() = default;
 
-        void reset()
+        void resetState()
         {
             m_h.setZero();
             m_c.setZero();
