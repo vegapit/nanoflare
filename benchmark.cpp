@@ -27,7 +27,8 @@ int main()
 {
     std::ifstream fstream("../test_data/resrnn.json");
     nlohmann::json data = nlohmann::json::parse(fstream);
-    auto obj = ModelBuilder::fromJson(data);
+    std::shared_ptr<BaseModel> obj;
+    ModelBuilder::fromJson(data, obj);
 
     RowMatrixXf x = Eigen::MatrixXf::Random(1, 512);
 
@@ -36,8 +37,6 @@ int main()
         for(int i = 0; i < 100; i++)
             obj->forward(x);
     }
-
-    delete obj;
 
     return 0;
 }

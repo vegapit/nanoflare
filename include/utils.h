@@ -2,7 +2,6 @@
 
 #include <eigen3/Eigen/Dense>
 #include <nlohmann/json.hpp>
-#include <iostream>
 #include "xsimd/xsimd.hpp"
 
 namespace MicroTorch
@@ -94,12 +93,10 @@ namespace MicroTorch
     
     enum ModelType {
         RES_LSTM,
-        RES_GRU,
-        UNKNOWN=-1
+        RES_GRU
     };
 
     NLOHMANN_JSON_SERIALIZE_ENUM( ModelType, {
-        {UNKNOWN, nullptr},
         {RES_LSTM, "ResLSTM"},
         {RES_GRU, "ResGRU"}
     })

@@ -26,8 +26,6 @@ namespace MicroTorch
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override
         {
-            setNormMean( state_dict[std::string("norm_mean")].get<float>() );
-            setNormStd( state_dict[std::string("norm_std")].get<float>() );
             auto lstm_state_dict = state_dict[std::string("rnn")].get<std::map<std::string, nlohmann::json>>();
             m_rnn.loadStateDict( lstm_state_dict );
             auto linear_state_dict = state_dict[std::string("linear")].get<std::map<std::string, nlohmann::json>>();
