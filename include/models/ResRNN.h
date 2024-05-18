@@ -13,7 +13,7 @@ namespace MicroTorch
     class ResRNN : public BaseModel
     {
     public:
-        ResRNN(int input_dim, int hidden_size, int output_dim, bool rnn_bias, bool linear_bias) : BaseModel(), m_rnn(input_dim, hidden_size, rnn_bias), m_linear(hidden_size, output_dim, linear_bias) {}
+        ResRNN(int input_dim, int hidden_size, int output_dim, bool rnn_bias, bool linear_bias, float norm_mean, float norm_std) : BaseModel(norm_mean, norm_std), m_rnn(input_dim, hidden_size, rnn_bias), m_linear(hidden_size, output_dim, linear_bias) {}
         ~ResRNN() = default;
 
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept override

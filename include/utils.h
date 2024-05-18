@@ -108,7 +108,8 @@ namespace MicroTorch
     {
         ModelType type;
         int input_size, hidden_size, output_size;
-        bool rnn_bias, linear_bias; 
+        bool rnn_bias, linear_bias;
+        float norm_mean, norm_std;
     };
 
     inline void from_json(const nlohmann::json& j, ModelDef& obj) {
@@ -118,6 +119,8 @@ namespace MicroTorch
         j.at("output_size").get_to(obj.output_size);
         j.at("rnn_bias").get_to(obj.rnn_bias);
         j.at("linear_bias").get_to(obj.linear_bias);
+        j.at("norm_mean").get_to(obj.norm_mean);
+        j.at("norm_std").get_to(obj.norm_std);
     }
 
 }

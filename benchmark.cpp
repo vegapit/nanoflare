@@ -25,7 +25,9 @@ private:
 
 int main()
 {
-    auto obj = ModelBuilder::fromJson("../test_data/resrnn.json");
+    std::ifstream fstream("../test_data/resrnn.json");
+    nlohmann::json data = nlohmann::json::parse(fstream);
+    auto obj = ModelBuilder::fromJson(data);
 
     RowMatrixXf x = Eigen::MatrixXf::Random(1, 512);
 
