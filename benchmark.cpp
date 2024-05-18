@@ -1,5 +1,4 @@
-#include "models/ResRNN.h"
-#include "LSTM.h"
+#include "ModelBuilder.h"
 #include <nlohmann/json.hpp>
 #include <iostream>
 #include <fstream>
@@ -26,20 +25,17 @@ private:
 
 int main()
 {
-    std::ifstream f("../test_data/resrnn.json");
-    nlohmann::json data = nlohmann::json::parse(f);
-    std::map<std::string, nlohmann::json> state_dict = data.get<std::map<std::string, nlohmann::json>>();
-
-    ResRNN<LSTM> obj(1, 32, 1, false, true);
-    obj.loadStateDict( state_dict );
+    auto obj = ModelBuilder::fromJson("../test_data/resrnn.json");
 
     RowMatrixXf x = Eigen::MatrixXf::Random(1, 512);
 
     {
         Timer timer;
         for(int i = 0; i < 100; i++)
-            obj.forward(x);
+            obj->forward(x);
     }
+
+    delete obj;
 
     return 0;
 }

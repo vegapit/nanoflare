@@ -8,7 +8,7 @@
 namespace MicroTorch
 {
     typedef Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMatrixXf;
-
+    
     inline void xSigmoid( const Eigen::Ref<Eigen::VectorXf>& in, Eigen::Ref<Eigen::VectorXf> out )
     {
         using b_type = xsimd::batch<float>;
@@ -47,9 +47,9 @@ namespace MicroTorch
 
     inline std::vector<RowMatrixXf> loadTensor( std::string name, std::map<std::string, nlohmann::json> state_dict )
     {
-        auto data = state_dict[name].get<std::map<std::string, nlohmann::json>>();
-        auto shape = data[std::string("shape")].get<std::vector<int>>();
-        auto values = data[std::string("values")].get<std::vector<float>>();
+        auto data = state_dict.at(name).get<std::map<std::string, nlohmann::json>>();
+        auto shape = data.at("shape").get<std::vector<int>>();
+        auto values = data.at("values").get<std::vector<float>>();
 
         std::vector<RowMatrixXf> tensor;
 
@@ -69,17 +69,17 @@ namespace MicroTorch
 
     inline RowMatrixXf loadMatrix( std::string name, std::map<std::string, nlohmann::json> state_dict )
     {
-        auto data = state_dict[name].get<std::map<std::string, nlohmann::json>>();
-        auto shape = data[std::string("shape")].get<std::vector<int>>();
-        auto values = data[std::string("values")].get<std::vector<float>>();
+        auto data = state_dict.at(name).get<std::map<std::string, nlohmann::json>>();
+        auto shape = data.at("shape").get<std::vector<int>>();
+        auto values = data.at("values").get<std::vector<float>>();
         return Eigen::Map<RowMatrixXf>(values.data(), shape[0], shape[1]);
     }
 
     inline Eigen::VectorXf loadVector( std::string name, std::map<std::string, nlohmann::json> state_dict )
     {
-        auto data = state_dict[name].get<std::map<std::string, nlohmann::json>>();
-        auto shape = data[std::string("shape")].get<std::vector<int>>();
-        auto values = data[std::string("values")].get<std::vector<float>>();
+        auto data = state_dict.at(name).get<std::map<std::string, nlohmann::json>>();
+        auto shape = data.at("shape").get<std::vector<int>>();
+        auto values = data.at("values").get<std::vector<float>>();
         return Eigen::Map<Eigen::VectorXf>( values.data(), shape[0] );
     } 
 
@@ -90,6 +90,34 @@ namespace MicroTorch
         for(int i = 0; i < numCalculations; i++)
             values[i] = in.segment(i, weights.size()).dot(weights);
         return Eigen::Map<Eigen::RowVectorXf>( values.data(), numCalculations );
+    }
+    
+    enum ModelType {
+        RES_LSTM,
+        RES_GRU,
+        UNKNOWN=-1
+    };
+
+    NLOHMANN_JSON_SERIALIZE_ENUM( ModelType, {
+        {UNKNOWN, nullptr},
+        {RES_LSTM, "ResLSTM"},
+        {RES_GRU, "ResGRU"}
+    })
+
+    struct ModelDef
+    {
+        ModelType type;
+        int input_size, hidden_size, output_size;
+        bool rnn_bias, linear_bias; 
+    };
+
+    inline void from_json(const nlohmann::json& j, ModelDef& obj) {
+        obj.type = j.at("type").template get<ModelType>();
+        j.at("input_size").get_to(obj.input_size);
+        j.at("hidden_size").get_to(obj.hidden_size);
+        j.at("output_size").get_to(obj.output_size);
+        j.at("rnn_bias").get_to(obj.rnn_bias);
+        j.at("linear_bias").get_to(obj.linear_bias);
     }
 
 }

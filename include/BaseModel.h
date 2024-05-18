@@ -3,6 +3,7 @@
 #include <eigen3/Eigen/Dense>
 #include <nlohmann/json.hpp>
 #include <assert.h>
+#include <fstream>
 #include "utils.h"
 
 namespace MicroTorch {
@@ -12,7 +13,7 @@ namespace MicroTorch {
     public:
         BaseModel(): m_normMean(0.f), m_normStd(1.f) {}
         BaseModel(float norm_mean, float norm_std): m_normMean(norm_mean), m_normStd(norm_std) { assert( norm_std > 0.f); }
-        ~BaseModel() = default;
+        virtual ~BaseModel() = default;
 
         virtual inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept = 0;
         virtual void loadStateDict(std::map<std::string, nlohmann::json> state_dict) = 0;
