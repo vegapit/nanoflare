@@ -6,6 +6,13 @@
 
 namespace MicroTorch
 {
+    enum Activation
+    {
+        SIGMOID,
+        TANH,
+        SOFTSIGN
+    };
+
     typedef Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMatrixXf;
     
     inline void xSigmoid( const Eigen::Ref<Eigen::VectorXf>& in, Eigen::Ref<Eigen::VectorXf> out )
@@ -44,6 +51,24 @@ namespace MicroTorch
             out(i) = std::tanh(in(i));
     }
 
+    inline void xSoftSign( const Eigen::Ref<Eigen::VectorXf>& in, Eigen::Ref<Eigen::VectorXf> out )
+    {
+        using b_type = xsimd::batch<float>;
+        std::size_t inc = b_type::size;
+        std::size_t size = out.size();
+        // size for which the vectorization is possible
+        std::size_t vec_size = size - size % inc;
+        for (std::size_t i = 0; i < vec_size; i += inc)
+        {
+            b_type xvec = b_type::load_unaligned(in.data() + i);
+            b_type rvec = xvec / (1.f + xsimd::abs(xvec));
+            rvec.store_unaligned(out.data() + i);
+        }
+        // Remaining part that cannot be vectorize
+        for (std::size_t i = vec_size; i < size; ++i)
+            out(i) = in(i) / (1.f + std::abs(in(i)));
+    }
+
     inline std::vector<RowMatrixXf> loadTensor( std::string name, std::map<std::string, nlohmann::json> state_dict )
     {
         auto data = state_dict.at(name).get<std::map<std::string, nlohmann::json>>();
@@ -59,7 +84,7 @@ namespace MicroTorch
             RowMatrixXf matrix(shape[1], shape[2]);
             for (int j = 0; j < shape[1]; ++j)
                 for (int k = 0; k < shape[2]; ++k)
-                    matrix(j, k) = values[i * shape[1] + j * shape[2] + k];
+                    matrix(j, k) = values[i * shape[1] * shape[2] + j * shape[2] + k];
             tensor.push_back( matrix );
         }
 
@@ -82,15 +107,44 @@ namespace MicroTorch
         return Eigen::Map<Eigen::VectorXf>( values.data(), shape[0] );
     } 
 
-    inline Eigen::RowVectorXf convolve1d(const Eigen::RowVectorXf& in, const Eigen::RowVectorXf& weights)
+inline Eigen::RowVectorXf pad(const Eigen::RowVectorXf& in, int padding)
     {
-        int numCalculations = in.size() - weights.size() + 1;
+        std::vector<float> values(in.size() + 2 * padding);
+        for(int i = 0; i < values.size(); i++)
+        {
+            if((i < padding)||(i >= in.size() + padding))
+                values[i] = 0.f; 
+            else
+                values[i] = in(i - padding); 
+        }
+        return Eigen::Map<Eigen::RowVectorXf>( values.data(), values.size() );
+    }
+
+    inline Eigen::RowVectorXf dilate(const Eigen::RowVectorXf& in, int dilation)
+    {
+        int size = dilation * (in.size() - 1) + 1;
+        std::vector<float> values(size);
+        for(int i = 0; i < in.size() - 1; i++)
+            for(int k = 0; k < dilation; k++)
+            {
+                if( k == 0 )
+                    values[dilation * i + k] = in[i];
+                else
+                    values[dilation * i + k] = 0.f; 
+            }
+        values[size - 1] = in(in.size() - 1);
+        return Eigen::Map<Eigen::RowVectorXf>( values.data(), values.size() );
+    }
+
+    inline Eigen::RowVectorXf convolve1d(const Eigen::RowVectorXf& in, const Eigen::RowVectorXf& weights)
+    {   
+        int numCalculations = in.size();
         std::vector<float> values(numCalculations);
         for(int i = 0; i < numCalculations; i++)
             values[i] = in.segment(i, weights.size()).dot(weights);
         return Eigen::Map<Eigen::RowVectorXf>( values.data(), numCalculations );
     }
-    
+
     enum ModelType {
         RES_LSTM,
         RES_GRU

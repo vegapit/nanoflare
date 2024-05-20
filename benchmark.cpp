@@ -1,4 +1,5 @@
 #include "ModelBuilder.h"
+#include "models/WaveNet.h"
 #include <nlohmann/json.hpp>
 #include <iostream>
 #include <fstream>
@@ -38,5 +39,21 @@ int main()
             obj->forward(x);
     }
 
+    std::ifstream fstream2("../test_data/wavenet.json");
+    nlohmann::json data2 = nlohmann::json::parse(fstream2);
+    
+    WaveNet wn(1, 5, 1, 3, std::vector<int>{ 1, 2, 4, 8, 16 }, 0.f, 1.f);
+    wn.loadStateDict( data2 );
+
+    {
+        Timer timer;
+        for(int i = 0; i < 100; i++)
+            wn.forward(x);
+    }
+
+    auto res = wn.forward(x);
+
+    std::cout << res.rows() << " " << res.cols() << std::endl;
+    
     return 0;
 }

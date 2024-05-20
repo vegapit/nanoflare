@@ -6,7 +6,6 @@
 #include "LSTM.h"
 #include "GRU.h"
 #include "utils.h"
-#include <iostream>
 
 namespace MicroTorch
 {
