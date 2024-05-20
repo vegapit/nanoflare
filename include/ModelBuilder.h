@@ -3,6 +3,7 @@
 #include <nlohmann/json.hpp>
 #include "BaseModel.h"
 #include "models/ResRNN.h"
+#include "models/WaveNet.h"
 #include "LSTM.h"
 #include "GRU.h"
 #include "utils.h"
@@ -16,17 +17,26 @@ namespace MicroTorch
         {
             auto doc = data.get<std::map<std::string, nlohmann::json>>();
 
-            auto model_def = data.at("model_def").template get<ModelDef>();
+            auto config = data.at("config").template get<ModelConfig>();
             auto state_dict = data.at("state_dict").get<std::map<std::string, nlohmann::json>>();
 
-            switch (model_def.type)
+            switch (config.model_type)
             {
-                case RES_LSTM:
-                    model = std::make_shared<ResRNN<LSTM>>(model_def.input_size, model_def.hidden_size, model_def.output_size, model_def.rnn_bias, model_def.linear_bias, model_def.norm_mean, model_def.norm_std);
+                case RES_LSTM: {
+                    auto parameters = data.at("parameters").template get<RNNParameters>();
+                    model = std::make_shared<ResRNN<LSTM>>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.rnn_bias, parameters.linear_bias, config.norm_mean, config.norm_std);
                     break;
-                case RES_GRU:
-                    model = std::make_shared<ResRNN<GRU>>(model_def.input_size, model_def.hidden_size, model_def.output_size, model_def.rnn_bias, model_def.linear_bias, model_def.norm_mean, model_def.norm_std);
+                }
+                case RES_GRU: {
+                    auto parameters = data.at("parameters").template get<RNNParameters>();
+                    model = std::make_shared<ResRNN<GRU>>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.rnn_bias, parameters.linear_bias, config.norm_mean, config.norm_std);
                     break;
+                }
+                case WAVENET: {
+                    auto parameters = data.at("parameters").template get<WaveNetParameters>();
+                    model = std::make_shared<WaveNet>(parameters.input_size, parameters.num_channels, parameters.output_size, parameters.kernel_size, parameters.dilations, config.norm_mean, config.norm_std);
+                    break;
+                }
                 default:
                     return;
             }

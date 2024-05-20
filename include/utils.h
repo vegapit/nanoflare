@@ -145,31 +145,56 @@ inline Eigen::RowVectorXf pad(const Eigen::RowVectorXf& in, int padding)
         return Eigen::Map<Eigen::RowVectorXf>( values.data(), numCalculations );
     }
 
+    // Model configuration
+    
     enum ModelType {
         RES_LSTM,
-        RES_GRU
+        RES_GRU,
+        WAVENET
     };
 
     NLOHMANN_JSON_SERIALIZE_ENUM( ModelType, {
         {RES_LSTM, "ResLSTM"},
-        {RES_GRU, "ResGRU"}
+        {RES_GRU, "ResGRU"},
+        {WAVENET, "WaveNet"}
     })
 
-    struct ModelDef
+    struct RNNParameters
     {
-        ModelType type;
         int input_size, hidden_size, output_size;
         bool rnn_bias, linear_bias;
-        float norm_mean, norm_std;
     };
 
-    inline void from_json(const nlohmann::json& j, ModelDef& obj) {
-        obj.type = j.at("type").template get<ModelType>();
+    inline void from_json(const nlohmann::json& j, RNNParameters& obj) {
         j.at("input_size").get_to(obj.input_size);
         j.at("hidden_size").get_to(obj.hidden_size);
         j.at("output_size").get_to(obj.output_size);
         j.at("rnn_bias").get_to(obj.rnn_bias);
         j.at("linear_bias").get_to(obj.linear_bias);
+    }
+
+    struct WaveNetParameters
+    {
+        int input_size, num_channels, output_size, kernel_size;
+        std::vector<int> dilations;
+    };
+
+    inline void from_json(const nlohmann::json& j, WaveNetParameters& obj) {
+        j.at("input_size").get_to(obj.input_size);
+        j.at("num_channels").get_to(obj.num_channels);
+        j.at("output_size").get_to(obj.output_size);
+        j.at("kernel_size").get_to(obj.kernel_size);
+        j.at("dilations").get_to(obj.dilations);
+    }
+
+    struct ModelConfig
+    {
+        ModelType model_type;
+        float norm_mean, norm_std;
+    };
+
+    inline void from_json(const nlohmann::json& j, ModelConfig& obj) {
+        obj.model_type = j.at("model_type").template get<ModelType>();
         j.at("norm_mean").get_to(obj.norm_mean);
         j.at("norm_std").get_to(obj.norm_std);
     }

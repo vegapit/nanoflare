@@ -28,15 +28,15 @@ namespace MicroTorch
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)
         {
-            auto wih = loadMatrix( std::string("weight_ih_l0"), state_dict );
-            auto whh = loadMatrix( std::string("weight_hh_l0"), state_dict );
+            auto wih = loadMatrix( std::string("weight_ih"), state_dict );
+            auto whh = loadMatrix( std::string("weight_hh"), state_dict );
             m_cell.setWeightIH( wih );
             m_cell.setWeightHH( whh );
             
             if(m_cell.isBiased())
             {
-                auto bih = loadVector( std::string("bias_ih_l0"), state_dict );
-                auto bhh = loadVector( std::string("bias_hh_l0"), state_dict );
+                auto bih = loadVector( std::string("bias_ih"), state_dict );
+                auto bhh = loadVector( std::string("bias_hh"), state_dict );
                 m_cell.setBiasIH( bih );
                 m_cell.setBiasHH( bhh );
             }
