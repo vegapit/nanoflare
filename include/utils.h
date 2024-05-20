@@ -107,7 +107,7 @@ namespace MicroTorch
         return Eigen::Map<Eigen::VectorXf>( values.data(), shape[0] );
     } 
 
-inline Eigen::RowVectorXf pad(const Eigen::RowVectorXf& in, int padding)
+    inline Eigen::RowVectorXf pad(const Eigen::RowVectorXf& in, int padding)
     {
         std::vector<float> values(in.size() + 2 * padding);
         for(int i = 0; i < values.size(); i++)
@@ -175,7 +175,7 @@ inline Eigen::RowVectorXf pad(const Eigen::RowVectorXf& in, int padding)
 
     struct WaveNetParameters
     {
-        int input_size, num_channels, output_size, kernel_size;
+        int input_size, num_channels, output_size, kernel_size, stack_size;
         std::vector<int> dilations;
     };
 
@@ -185,6 +185,7 @@ inline Eigen::RowVectorXf pad(const Eigen::RowVectorXf& in, int padding)
         j.at("output_size").get_to(obj.output_size);
         j.at("kernel_size").get_to(obj.kernel_size);
         j.at("dilations").get_to(obj.dilations);
+        j.at("stack_size").get_to(obj.stack_size);
     }
 
     struct ModelConfig

@@ -9,7 +9,8 @@
         "output_size": 1,
         "num_channels": 5,
         "kernel_size": 3,
-        "dilations" : [1, 2, 4, 8, 16]
+        "dilations" : [1, 2, 4, 8, 16],
+        "stack_size": 1
     },
     "state_dict": {
         "conv": {
