@@ -28,7 +28,7 @@ namespace MicroTorch
         void setWeightHH(const Eigen::Ref<RowMatrixXf>& m)
         {
             assert(m.rows() == 3 * m_hiddenSize);
-            assert(m.cols() == m_inputSize);
+            assert(m.cols() == m_hiddenSize);
             m_whh = m;
         }
 
@@ -63,17 +63,13 @@ namespace MicroTorch
                 nh_inner += m_bhh.segment(2*m_hiddenSize,m_hiddenSize);
             }
 
-            Eigen::VectorXf z(m_hiddenSize);
-            Eigen::VectorXf r(m_hiddenSize);
-            Eigen::VectorXf n(m_hiddenSize);
+            Eigen::VectorXf n_inner;
+            n_inner.array() = nx_inner.array() + sigmoid( r_inner.array() ) * nh_inner.array();
 
-            xSigmoid(z_inner, z);
-            xSigmoid(r_inner, r);
+            Eigen::VectorXf z;
+            z.array() = sigmoid( z_inner.array() );
 
-            Eigen::VectorXf n_inner = nx_inner + r.cwiseProduct( nh_inner );
-            xTanh(n_inner, n);
-
-            h = (Eigen::MatrixXf::Ones(1,m_hiddenSize) - z).cwiseProduct(n) + z.cwiseProduct(h);
+            h.array() = (1.f - z.array()) * n_inner.array().tanh() + z.array() * h.array();
         }
 
     private:

@@ -20,23 +20,17 @@ namespace MicroTorch
         {
             RowMatrixXf y_inner = m_inputConv.forward( x );
             
-            RowMatrixXf y(y_inner.rows(), y_inner.cols());
+            RowMatrixXf y(m_numChannels, x.cols());
             
             if(m_gated)
             {
                 RowMatrixXf y_filter = y_inner(Eigen::seqN(0, m_numChannels), Eigen::all);
                 RowMatrixXf y_gate = y_inner(Eigen::seqN(m_numChannels, m_numChannels), Eigen::all);
 
-                RowMatrixXf y_f(y_filter.rows(), y_filter.cols());
-                RowMatrixXf y_g(y_gate.rows(), y_gate.cols());
-
-                xTanh( y_filter, y_f);
-                xSigmoid( y_gate, y_g); 
-
-                y = y_f.cwiseProduct( y_g );
+                y.array() = y_filter.array().tanh() * (1.f / (1.f + (-y_gate.array()).exp()));
             }
             else
-                xTanh( y_inner, y );
+                y.array() = y_inner.array().tanh();
 
             y = m_outputConv.forward( y );
 

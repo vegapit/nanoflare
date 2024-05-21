@@ -45,9 +45,12 @@ namespace MicroTorch
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)
         {
             auto w = loadMatrix( std::string("weight"), state_dict );
-            auto b = loadVector( std::string("bias"), state_dict );
             setWeight( w );
-            setBias( b );
+            if(m_bias)
+            {
+                auto b = loadVector( std::string("bias"), state_dict );
+                setBias( b );
+            }
         }
 
     private:

@@ -15,7 +15,7 @@ namespace MicroTorch
         WaveNet(int input_size, int num_channels, int output_size, int kernel_size, std::vector<int> dilations, int stack_size, bool gated, float norm_mean, float norm_std) : 
             BaseModel(norm_mean, norm_std), m_numChannels(num_channels), m_dilations(dilations), m_stackSize(stack_size), m_gated(gated),
             m_inputConv(input_size, num_channels, kernel_size, true, 1),
-            m_outputLinear(num_channels * dilations.size() * stack_size, output_size, true)
+            m_outputLinear(num_channels, output_size, false)
         {
             for(int k = 0; k < stack_size; k++)
                 for(auto dilation: dilations)
@@ -25,21 +25,21 @@ namespace MicroTorch
         
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept override
         {
-            RowMatrixXf norm_x = x;
+            RowMatrixXf norm_x( x );
             normalise( norm_x );
             RowMatrixXf y = m_inputConv.forward( norm_x );
 
-            RowMatrixXf skip_ys( m_numChannels * m_dilations.size() * m_stackSize, x.cols() );
+            RowMatrixXf skip_sum = Eigen::MatrixXf::Zero( m_numChannels, x.cols() );
             RowMatrixXf skip_y;
             for(int k = 0; k < m_stackSize; k++)
                 for(int i = 0; i < m_dilations.size(); i++)
                 {
                     int idx = k * m_dilations.size() + i;
                     std::tie( y, skip_y ) = m_blockStack[idx].forward( y );
-                    skip_ys.block(idx * m_numChannels, 0, m_numChannels, x.cols()) = skip_y;
+                    skip_sum.array() += skip_y.array();
                 }
-            RowMatrixXf transpose_skip_ys = skip_ys.transpose();
-            return m_outputLinear.forward( transpose_skip_ys ).transpose();
+            RowMatrixXf transposed_skip_sum = skip_sum.transpose().cwiseMax(0.f);
+            return m_outputLinear.forward( transposed_skip_sum ).transpose();
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override

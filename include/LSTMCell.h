@@ -21,14 +21,14 @@ namespace MicroTorch
 
         void setWeightIH(const Eigen::Ref<RowMatrixXf>& m)
         {
-            assert(m.rows() == 4 * m_inputSize);
-            assert(m.cols() == m_hiddenSize);
+            assert(m.rows() == 4 * m_hiddenSize);
+            assert(m.cols() == m_inputSize);
             m_wih = m;
         }
 
         void setWeightHH(const Eigen::Ref<RowMatrixXf>& m)
         {
-            assert(m.rows() == 4 * m_inputSize);
+            assert(m.rows() == 4 * m_hiddenSize);
             assert(m.cols() == m_hiddenSize);
             m_whh = m;
         }
@@ -63,23 +63,9 @@ namespace MicroTorch
                 g_inner += m_bih.segment(2*m_hiddenSize,m_hiddenSize) + m_bhh.segment(2*m_hiddenSize,m_hiddenSize);
                 o_inner += m_bih.segment(3*m_hiddenSize,m_hiddenSize) + m_bhh.segment(3*m_hiddenSize,m_hiddenSize);
             }
-
-            Eigen::VectorXf fx(m_hiddenSize);
-            Eigen::VectorXf ix(m_hiddenSize);
-            Eigen::VectorXf gx(m_hiddenSize);
-            Eigen::VectorXf ox(m_hiddenSize);
-            Eigen::VectorXf cx(m_hiddenSize);
-
-            xSigmoid( f_inner, fx );
-            xSigmoid( i_inner, ix );
-            xTanh( g_inner, gx );
-            xSigmoid( o_inner, ox );
             
-            c = fx.cwiseProduct(c) + ix.cwiseProduct( gx );
-
-            xTanh( c, cx );
-
-            h = ox.cwiseProduct(cx);
+            c.array() = sigmoid( f_inner.array() ) * c.array() + sigmoid( i_inner.array() ) * g_inner.array().tanh();
+            h.array() = sigmoid( o_inner.array() ) * c.array().tanh();
         }
 
     private:

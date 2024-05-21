@@ -36,7 +36,11 @@ namespace MicroTorch
             for(int i = 0; i < m_outChannels; i++)
             {
                 for(int j = 0; j < m_inChannels; j++)
-                    y.row(i) += convolve1d(x.row(j), m_w[i].row(j));
+                {
+                    RowMatrixXf row = x.row(j);
+                    RowMatrixXf weights = m_w[i].row(j);
+                    y.row(i) += convolve1d(row, weights);
+                }
                 if(m_bias)
                     y.row(i).array() += m_b(i);
             }

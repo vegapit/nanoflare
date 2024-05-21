@@ -2,7 +2,6 @@
 
 #include <eigen3/Eigen/Dense>
 #include <nlohmann/json.hpp>
-#include "xsimd/xsimd.hpp"
 
 namespace MicroTorch
 {
@@ -14,60 +13,8 @@ namespace MicroTorch
     };
 
     typedef Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMatrixXf;
-    
-    inline void xSigmoid( const Eigen::Ref<Eigen::VectorXf>& in, Eigen::Ref<Eigen::VectorXf> out )
-    {
-        using b_type = xsimd::batch<float>;
-        std::size_t inc = b_type::size;
-        std::size_t size = out.size();
-        // size for which the vectorization is possible
-        std::size_t vec_size = size - size % inc;
-        for (std::size_t i = 0; i < vec_size; i += inc)
-        {
-            b_type xvec = b_type::load_unaligned(in.data() + i);
-            b_type rvec = 1.f / (1.f + xsimd::exp(-xvec));
-            rvec.store_unaligned(out.data() + i);
-        }
-        // Remaining part that cannot be vectorize
-        for (std::size_t i = vec_size; i < size; ++i)
-            out(i) = 1.f / (1.f + std::exp(-in(i)));
-    }
 
-    inline void xTanh( const Eigen::Ref<Eigen::VectorXf>& in, Eigen::Ref<Eigen::VectorXf> out )
-    {
-        using b_type = xsimd::batch<float>;
-        std::size_t inc = b_type::size;
-        std::size_t size = out.size();
-        // size for which the vectorization is possible
-        std::size_t vec_size = size - size % inc;
-        for (std::size_t i = 0; i < vec_size; i += inc)
-        {
-            b_type xvec = b_type::load_unaligned(in.data() + i);
-            b_type rvec = xsimd::tanh(xvec);
-            rvec.store_unaligned(out.data() + i);
-        }
-        // Remaining part that cannot be vectorize
-        for (std::size_t i = vec_size; i < size; ++i)
-            out(i) = std::tanh(in(i));
-    }
-
-    inline void xSoftSign( const Eigen::Ref<Eigen::VectorXf>& in, Eigen::Ref<Eigen::VectorXf> out )
-    {
-        using b_type = xsimd::batch<float>;
-        std::size_t inc = b_type::size;
-        std::size_t size = out.size();
-        // size for which the vectorization is possible
-        std::size_t vec_size = size - size % inc;
-        for (std::size_t i = 0; i < vec_size; i += inc)
-        {
-            b_type xvec = b_type::load_unaligned(in.data() + i);
-            b_type rvec = xvec / (1.f + xsimd::abs(xvec));
-            rvec.store_unaligned(out.data() + i);
-        }
-        // Remaining part that cannot be vectorize
-        for (std::size_t i = vec_size; i < size; ++i)
-            out(i) = in(i) / (1.f + std::abs(in(i)));
-    }
+    inline Eigen::ArrayXf sigmoid(const Eigen::Ref<Eigen::ArrayXf>& x) { return 1.f / (1.f + (-x).exp()); }
 
     inline std::vector<RowMatrixXf> loadTensor( std::string name, std::map<std::string, nlohmann::json> state_dict )
     {
@@ -107,7 +54,7 @@ namespace MicroTorch
         return Eigen::Map<Eigen::VectorXf>( values.data(), shape[0] );
     } 
 
-    inline Eigen::RowVectorXf pad(const Eigen::RowVectorXf& in, int padding)
+    inline Eigen::RowVectorXf pad(const Eigen::Ref<Eigen::RowVectorXf>& in, int padding)
     {
         std::vector<float> values(in.size() + 2 * padding);
         for(int i = 0; i < values.size(); i++)
@@ -120,7 +67,7 @@ namespace MicroTorch
         return Eigen::Map<Eigen::RowVectorXf>( values.data(), values.size() );
     }
 
-    inline Eigen::RowVectorXf dilate(const Eigen::RowVectorXf& in, int dilation)
+    inline Eigen::RowVectorXf dilate(const Eigen::Ref<Eigen::RowVectorXf>& in, int dilation)
     {
         int size = dilation * (in.size() - 1) + 1;
         std::vector<float> values(size);
@@ -136,9 +83,9 @@ namespace MicroTorch
         return Eigen::Map<Eigen::RowVectorXf>( values.data(), values.size() );
     }
 
-    inline Eigen::RowVectorXf convolve1d(const Eigen::RowVectorXf& in, const Eigen::RowVectorXf& weights)
+    inline Eigen::RowVectorXf convolve1d(const Eigen::Ref<Eigen::RowVectorXf>& in, const Eigen::Ref<Eigen::RowVectorXf>& weights)
     {   
-        int numCalculations = in.size();
+        int numCalculations = in.size() - weights.size() + 1;
         std::vector<float> values(numCalculations);
         for(int i = 0; i < numCalculations; i++)
             values[i] = in.segment(i, weights.size()).dot(weights);

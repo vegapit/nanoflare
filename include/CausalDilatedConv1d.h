@@ -47,9 +47,18 @@ namespace MicroTorch
             {
                 for(int j = 0; j < m_inChannels; j++)
                     if( m_internalPadding > 0)
-                        y.row(i) += convolve1d( pad(x.row(j), m_internalPadding), m_dilatedW[i].row(j) );
+                    {
+                        RowMatrixXf row = x.row(j);
+                        RowMatrixXf padded_row = pad(row, m_internalPadding);
+                        RowMatrixXf weights = m_dilatedW[i].row(j);
+                        y.row(i) += convolve1d( padded_row, weights );
+                    }
                     else
-                        y.row(i) += convolve1d( x.row(j), m_dilatedW[i].row(j) );
+                    {
+                        RowMatrixXf row = x.row(j); 
+                        RowMatrixXf weights = m_dilatedW[i].row(j);
+                        y.row(i) += convolve1d( row, weights );
+                    }
                 if( m_bias )
                     y.row(i).array() += m_b(i);
             }
