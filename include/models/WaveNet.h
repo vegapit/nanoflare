@@ -12,14 +12,14 @@ namespace MicroTorch
     class WaveNet : public BaseModel
     {
     public:
-        WaveNet(int input_size, int num_channels, int output_size, int kernel_size, std::vector<int> dilations, int stack_size, float norm_mean, float norm_std) : 
-            BaseModel(norm_mean, norm_std), m_numChannels(num_channels), m_dilations(dilations), m_stackSize(stack_size),
+        WaveNet(int input_size, int num_channels, int output_size, int kernel_size, std::vector<int> dilations, int stack_size, bool gated, float norm_mean, float norm_std) : 
+            BaseModel(norm_mean, norm_std), m_numChannels(num_channels), m_dilations(dilations), m_stackSize(stack_size), m_gated(gated),
             m_inputConv(input_size, num_channels, kernel_size, true, 1),
             m_outputLinear(num_channels * dilations.size() * stack_size, output_size, true)
         {
             for(int k = 0; k < stack_size; k++)
                 for(auto dilation: dilations)
-                    m_blockStack.push_back( ResidualBlock(num_channels, kernel_size, dilation, true, true, Activation::TANH, Activation::SIGMOID) );
+                    m_blockStack.push_back( ResidualBlock(num_channels, kernel_size, dilation, true, true, gated) );
         }
         ~WaveNet() = default;
         
@@ -29,7 +29,7 @@ namespace MicroTorch
             normalise( norm_x );
             RowMatrixXf y = m_inputConv.forward( norm_x );
 
-            RowMatrixXf skip_ys( m_numChannels * m_dilations.size(), x.cols() );
+            RowMatrixXf skip_ys( m_numChannels * m_dilations.size() * m_stackSize, x.cols() );
             RowMatrixXf skip_y;
             for(int k = 0; k < m_stackSize; k++)
                 for(int i = 0; i < m_dilations.size(); i++)
@@ -59,6 +59,7 @@ namespace MicroTorch
 
     private:
         int m_numChannels, m_stackSize;
+        bool m_gated;
         std::vector<int> m_dilations;
         CausalDilatedConv1d m_inputConv;
         std::vector<ResidualBlock> m_blockStack;

@@ -42,7 +42,6 @@ namespace MicroTorch
 
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const noexcept
         {    
-            float f_bias = static_cast<float>(m_bias);
             RowMatrixXf y = RowMatrixXf::Zero(m_outChannels, x.cols());
             for(int i = 0; i < m_outChannels; i++)
             {
@@ -51,7 +50,8 @@ namespace MicroTorch
                         y.row(i) += convolve1d( pad(x.row(j), m_internalPadding), m_dilatedW[i].row(j) );
                     else
                         y.row(i) += convolve1d( x.row(j), m_dilatedW[i].row(j) );
-                y.row(i).array() += f_bias * m_b(i);
+                if( m_bias )
+                    y.row(i).array() += m_b(i);
             }
             return y;
         }

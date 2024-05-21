@@ -176,6 +176,7 @@ namespace MicroTorch
     struct WaveNetParameters
     {
         int input_size, num_channels, output_size, kernel_size, stack_size;
+        bool gated;
         std::vector<int> dilations;
     };
 
@@ -186,6 +187,7 @@ namespace MicroTorch
         j.at("kernel_size").get_to(obj.kernel_size);
         j.at("dilations").get_to(obj.dilations);
         j.at("stack_size").get_to(obj.stack_size);
+        j.at("gated").get_to(obj.gated);
     }
 
     struct ModelConfig

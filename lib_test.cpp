@@ -158,7 +158,7 @@ bool residualblock_pytorch_match()
     nlohmann::json data = nlohmann::json::parse(f);
     std::map<std::string, nlohmann::json> state_dict = data.get<std::map<std::string, nlohmann::json>>();
 
-    ResidualBlock obj( numChannels, kernelSize, 2, true, true, Activation::SOFTSIGN, Activation::SOFTSIGN );
+    ResidualBlock obj( numChannels, kernelSize, 2, true, true, true );
     obj.loadStateDict( state_dict );
 
     RowMatrixXf x(5,1);
@@ -170,7 +170,7 @@ bool residualblock_pytorch_match()
     std::cout << pred << std::endl;
 
     RowMatrixXf target(5,1);
-    target << 0.4790f, -0.2503f, 0.2305f, 0.1531f, 0.0950f;
+    target << 0.4813f, -0.2321f, 0.2010f, 0.0285f, 0.0679f;
 
     return ( (pred - target).lpNorm<1>() < 1e-3 );
 }

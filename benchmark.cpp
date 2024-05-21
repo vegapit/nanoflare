@@ -25,13 +25,13 @@ private:
 
 int main()
 {
-    std::ifstream fstream("../test_data/resrnn.json");
-    nlohmann::json data = nlohmann::json::parse(fstream);
     std::shared_ptr<BaseModel> obj;
-    ModelBuilder::fromJson(data, obj);
-
     RowMatrixXf x = Eigen::MatrixXf::Random(1, 512);
 
+    std::ifstream fstream("../test_data/resrnn.json");
+    nlohmann::json data = nlohmann::json::parse(fstream);    
+    ModelBuilder::fromJson(data, obj);
+    
     {
         Timer timer;
         for(int i = 0; i < 100; i++)
@@ -40,8 +40,8 @@ int main()
 
     std::ifstream fstream2("../test_data/wavenet.json");
     nlohmann::json data2 = nlohmann::json::parse(fstream2);
-    
     ModelBuilder::fromJson(data2, obj);
+
     {
         Timer timer;
         for(int i = 0; i < 100; i++)
