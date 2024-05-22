@@ -5,16 +5,8 @@
 
 namespace MicroTorch
 {
-    enum Activation
-    {
-        SIGMOID,
-        TANH,
-        SOFTSIGN
-    };
 
     typedef Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMatrixXf;
-
-    inline Eigen::ArrayXf sigmoid(const Eigen::Ref<Eigen::ArrayXf>& x) { return 1.f / (1.f + (-x).exp()); }
 
     inline std::vector<RowMatrixXf> loadTensor( std::string name, std::map<std::string, nlohmann::json> state_dict )
     {
@@ -94,6 +86,19 @@ namespace MicroTorch
 
     // Model configuration
     
+    enum Activation
+    {
+        SIGMOID,
+        TANH,
+        SOFTSIGN
+    };
+
+    NLOHMANN_JSON_SERIALIZE_ENUM( Activation, {
+        {SIGMOID, "Sigmoid"},
+        {TANH, "Tanh"},
+        {SOFTSIGN, "SoftSign"}
+    })
+
     enum ModelType {
         RES_LSTM,
         RES_GRU,
@@ -125,6 +130,7 @@ namespace MicroTorch
         int input_size, num_channels, output_size, kernel_size, stack_size;
         bool gated;
         std::vector<int> dilations;
+        Activation activation;
     };
 
     inline void from_json(const nlohmann::json& j, WaveNetParameters& obj) {
@@ -135,6 +141,7 @@ namespace MicroTorch
         j.at("dilations").get_to(obj.dilations);
         j.at("stack_size").get_to(obj.stack_size);
         j.at("gated").get_to(obj.gated);
+        obj.activation = j.at("activation").template get<Activation>();
     }
 
     struct ModelConfig

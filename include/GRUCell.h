@@ -64,10 +64,10 @@ namespace MicroTorch
             }
 
             Eigen::VectorXf n_inner;
-            n_inner.array() = nx_inner.array() + sigmoid( r_inner.array() ) * nh_inner.array();
+            n_inner.array() = nx_inner.array() + r_inner.array().logistic() * nh_inner.array();
 
             Eigen::VectorXf z;
-            z.array() = sigmoid( z_inner.array() );
+            z.array() = z_inner.array().logistic();
 
             h.array() = (1.f - z.array()) * n_inner.array().tanh() + z.array() * h.array();
         }

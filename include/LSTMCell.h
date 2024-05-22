@@ -64,8 +64,8 @@ namespace MicroTorch
                 o_inner += m_bih.segment(3*m_hiddenSize,m_hiddenSize) + m_bhh.segment(3*m_hiddenSize,m_hiddenSize);
             }
             
-            c.array() = sigmoid( f_inner.array() ) * c.array() + sigmoid( i_inner.array() ) * g_inner.array().tanh();
-            h.array() = sigmoid( o_inner.array() ) * c.array().tanh();
+            c.array() = f_inner.array().logistic() * c.array() + i_inner.array().logistic() * g_inner.array().tanh();
+            h.array() = o_inner.array().logistic() * c.array().tanh();
         }
 
     private:
