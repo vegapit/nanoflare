@@ -48,40 +48,31 @@ namespace MicroTorch
 
     inline Eigen::RowVectorXf pad(const Eigen::Ref<Eigen::RowVectorXf>& in, int padding)
     {
-        std::vector<float> values(in.size() + 2 * padding);
-        for(int i = 0; i < values.size(); i++)
-        {
-            if((i < padding)||(i >= in.size() + padding))
-                values[i] = 0.f; 
-            else
-                values[i] = in(i - padding); 
-        }
-        return Eigen::Map<Eigen::RowVectorXf>( values.data(), values.size() );
+        Eigen::RowVectorXf out = Eigen::RowVectorXf::Zero(in.size() + 2 * padding);
+        out.segment(padding, in.size()) = in; 
+        return out;
     }
 
     inline Eigen::RowVectorXf dilate(const Eigen::Ref<Eigen::RowVectorXf>& in, int dilation)
     {
         int size = dilation * (in.size() - 1) + 1;
-        std::vector<float> values(size);
+        Eigen::RowVectorXf out = Eigen::RowVectorXf::Zero(size);
         for(int i = 0; i < in.size() - 1; i++)
             for(int k = 0; k < dilation; k++)
-            {
                 if( k == 0 )
-                    values[dilation * i + k] = in[i];
-                else
-                    values[dilation * i + k] = 0.f; 
-            }
-        values[size - 1] = in(in.size() - 1);
-        return Eigen::Map<Eigen::RowVectorXf>( values.data(), values.size() );
+                    out(dilation * i + k) = in(i);
+        out(size - 1) = in(in.size() - 1);
+        return out;
     }
 
     inline Eigen::RowVectorXf convolve1d(const Eigen::Ref<Eigen::RowVectorXf>& in, const Eigen::Ref<Eigen::RowVectorXf>& weights)
     {   
-        int numCalculations = in.size() - weights.size() + 1;
-        std::vector<float> values(numCalculations);
-        for(int i = 0; i < numCalculations; i++)
-            values[i] = in.segment(i, weights.size()).dot(weights);
-        return Eigen::Map<Eigen::RowVectorXf>( values.data(), numCalculations );
+        size_t weights_size = weights.size();
+        size_t out_size = in.size() - weights.size() + 1;
+        Eigen::RowVectorXf out(out_size);
+        for(size_t i = 0; i < out_size; i++)
+            out(i) = in.segment(i, weights_size).cwiseProduct(weights).sum();
+        return out;
     }
 
     // Model configuration
