@@ -9,7 +9,7 @@ namespace MicroTorch
     class Linear
     {
     public:
-        Linear(int in_channels, int out_channels, bool bias) : m_inChannels(in_channels), m_outChannels(out_channels), m_bias(bias),
+        Linear(size_t in_channels, size_t out_channels, bool bias) : m_inChannels(in_channels), m_outChannels(out_channels), m_bias(bias),
             m_w(RowMatrixXf::Zero(out_channels,in_channels)),
             m_b(Eigen::RowVectorXf::Zero(out_channels))
         {}
@@ -31,16 +31,16 @@ namespace MicroTorch
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const noexcept
         {
             RowMatrixXf y( x.rows(), m_outChannels );
-            for(int i = 0; i < x.rows(); i++)
+            for(size_t i = 0; i < x.rows(); i++)
                 y.row(i).noalias() = x.row(i) * m_w.transpose();
             if(m_bias)
                 y.rowwise() += m_b;
             return y;
         }
 
-        int getInChannels() const { return m_inChannels; }
-        int getOutChannels() const { return m_outChannels; }
-        int getBias() const { return m_bias; }
+        size_t getInChannels() const { return m_inChannels; }
+        size_t getOutChannels() const { return m_outChannels; }
+        size_t getBias() const { return m_bias; }
         
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)
         {
@@ -57,7 +57,7 @@ namespace MicroTorch
         RowMatrixXf m_w;
         Eigen::RowVectorXf m_b;
 
-        int m_inChannels, m_outChannels;
+        size_t m_inChannels, m_outChannels;
         bool m_bias;
     };
 }

@@ -9,7 +9,7 @@ namespace MicroTorch
     class LSTM
     {
     public:
-        LSTM(int input_size, int hidden_size, bool bias) : m_cell(input_size, hidden_size, bias), m_h(Eigen::VectorXf::Zero(hidden_size)), m_c(Eigen::VectorXf::Zero(hidden_size)) {}
+        LSTM(size_t input_size, size_t hidden_size, bool bias) : m_cell(input_size, hidden_size, bias), m_h(Eigen::VectorXf::Zero(hidden_size)), m_c(Eigen::VectorXf::Zero(hidden_size)) {}
         ~LSTM() = default;
 
         void resetState()
@@ -21,7 +21,7 @@ namespace MicroTorch
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept
         {
             RowMatrixXf y( x.rows(), m_cell.getHiddenSize() );
-            for(int i = 0; i < x.rows(); i++)
+            for(size_t i = 0; i < x.rows(); i++)
             {
                 RowMatrixXf row = x.row(i);
                 m_cell.forward( row, m_h, m_c );

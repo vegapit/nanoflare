@@ -11,7 +11,7 @@ namespace MicroTorch
     class LSTMCell
     {
     public:
-        LSTMCell(int input_size, int hidden_size, bool bias) : m_hiddenSize(hidden_size), m_inputSize(input_size), m_bias(bias),
+        LSTMCell(size_t input_size, size_t hidden_size, bool bias) : m_hiddenSize(hidden_size), m_inputSize(input_size), m_bias(bias),
             m_wih(RowMatrixXf::Zero(4*hidden_size,input_size)),
             m_whh(RowMatrixXf::Zero(4*hidden_size,hidden_size)),
             m_bih(Eigen::VectorXf::Zero(4*hidden_size)),
@@ -45,8 +45,8 @@ namespace MicroTorch
             m_bhh = v;
         }
 
-        int getInputSize() const { return m_inputSize; } 
-        int getHiddenSize() const { return m_hiddenSize; }
+        size_t getInputSize() const { return m_inputSize; } 
+        size_t getHiddenSize() const { return m_hiddenSize; }
         bool isBiased() const { return m_bias; }
 
         inline void forward( const Eigen::Ref<Eigen::VectorXf>& x, Eigen::Ref<Eigen::VectorXf> h, Eigen::Ref<Eigen::VectorXf> c ) const noexcept
@@ -69,7 +69,7 @@ namespace MicroTorch
         }
 
     private:
-        int m_inputSize, m_hiddenSize;
+        size_t m_inputSize, m_hiddenSize;
         bool m_bias;
 
         RowMatrixXf m_wih, m_whh;

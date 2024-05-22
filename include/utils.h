@@ -11,18 +11,18 @@ namespace MicroTorch
     inline std::vector<RowMatrixXf> loadTensor( std::string name, std::map<std::string, nlohmann::json> state_dict )
     {
         auto data = state_dict.at(name).get<std::map<std::string, nlohmann::json>>();
-        auto shape = data.at("shape").get<std::vector<int>>();
+        auto shape = data.at("shape").get<std::vector<size_t>>();
         auto values = data.at("values").get<std::vector<float>>();
 
         std::vector<RowMatrixXf> tensor;
 
         // Loop through the vector and assign elements to rows
-        for (int i = 0; i < shape[0]; ++i)
+        for (size_t i = 0; i < shape[0]; ++i)
         {
             // Create the Eigen matrix
             RowMatrixXf matrix(shape[1], shape[2]);
-            for (int j = 0; j < shape[1]; ++j)
-                for (int k = 0; k < shape[2]; ++k)
+            for (size_t j = 0; j < shape[1]; ++j)
+                for (size_t k = 0; k < shape[2]; ++k)
                     matrix(j, k) = values[i * shape[1] * shape[2] + j * shape[2] + k];
             tensor.push_back( matrix );
         }
@@ -33,7 +33,7 @@ namespace MicroTorch
     inline RowMatrixXf loadMatrix( std::string name, std::map<std::string, nlohmann::json> state_dict )
     {
         auto data = state_dict.at(name).get<std::map<std::string, nlohmann::json>>();
-        auto shape = data.at("shape").get<std::vector<int>>();
+        auto shape = data.at("shape").get<std::vector<size_t>>();
         auto values = data.at("values").get<std::vector<float>>();
         return Eigen::Map<RowMatrixXf>(values.data(), shape[0], shape[1]);
     }
@@ -41,25 +41,25 @@ namespace MicroTorch
     inline Eigen::VectorXf loadVector( std::string name, std::map<std::string, nlohmann::json> state_dict )
     {
         auto data = state_dict.at(name).get<std::map<std::string, nlohmann::json>>();
-        auto shape = data.at("shape").get<std::vector<int>>();
+        auto shape = data.at("shape").get<std::vector<size_t>>();
         auto values = data.at("values").get<std::vector<float>>();
         return Eigen::Map<Eigen::VectorXf>( values.data(), shape[0] );
     } 
 
-    inline Eigen::RowVectorXf pad(const Eigen::Ref<Eigen::RowVectorXf>& in, int padding)
+    inline Eigen::RowVectorXf pad(const Eigen::Ref<Eigen::RowVectorXf>& in, size_t padding)
     {
         Eigen::RowVectorXf out = Eigen::RowVectorXf::Zero(in.size() + 2 * padding);
         out.segment(padding, in.size()) = in; 
         return out;
     }
 
-    inline Eigen::RowVectorXf dilate(const Eigen::Ref<Eigen::RowVectorXf>& in, int dilation)
+    inline Eigen::RowVectorXf dilate(const Eigen::Ref<Eigen::RowVectorXf>& in, size_t dilation)
     {
-        int size = dilation * (in.size() - 1) + 1;
+        size_t size = dilation * (in.size() - 1) + 1;
         Eigen::RowVectorXf out = Eigen::RowVectorXf::Zero(size);
-        for(int i = 0; i < in.size() - 1; i++)
-            for(int k = 0; k < dilation; k++)
-                if( k == 0 )
+        for(size_t i = 0; i < in.size() - 1; i++)
+            for(size_t k = 0; k < dilation; k++)
+                if(k == 0)
                     out(dilation * i + k) = in(i);
         out(size - 1) = in(in.size() - 1);
         return out;
@@ -104,7 +104,7 @@ namespace MicroTorch
 
     struct RNNParameters
     {
-        int input_size, hidden_size, output_size;
+        size_t input_size, hidden_size, output_size;
         bool rnn_bias, linear_bias;
     };
 
@@ -118,9 +118,9 @@ namespace MicroTorch
 
     struct WaveNetParameters
     {
-        int input_size, num_channels, output_size, kernel_size, stack_size;
+        size_t input_size, num_channels, output_size, kernel_size, stack_size;
         bool gated;
-        std::vector<int> dilations;
+        std::vector<size_t> dilations;
         Activation activation;
     };
 

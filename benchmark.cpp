@@ -34,7 +34,7 @@ int main()
     
     {
         Timer timer;
-        for(int i = 0; i < 100; i++)
+        for(size_t i = 0; i < 100; i++)
             obj->forward(x);
     }
 
@@ -44,7 +44,7 @@ int main()
 
     {
         Timer timer;
-        for(int i = 0; i < 100; i++)
+        for(size_t i = 0; i < 100; i++)
             obj->forward(x);
     }
 

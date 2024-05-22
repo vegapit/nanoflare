@@ -13,8 +13,8 @@ using namespace MicroTorch;
 
 bool lstm_pytorch_match()
 {
-    int hiddenSize = 7;
-    int inputSize = 1;
+    size_t hiddenSize = 7;
+    size_t inputSize = 1;
 
     std::ifstream f("../test_data/lstm.json");
     nlohmann::json data = nlohmann::json::parse(f);
@@ -40,8 +40,8 @@ bool lstm_pytorch_match()
 
 bool gru_pytorch_match()
 {
-    int hiddenSize = 7;
-    int inputSize = 1;
+    size_t hiddenSize = 7;
+    size_t inputSize = 1;
 
     std::ifstream f("../test_data/gru.json");
     nlohmann::json data = nlohmann::json::parse(f);
@@ -67,8 +67,8 @@ bool gru_pytorch_match()
 
 bool linear_pytorch_match()
 {
-    int inChannels = 3;
-    int outChannels = 2;
+    size_t inChannels = 3;
+    size_t outChannels = 2;
 
     std::ifstream f("../test_data/linear.json");
     nlohmann::json data = nlohmann::json::parse(f);
@@ -93,9 +93,9 @@ bool linear_pytorch_match()
 
 bool conv1d_pytorch_match()
 {
-    int inChannels = 3;
-    int outChannels = 1;
-    int kernelSize = 1;
+    size_t inChannels = 3;
+    size_t outChannels = 1;
+    size_t kernelSize = 1;
 
     std::ifstream f("../test_data/conv1d.json");
     nlohmann::json data = nlohmann::json::parse(f);
@@ -120,9 +120,9 @@ bool conv1d_pytorch_match()
 
 bool causaldilatedconv1d_pytorch_match()
 {
-    int inChannels = 1;
-    int outChannels = 5;
-    int kernelSize = 3;
+    size_t inChannels = 1;
+    size_t outChannels = 5;
+    size_t kernelSize = 3;
 
     std::ifstream f("../test_data/causaldilatedconv1d.json");
     nlohmann::json data = nlohmann::json::parse(f);
@@ -151,8 +151,8 @@ bool causaldilatedconv1d_pytorch_match()
 
 bool residualblock_pytorch_match()
 {
-    int numChannels = 5;
-    int kernelSize = 3;
+    size_t numChannels = 5;
+    size_t kernelSize = 3;
 
     std::ifstream f("../test_data/residualblock.json");
     nlohmann::json data = nlohmann::json::parse(f);

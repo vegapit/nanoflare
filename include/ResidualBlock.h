@@ -10,7 +10,7 @@ namespace MicroTorch
     class ResidualBlock
     {
     public:
-        ResidualBlock(int num_channels, int kernel_size, int dilation, bool input_bias, bool output_bias, bool gated, Activation activation) 
+        ResidualBlock(size_t num_channels, size_t kernel_size, size_t dilation, bool input_bias, bool output_bias, bool gated, Activation activation) 
             : m_numChannels(num_channels), m_kernelSize(kernel_size), m_gated(gated), m_activation(activation),
             m_inputConv(num_channels, gated ? 2 * num_channels : num_channels, kernel_size, input_bias, dilation), 
             m_outputConv(num_channels, num_channels, 1, output_bias) {}
@@ -45,7 +45,7 @@ namespace MicroTorch
             {
                 switch (m_activation)
                 {
-               case SIGMOID:
+                case SIGMOID:
                     y.array() = y_inner.array().logistic();
                     break;
                 case TANH:
@@ -74,7 +74,7 @@ namespace MicroTorch
         CausalDilatedConv1d m_inputConv;
         Conv1d m_outputConv;
         bool m_gated;
-        int m_numChannels, m_kernelSize;
+        size_t m_numChannels, m_kernelSize;
         Activation m_activation;
     };
 }
