@@ -9,11 +9,12 @@ namespace MicroTorch
     class Conv1d
     {
     public:
-        Conv1d(size_t in_channels, size_t out_channels, size_t kernel_size, bool bias) : m_inChannels(in_channels), m_outChannels(out_channels), 
-            m_kernelSize(kernel_size), m_bias(bias),m_b(Eigen::RowVectorXf::Zero(out_channels))
+        Conv1d(size_t in_channels, size_t out_channels, size_t kernel_size, bool bias) : 
+            m_inChannels(in_channels), m_outChannels(out_channels), m_w(std::vector<RowMatrixXf>(out_channels)),
+            m_kernelSize(kernel_size), m_bias(bias), m_b(Eigen::RowVectorXf::Zero(out_channels))
         {
             for(size_t i = 0; i < out_channels; i++)
-                m_w.push_back( RowMatrixXf::Zero(in_channels, kernel_size) );
+                m_w[i] = RowMatrixXf::Zero(in_channels, kernel_size);
         }
         ~Conv1d() = default;
 
@@ -21,6 +22,7 @@ namespace MicroTorch
         {
             assert(m.rows() == m_inChannels);
             assert(m.cols() == m_kernelSize);
+            assert(channel < m_outChannels);
             m_w[channel] = m;
         }
 
@@ -30,16 +32,21 @@ namespace MicroTorch
             m_b = v;
         }
 
+        inline size_t getOutputLength( size_t in_length ) const { return in_length - (m_kernelSize - 1); }
+
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const noexcept
         {
-            RowMatrixXf y = RowMatrixXf::Zero(m_outChannels, x.cols());
+            RowMatrixXf y = RowMatrixXf::Zero(m_outChannels, getOutputLength( x.cols() ) );
+            Eigen::RowVectorXf input_row(x.cols());
+            Eigen::RowVectorXf weight_row(m_w[0].cols());
+
             for(size_t i = 0; i < m_outChannels; i++)
             {
                 for(size_t j = 0; j < m_inChannels; j++)
                 {
-                    RowMatrixXf row = x.row(j);
-                    RowMatrixXf weights = m_w[i].row(j);
-                    y.row(i) += convolve1d(row, weights);
+                    input_row = x.row(j);
+                    weight_row = m_w[i].row(j);
+                    y.row(i) += convolve1d(input_row, weight_row);
                 }
                 if(m_bias)
                     y.row(i).array() += m_b(i);

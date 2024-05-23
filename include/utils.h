@@ -48,27 +48,29 @@ namespace MicroTorch
 
     inline Eigen::RowVectorXf pad(const Eigen::Ref<Eigen::RowVectorXf>& in, size_t padding)
     {
-        Eigen::RowVectorXf out = Eigen::RowVectorXf::Zero(in.size() + 2 * padding);
-        out.segment(padding, in.size()) = in; 
+        size_t in_size = in.size();
+        Eigen::RowVectorXf out = Eigen::RowVectorXf::Zero(in_size + 2 * padding);
+        out.segment(padding, in_size) = in; 
         return out;
     }
 
     inline Eigen::RowVectorXf dilate(const Eigen::Ref<Eigen::RowVectorXf>& in, size_t dilation)
     {
-        size_t size = dilation * (in.size() - 1) + 1;
+        size_t in_size = in.size();
+        size_t size = dilation * (in_size - 1) + 1;
         Eigen::RowVectorXf out = Eigen::RowVectorXf::Zero(size);
-        for(size_t i = 0; i < in.size() - 1; i++)
+        for(size_t i = 0; i < in_size - 1; i++)
             for(size_t k = 0; k < dilation; k++)
                 if(k == 0)
                     out(dilation * i + k) = in(i);
-        out(size - 1) = in(in.size() - 1);
+        out(size - 1) = in(in_size - 1);
         return out;
     }
 
     inline Eigen::RowVectorXf convolve1d(const Eigen::Ref<Eigen::RowVectorXf>& in, const Eigen::Ref<Eigen::RowVectorXf>& weights)
     {   
         size_t weights_size = weights.size();
-        size_t out_size = in.size() - weights.size() + 1;
+        size_t out_size = in.size() - weights_size + 1;
         Eigen::RowVectorXf out(out_size);
         for(size_t i = 0; i < out_size; i++)
             out(i) = in.segment(i, weights_size).cwiseProduct(weights).sum();

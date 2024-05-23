@@ -93,9 +93,9 @@ bool linear_pytorch_match()
 
 bool conv1d_pytorch_match()
 {
-    size_t inChannels = 3;
-    size_t outChannels = 1;
-    size_t kernelSize = 1;
+    size_t inChannels = 1;
+    size_t outChannels = 2;
+    size_t kernelSize = 3;
 
     std::ifstream f("../test_data/conv1d.json");
     nlohmann::json data = nlohmann::json::parse(f);
@@ -104,65 +104,65 @@ bool conv1d_pytorch_match()
     Conv1d obj( inChannels, outChannels, kernelSize, true);
     obj.loadStateDict( state_dict );
 
-    RowMatrixXf x(3, 2);
-    x << 0.f, 1.f, 2.f, 3.f, 4.f, 5.f;
+    RowMatrixXf x(1, 5);
+    x << 0.f, 1.f, 2.f, 3.f, 4.f;
 
     auto pred = obj.forward(x);
 
     std::cout << "Conv1d Pred" << std::endl;
     std::cout << pred << std::endl;
 
-    RowMatrixXf target(1,2);
-    target << 0.6171f, 1.1664f;
+    RowMatrixXf target(2,3);
+    target << -0.3752188f, -0.48619097f, -0.59716314f, 1.4530494f, 2.562778f, 3.6725063f;
 
-    return ( (pred - target).lpNorm<1>() < 1e-3 );
+    return ( (pred - target).lpNorm<1>() < 1e-5 );
 }
 
 bool causaldilatedconv1d_pytorch_match()
 {
     size_t inChannels = 1;
-    size_t outChannels = 5;
+    size_t outChannels = 2;
     size_t kernelSize = 3;
+    bool bias = true;
+    size_t dilation = 2;
 
     std::ifstream f("../test_data/causaldilatedconv1d.json");
     nlohmann::json data = nlohmann::json::parse(f);
     std::map<std::string, nlohmann::json> state_dict = data.get<std::map<std::string, nlohmann::json>>();
 
-    CausalDilatedConv1d obj( inChannels, outChannels, kernelSize, true, 2 );
+    CausalDilatedConv1d obj( inChannels, outChannels, kernelSize, bias, dilation );
     obj.loadStateDict( state_dict );
 
-    Eigen::RowVectorXf x(4);
-    x << 0.5f, -0.5f, 0.25f, -0.1f;
+    RowMatrixXf x(1, 5);
+    x << 0.f, 1.f, 2.f, 3.f, 4.f;
 
     auto pred = obj.forward(x);
 
     std::cout << "CausalDilatedConv1d Pred" << std::endl;
     std::cout << pred << std::endl;
 
-    RowMatrixXf target(5,4);
-    target << -0.0791f, -0.2495f, -0.3404f, -0.0638f, 
-        0.4213f, 0.1339f, 0.5911f, 0.0273f, 
-        -0.6683f, -0.1060f, -0.4642f, -0.3741f,
-        0.1276f, -0.2533f, -0.2105f, 0.0916f,
-        -0.1803f, 0.1715f, -0.1969f, 0.1731f;
+    RowMatrixXf target(2, 5);
+    target << -0.2568827f, -0.2824603f, -0.30803785f, -0.7492607f, -1.1904836f,
+        -0.26991627f, -0.07575521f, 0.11840585f, 0.30745503f, 0.49650422f;
 
-    return ( (pred - target).lpNorm<1>() < 1e-3 );
+    return ( (pred - target).lpNorm<1>() < 1e-5 );
 }
 
 bool residualblock_pytorch_match()
 {
     size_t numChannels = 5;
     size_t kernelSize = 3;
+    size_t dilation = 2;
 
     std::ifstream f("../test_data/residualblock.json");
     nlohmann::json data = nlohmann::json::parse(f);
     std::map<std::string, nlohmann::json> state_dict = data.get<std::map<std::string, nlohmann::json>>();
 
-    ResidualBlock obj( numChannels, kernelSize, 2, true, true, true, Activation::TANH );
+    ResidualBlock obj( numChannels, kernelSize, dilation, true, true, true, Activation::TANH );
     obj.loadStateDict( state_dict );
 
     RowMatrixXf x(5,1);
-    x << 0.5f, -0.5f, 0.25f, -0.1f, 0.1f;
+    x << 0.f, 0.1f, 0.2f, 0.3f, 0.4f;
 
     auto pred = std::get<0>( obj.forward(x) );
 
@@ -170,9 +170,9 @@ bool residualblock_pytorch_match()
     std::cout << pred << std::endl;
 
     RowMatrixXf target(5,1);
-    target << 0.4813f, -0.2321f, 0.2010f, 0.0285f, 0.0679f;
+    target << -0.23491728f, 0.1363181f, 0.6830531f, 0.70318216f, 0.25027066f;
 
-    return ( (pred - target).lpNorm<1>() < 1e-3 );
+    return ( (pred - target).lpNorm<1>() < 1e-5 );
 }
 
 bool convolve1d_calculate()

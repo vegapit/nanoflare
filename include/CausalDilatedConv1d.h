@@ -2,6 +2,7 @@
 
 #include <eigen3/Eigen/Dense>
 #include "utils.h"
+#include <iostream>
 
 namespace MicroTorch
 {
@@ -10,7 +11,7 @@ namespace MicroTorch
     {
     public:
         CausalDilatedConv1d(size_t in_channels, size_t out_channels, size_t kernel_size, bool bias, size_t dilation) : m_inChannels(in_channels), m_outChannels(out_channels), 
-            m_kernelSize(kernel_size), m_bias(bias), m_dilation(dilation), m_internalPadding((dilation * (kernel_size - 1)) / 2), m_b(Eigen::RowVectorXf::Zero(out_channels))
+            m_kernelSize(kernel_size), m_bias(bias), m_dilation(dilation), m_internalPadding(dilation * (kernel_size - 1)), m_b(Eigen::RowVectorXf::Zero(out_channels))
         {
             for(size_t i = 0; i < out_channels; i++)
             {
@@ -27,10 +28,11 @@ namespace MicroTorch
             m_w[channel] = m;
 
             // Calculate dilated weights
+            Eigen::RowVectorXf weight_row( m.cols() );
             for(size_t i = 0; i < m.rows(); i++)
             {
-                RowMatrixXf row = m.row(i);
-                m_dilatedW[channel].row(i) = dilate( row, m_dilation );
+                weight_row = m.row(i);
+                m_dilatedW[channel].row(i) = dilate( weight_row, m_dilation );
             }
         }
 
@@ -40,25 +42,31 @@ namespace MicroTorch
             m_b = v;
         }
 
+        inline size_t getOutputLength( size_t in_length ) const { return in_length + (m_kernelSize - 1); }
+
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const noexcept
-        {    
-            RowMatrixXf y = RowMatrixXf::Zero(m_outChannels, x.cols());
+        {   
+            // Build padded input matrix
+            RowMatrixXf padded_x(x.rows(), x.cols() + 2 * m_internalPadding);
+            Eigen::RowVectorXf input_row( x.cols() );
+            for(size_t i = 0; i < x.rows(); i++)
+            {
+                input_row = x.row(i);
+                padded_x.row(i) = pad(input_row, m_internalPadding);
+            }
+
+            Eigen::RowVectorXf padded_input_row( padded_x.cols() );
+            Eigen::RowVectorXf dilated_weight_row( m_dilatedW[0].cols() );
+
+            RowMatrixXf y = RowMatrixXf::Zero(m_outChannels,x.cols());
             for(size_t i = 0; i < m_outChannels; i++)
             {
                 for(size_t j = 0; j < m_inChannels; j++)
-                    if( m_internalPadding > 0)
-                    {
-                        RowMatrixXf row = x.row(j);
-                        RowMatrixXf padded_row = pad(row, m_internalPadding);
-                        RowMatrixXf weights = m_dilatedW[i].row(j);
-                        y.row(i) += convolve1d( padded_row, weights );
-                    }
-                    else
-                    {
-                        RowMatrixXf row = x.row(j); 
-                        RowMatrixXf weights = m_dilatedW[i].row(j);
-                        y.row(i) += convolve1d( row, weights );
-                    }
+                {
+                    padded_input_row = padded_x.row(j);
+                    dilated_weight_row = m_dilatedW[i].row(j);
+                    y.row(i) += convolve1d( padded_input_row, dilated_weight_row ).head( x.cols() );
+                }
                 if( m_bias )
                     y.row(i).array() += m_b(i);
             }
