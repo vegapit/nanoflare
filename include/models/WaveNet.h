@@ -26,21 +26,25 @@ namespace MicroTorch
         
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept override
         {
-            RowMatrixXf norm_x( x );
+            size_t dilations_size = m_dilations.size();
+
+            RowMatrixXf norm_x( x.rows(), x.cols() );
             normalise( norm_x );
             RowMatrixXf y = m_inputConv.forward( norm_x );
 
             RowMatrixXf skip_sum = Eigen::MatrixXf::Zero( m_numChannels, x.cols() );
             RowMatrixXf skip_y;
             for(size_t k = 0; k < m_stackSize; k++)
-                for(size_t i = 0; i < m_dilations.size(); i++)
+                for(size_t i = 0; i < dilations_size; i++)
                 {
-                    size_t idx = k * m_dilations.size() + i;
-                    std::tie( y, skip_y ) = m_blockStack[idx].forward( y );
+                    std::tie( y, skip_y ) = m_blockStack[k * dilations_size + i].forward( y );
                     skip_sum.array() += skip_y.array();
                 }
-            RowMatrixXf transposed_skip_sum = skip_sum.transpose().cwiseMax(0.f);
-            return m_outputLinear.forward( transposed_skip_sum ).transpose();
+            skip_sum = skip_sum.cwiseMax(0.f); // Apply ReLU
+            skip_sum.transposeInPlace(); // Transpose
+            skip_sum = m_outputLinear.forward( skip_sum ); // Apply Linear layer
+            skip_sum.transposeInPlace(); // Transpose
+            return skip_sum;
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override

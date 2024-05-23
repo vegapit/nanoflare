@@ -31,8 +31,9 @@ namespace MicroTorch
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const noexcept
         {
             RowMatrixXf y( x.rows(), m_outChannels );
+            RowMatrixXf transposed_w = m_w.transpose();
             for(size_t i = 0; i < x.rows(); i++)
-                y.row(i).noalias() = x.row(i) * m_w.transpose();
+                y.row(i).noalias() = x.row(i) * transposed_w;
             if(m_bias)
                 y.rowwise() += m_b;
             return y;
