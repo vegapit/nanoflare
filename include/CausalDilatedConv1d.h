@@ -46,26 +46,28 @@ namespace MicroTorch
 
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const noexcept
         {   
+            size_t in_length = x.cols();
+
             // Build padded input matrix
-            RowMatrixXf padded_x(x.rows(), x.cols() + 2 * m_internalPadding);
-            Eigen::RowVectorXf input_row( x.cols() );
+            RowMatrixXf padded_x(x.rows(), in_length + 2 * m_internalPadding);
+            Eigen::RowVectorXf input_row( in_length );
             for(size_t i = 0; i < x.rows(); i++)
             {
                 input_row = x.row(i);
                 padded_x.row(i) = pad(input_row, m_internalPadding);
             }
-
+ 
             Eigen::RowVectorXf padded_input_row( padded_x.cols() );
             Eigen::RowVectorXf dilated_weight_row( m_dilatedW[0].cols() );
 
-            RowMatrixXf y = RowMatrixXf::Zero(m_outChannels,x.cols());
+            RowMatrixXf y = RowMatrixXf::Zero(m_outChannels, in_length);
             for(size_t i = 0; i < m_outChannels; i++)
             {
                 for(size_t j = 0; j < m_inChannels; j++)
                 {
                     padded_input_row = padded_x.row(j);
                     dilated_weight_row = m_dilatedW[i].row(j);
-                    y.row(i) += convolve1d( padded_input_row, dilated_weight_row ).head( x.cols() );
+                    y.row(i) += convolve1d( padded_input_row, dilated_weight_row, in_length );
                 }
                 if( m_bias )
                     y.row(i).array() += m_b(i);

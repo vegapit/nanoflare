@@ -77,6 +77,15 @@ namespace MicroTorch
         return out;
     }
 
+    inline Eigen::RowVectorXf convolve1d(const Eigen::Ref<Eigen::RowVectorXf>& in, const Eigen::Ref<Eigen::RowVectorXf>& weights, size_t out_size)
+    {   
+        size_t weights_size = weights.size();
+        Eigen::RowVectorXf out(out_size);
+        for(size_t i = 0; i < out_size; i++)
+            out(i) = in.segment(i, weights_size).cwiseProduct(weights).sum();
+        return out;
+    }
+
     // Model configuration
     
     enum Activation
