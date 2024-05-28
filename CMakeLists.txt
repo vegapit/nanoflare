@@ -7,6 +7,7 @@ project( microtorch )
 
 find_package(catch2 3 REQUIRED)
 find_package(nlohmann_json 3.11.3 REQUIRED)
+find_package(benchmark REQUIRED)
 
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/include )
 
@@ -23,4 +24,5 @@ target_link_libraries(
     benchmark
     PUBLIC
     nlohmann_json::nlohmann_json
+    benchmark::benchmark
 )

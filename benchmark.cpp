@@ -1,52 +1,44 @@
 #include "ModelBuilder.h"
 #include <nlohmann/json.hpp>
-#include <iostream>
 #include <fstream>
-#include <chrono>
+#include <benchmark/benchmark.h>
 
 using namespace MicroTorch;
 
-class Timer
+inline void BM_ResRNNForward(benchmark::State& state)
 {
-public:
-    Timer() : m_timePoint(std::chrono::high_resolution_clock::now()) {}
-    ~Timer() { Stop(); }
+    constexpr int num_samples = 512;
+    constexpr int sampling_freq = 44100;
 
-    void Stop()
-    {
-        auto time_point = std::chrono::high_resolution_clock::now();
-        auto start = std::chrono::time_point_cast<std::chrono::microseconds>(m_timePoint).time_since_epoch().count();
-        auto end = std::chrono::time_point_cast<std::chrono::microseconds>(time_point).time_since_epoch().count();
-        std::cout << "Duration: " << (end - start) / 1000.0 << "ms" << std::endl;
-    }
-private:
-    std::chrono::time_point<std::chrono::high_resolution_clock> m_timePoint;
-};
-
-int main()
-{
     std::shared_ptr<BaseModel> obj;
-    RowMatrixXf x = Eigen::MatrixXf::Random(1, 512);
+    RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
 
     std::ifstream fstream("../test_data/resrnn.json");
     nlohmann::json data = nlohmann::json::parse(fstream);    
     ModelBuilder::fromJson(data, obj);
-    
-    {
-        Timer timer;
-        for(size_t i = 0; i < 100; i++)
-            obj->forward(x);
-    }
 
-    std::ifstream fstream2("../test_data/wavenet.json");
-    nlohmann::json data2 = nlohmann::json::parse(fstream2);
-    ModelBuilder::fromJson(data2, obj);
-
-    {
-        Timer timer;
-        for(size_t i = 0; i < 100; i++)
-            obj->forward(x);
-    }
-
-    return 0;
+    for (auto _ : state)
+        obj->forward(x);
 }
+
+inline void BM_WaveNetForward(benchmark::State& state) {
+    constexpr int num_samples = 512;
+    constexpr int sampling_freq = 44100;
+
+    std::shared_ptr<BaseModel> obj;
+    RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
+
+    std::ifstream fstream("../test_data/wavenet.json");
+    nlohmann::json data = nlohmann::json::parse(fstream);    
+    ModelBuilder::fromJson(data, obj);
+
+    for (auto _ : state)
+        obj->forward(x);
+}
+
+// Register the function as a benchmark
+BENCHMARK(BM_ResRNNForward)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_WaveNetForward)->Unit(benchmark::kMillisecond);
+
+// Run the benchmark
+BENCHMARK_MAIN();
