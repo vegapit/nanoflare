@@ -19,7 +19,8 @@ namespace MicroTorch {
         virtual void loadStateDict(std::map<std::string, nlohmann::json> state_dict) = 0;
 
         inline void normalise( Eigen::Ref<RowMatrixXf> x ) noexcept {
-            x.array() = (x.array() - m_normMean) / m_normStd;
+            if( (m_normMean != 0.f) || (m_normStd != 1.f) )
+                x.array() = (x.array() - m_normMean) / m_normStd;
         }
 
         float getNormMean() { return m_normMean; }

@@ -28,12 +28,12 @@ namespace MicroTorch
         {
             size_t dilations_size = m_dilations.size();
 
-            RowMatrixXf norm_x( x.rows(), x.cols() );
+            RowMatrixXf norm_x( x );
             normalise( norm_x );
             RowMatrixXf y = m_inputConv.forward( norm_x );
 
-            RowMatrixXf skip_sum = Eigen::MatrixXf::Zero( m_numChannels, x.cols() );
-            RowMatrixXf skip_y;
+            RowMatrixXf skip_sum = RowMatrixXf::Zero( m_numChannels, x.cols() );
+            RowMatrixXf skip_y( m_numChannels, x.cols() );
             for(size_t k = 0; k < m_stackSize; k++)
                 for(size_t i = 0; i < dilations_size; i++)
                 {
@@ -42,9 +42,7 @@ namespace MicroTorch
                 }
             skip_sum = skip_sum.cwiseMax(0.f); // Apply ReLU
             skip_sum.transposeInPlace(); // Transpose
-            skip_sum = m_outputLinear.forward( skip_sum ); // Apply Linear layer
-            skip_sum.transposeInPlace(); // Transpose
-            return skip_sum;
+            return m_outputLinear.forward( skip_sum ).transpose();
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override
