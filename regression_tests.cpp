@@ -1,13 +1,14 @@
 #include <catch2/catch_test_macros.hpp>
+#include <nlohmann/json.hpp>
+#include <iostream>
+#include <fstream>
+
 #include "LSTM.h"
 #include "GRU.h"
 #include "Conv1d.h"
 #include "CausalDilatedConv1d.h"
 #include "ResidualBlock.h"
 #include "Linear.h"
-#include <nlohmann/json.hpp>
-#include <iostream>
-#include <fstream>
 
 using namespace MicroTorch;
 
