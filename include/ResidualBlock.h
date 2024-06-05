@@ -19,7 +19,6 @@ namespace MicroTorch
         inline std::pair<RowMatrixXf,RowMatrixXf> forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept
         {
             RowMatrixXf y_inner = m_inputConv.forward( x );
-            
             RowMatrixXf y(m_numChannels, x.cols());
             
             if(m_gated)
@@ -57,7 +56,7 @@ namespace MicroTorch
                 }
             }
 
-            y = m_outputConv.forward( y );
+            y.noalias() = m_outputConv.forward( y );
 
             return std::make_pair(y + x, y); // (Res,Skip)
         }

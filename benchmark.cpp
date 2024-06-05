@@ -58,11 +58,14 @@ inline void BM_ResRNNLibtorchForward(benchmark::State& state)
     }
 
     std::tuple<torch::jit::IValue, torch::jit::IValue> hc { torch::zeros({1, 1, 64}) , torch::zeros({1, 1, 64}) };
-    
+
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back(torch::rand({1, 1, num_samples}));
     inputs.push_back(hc);
 
+    torch::NoGradGuard no_grad;
+    module.eval();
+    
     for (auto _ : state)
         module.forward(inputs);
 }

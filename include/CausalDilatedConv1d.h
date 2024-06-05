@@ -29,7 +29,7 @@ namespace MicroTorch
 
             // Calculate dilated weights
             Eigen::RowVectorXf weight_row( m.cols() );
-            for(size_t i = 0; i < m.rows(); i++)
+            for(Eigen::Index i = 0; i < m.rows(); i++)
             {
                 weight_row = m.row(i);
                 m_dilatedW[channel].row(i) = dilate( weight_row, m_dilation );
@@ -51,7 +51,7 @@ namespace MicroTorch
             // Build padded input matrix
             RowMatrixXf padded_x(x.rows(), in_length + 2 * m_internalPadding);
             Eigen::RowVectorXf input_row( in_length );
-            for(size_t i = 0; i < x.rows(); i++)
+            for(Eigen::Index i = 0; i < x.rows(); i++)
             {
                 input_row = x.row(i);
                 padded_x.row(i) = pad(input_row, m_internalPadding);

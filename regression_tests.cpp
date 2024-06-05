@@ -78,18 +78,18 @@ bool linear_pytorch_match()
     Linear obj( inChannels, outChannels, true);
     obj.loadStateDict( state_dict );
 
-    RowMatrixXf x(1, 3);
-    x << 1.f, 0.5f, -1.f;
+    RowMatrixXf x(2, 3);
+    x << 1.f, -1.f, -2.f, -1.f, 0.f, 1.f;
 
     auto pred = obj.forward(x);
 
     std::cout << "Linear Pred" << std::endl;
     std::cout << pred << std::endl;
 
-    RowMatrixXf target(1, 2);
-    target << -0.3685f, -0.3996f;
+    RowMatrixXf target(2, 2);
+    target <<  1.6924642f,  -0.50574875f, -1.1378999f, 0.10293144f;
 
-    return ( (pred - target).lpNorm<1>() < 1e-3 );
+    return ( (pred - target).lpNorm<1>() < 1e-5 );
 }
 
 bool conv1d_pytorch_match()

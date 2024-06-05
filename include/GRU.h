@@ -18,7 +18,7 @@ namespace MicroTorch
         {
             RowMatrixXf y( x.rows(), m_cell.getHiddenSize() );
             Eigen::RowVectorXf row( x.cols() );
-            for(Eigen::Index i = 0; i < x.rows(); i++)
+            for(size_t i = 0; i < x.rows(); i++)
             {
                 row = x.row(i);
                 m_cell.forward( row, m_h );

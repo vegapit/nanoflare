@@ -11,6 +11,7 @@ namespace MicroTorch
     public:
         Linear(size_t in_channels, size_t out_channels, bool bias) : m_inChannels(in_channels), m_outChannels(out_channels), m_bias(bias),
             m_w(RowMatrixXf::Zero(out_channels,in_channels)),
+            m_transW(RowMatrixXf::Zero(in_channels,out_channels)),
             m_b(Eigen::RowVectorXf::Zero(out_channels))
         {}
         ~Linear() = default;
@@ -20,6 +21,7 @@ namespace MicroTorch
             assert(m.rows() == m_outChannels);
             assert(m.cols() == m_inChannels);
             m_w = m;
+            m_transW = m.transpose();
         }
 
         void setBias(const Eigen::Ref<Eigen::RowVectorXf>& v)
@@ -30,11 +32,8 @@ namespace MicroTorch
 
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const noexcept
         {
-            RowMatrixXf y( x.rows(), m_outChannels );
-            RowMatrixXf transposed_w( m_w.transpose() );
-            for(Eigen::Index i = 0; i < x.rows(); i++)
-                y.row(i).noalias() = x.row(i) * transposed_w;
-            if(m_bias)
+            RowMatrixXf y = x * m_transW;
+            if( m_bias )
                 y.rowwise() += m_b;
             return y;
         }
@@ -55,7 +54,7 @@ namespace MicroTorch
         }
 
     private:
-        RowMatrixXf m_w;
+        RowMatrixXf m_w, m_transW;
         Eigen::RowVectorXf m_b;
 
         size_t m_inChannels, m_outChannels;
