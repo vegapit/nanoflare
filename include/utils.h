@@ -17,12 +17,12 @@ namespace MicroTorch
         std::vector<RowMatrixXf> tensor;
 
         // Loop through the vector and assign elements to rows
-        for (size_t i = 0; i < shape[0]; ++i)
+        for (auto i = 0; i < shape[0]; ++i)
         {
             // Create the Eigen matrix
             RowMatrixXf matrix(shape[1], shape[2]);
-            for (size_t j = 0; j < shape[1]; ++j)
-                for (size_t k = 0; k < shape[2]; ++k)
+            for (auto j = 0; j < shape[1]; ++j)
+                for (auto k = 0; k < shape[2]; ++k)
                     matrix(j, k) = values[i * shape[1] * shape[2] + j * shape[2] + k];
             tensor.push_back( matrix );
         }
@@ -35,7 +35,7 @@ namespace MicroTorch
         auto data = state_dict.at(name).get<std::map<std::string, nlohmann::json>>();
         auto shape = data.at("shape").get<std::vector<size_t>>();
         auto values = data.at("values").get<std::vector<float>>();
-        return Eigen::Map<RowMatrixXf>(values.data(), shape[0], shape[1]);
+        return Eigen::Map<RowMatrixXf>( values.data(), shape[0], shape[1] );
     }
 
     inline Eigen::VectorXf loadVector( std::string name, std::map<std::string, nlohmann::json> state_dict )
@@ -48,7 +48,7 @@ namespace MicroTorch
 
     inline Eigen::RowVectorXf pad(const Eigen::Ref<Eigen::RowVectorXf>& in, size_t padding)
     {
-        size_t in_size = in.size();
+        auto in_size = in.size();
         Eigen::RowVectorXf out = Eigen::RowVectorXf::Zero(in_size + 2 * padding);
         out.segment(padding, in_size) = in; 
         return out;
@@ -59,8 +59,8 @@ namespace MicroTorch
         size_t in_size = in.size();
         size_t size = dilation * (in_size - 1) + 1;
         Eigen::RowVectorXf out = Eigen::RowVectorXf::Zero(size);
-        for(size_t i = 0; i < in_size - 1; i++)
-            for(size_t k = 0; k < dilation; k++)
+        for(auto i = 0; i < in_size - 1; i++)
+            for(auto k = 0; k < dilation; k++)
                 if(k == 0)
                     out(dilation * i + k) = in(i);
         out(size - 1) = in(in_size - 1);
@@ -72,7 +72,7 @@ namespace MicroTorch
         size_t weights_size = weights.size();
         size_t out_size = in.size() - weights_size + 1;
         Eigen::RowVectorXf out(out_size);
-        for(size_t i = 0; i < out_size; i++)
+        for(auto i = 0; i < out_size; i++)
             out(i) = in.segment(i, weights_size).cwiseProduct(weights).sum();
         return out;
     }
@@ -81,7 +81,7 @@ namespace MicroTorch
     {   
         size_t weights_size = weights.size();
         Eigen::RowVectorXf out(out_size);
-        for(size_t i = 0; i < out_size; i++)
+        for(auto i = 0; i < out_size; i++)
             out(i) = in.segment(i, weights_size).cwiseProduct(weights).sum();
         return out;
     }

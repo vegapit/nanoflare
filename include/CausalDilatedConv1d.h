@@ -13,7 +13,7 @@ namespace MicroTorch
         CausalDilatedConv1d(size_t in_channels, size_t out_channels, size_t kernel_size, bool bias, size_t dilation) : m_inChannels(in_channels), m_outChannels(out_channels), 
             m_kernelSize(kernel_size), m_bias(bias), m_dilation(dilation), m_internalPadding(dilation * (kernel_size - 1)), m_b(Eigen::RowVectorXf::Zero(out_channels))
         {
-            for(size_t i = 0; i < out_channels; i++)
+            for(auto i = 0; i < out_channels; i++)
             {
                 m_w.push_back( RowMatrixXf::Zero(in_channels, kernel_size) );
                 m_dilatedW.push_back( RowMatrixXf::Zero(in_channels, dilation * (kernel_size - 1) + 1) );
@@ -29,7 +29,7 @@ namespace MicroTorch
 
             // Calculate dilated weights
             Eigen::RowVectorXf weight_row( m.cols() );
-            for(Eigen::Index i = 0; i < m.rows(); i++)
+            for(auto i = 0; i < m.rows(); i++)
             {
                 weight_row = m.row(i);
                 m_dilatedW[channel].row(i) = dilate( weight_row, m_dilation );
@@ -51,7 +51,7 @@ namespace MicroTorch
             // Build padded input matrix
             RowMatrixXf padded_x(x.rows(), in_length + 2 * m_internalPadding);
             Eigen::RowVectorXf input_row( in_length );
-            for(Eigen::Index i = 0; i < x.rows(); i++)
+            for(auto i = 0; i < x.rows(); i++)
             {
                 input_row = x.row(i);
                 padded_x.row(i) = pad(input_row, m_internalPadding);
@@ -61,9 +61,9 @@ namespace MicroTorch
             Eigen::RowVectorXf dilated_weight_row( m_dilatedW[0].cols() );
 
             RowMatrixXf y = RowMatrixXf::Zero(m_outChannels, in_length);
-            for(size_t i = 0; i < m_outChannels; i++)
+            for(auto i = 0; i < m_outChannels; i++)
             {
-                for(size_t j = 0; j < m_inChannels; j++)
+                for(auto j = 0; j < m_inChannels; j++)
                 {
                     padded_input_row = padded_x.row(j);
                     dilated_weight_row = m_dilatedW[i].row(j);
@@ -85,7 +85,7 @@ namespace MicroTorch
         {
             auto w = loadTensor( std::string("weight"), state_dict );
             auto b = loadVector( std::string("bias"), state_dict );
-            for(size_t i = 0; i < m_outChannels; i++)
+            for(auto i = 0; i < m_outChannels; i++)
                 setWeight( i, w[i] );
             setBias( b );
         }

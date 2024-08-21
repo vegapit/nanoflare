@@ -48,6 +48,32 @@ class ResidualBlock(nn.Module):
         y = self.outputConv( y )
         return y + x, y
 
+class TCNBlock(nn.Module):
+    def __init__(self, in_channels: int, out_channels: int, kernel_size: int, dilation: int = 1):
+        super().__init__()
+        self.conv1 = nn.Conv1d(
+            in_channels,
+            out_channels,
+            kernel_size,
+            dilation=dilation,
+            stride=2,
+        )
+        self.relu1 = nn.PReLU(out_channels)
+        self.bn1 = nn.BatchNorm1d(out_channels)
+        self.conv2 = nn.Conv1d(
+            out_channels,
+            out_channels,
+            kernel_size,
+            dilation=1
+        )
+        self.relu2 = nn.PReLU(out_channels)
+        self.bn2 = nn.BatchNorm1d(out_channels)
+
+    def forward(self, x: torch.Tensor):
+        x = self.bn1(self.relu1(self.conv1(x)))
+        x = self.bn2(self.relu2(self.conv2(x)))
+        return x
+    
 def error_to_signal(y, y_pred):
     """
     Error to signal ratio with pre-emphasis filter:

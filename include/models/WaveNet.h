@@ -24,7 +24,7 @@ namespace MicroTorch
         }
         ~WaveNet() = default;
         
-        inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept override
+        inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept override final
         {
             size_t dilations_size = m_dilations.size();
 
@@ -45,7 +45,7 @@ namespace MicroTorch
             return m_outputLinear.forward( skip_sum ).transpose();
         }
 
-        void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override
+        void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override final
         {
             auto conv_state_dict = state_dict[std::string("conv")].get<std::map<std::string, nlohmann::json>>();
             m_inputConv.loadStateDict( conv_state_dict );

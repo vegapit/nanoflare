@@ -13,7 +13,7 @@ namespace MicroTorch
             m_inChannels(in_channels), m_outChannels(out_channels), m_w(std::vector<RowMatrixXf>(out_channels)),
             m_kernelSize(kernel_size), m_bias(bias), m_b(Eigen::RowVectorXf::Zero(out_channels))
         {
-            for(size_t i = 0; i < out_channels; i++)
+            for(auto i = 0; i < out_channels; i++)
                 m_w[i] = RowMatrixXf::Zero(in_channels, kernel_size);
         }
         ~Conv1d() = default;
@@ -40,9 +40,9 @@ namespace MicroTorch
             Eigen::RowVectorXf input_row(x.cols());
             Eigen::RowVectorXf weight_row(m_w[0].cols());
 
-            for(size_t i = 0; i < m_outChannels; i++)
+            for(auto i = 0; i < m_outChannels; i++)
             {
-                for(size_t j = 0; j < m_inChannels; j++)
+                for(auto j = 0; j < m_inChannels; j++)
                 {
                     input_row = x.row(j);
                     weight_row = m_w[i].row(j);

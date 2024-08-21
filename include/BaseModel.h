@@ -6,7 +6,8 @@
 #include <fstream>
 #include "utils.h"
 
-namespace MicroTorch {
+namespace MicroTorch
+{
 
     class BaseModel
     {
@@ -24,8 +25,8 @@ namespace MicroTorch {
             x.array() /= m_normStd; // scale
         }
 
-        float getNormMean() { return m_normMean; }
-        float getNormStd() { return m_normStd; }
+        float getNormMean() const { return m_normMean; }
+        float getNormStd() const { return m_normStd; }
 
         void setNormMean( float value ) { m_normMean = value; }
         void setNormStd( float value ) { assert( value > 0.f ); m_normStd = value; }
