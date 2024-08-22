@@ -30,13 +30,16 @@ namespace MicroTorch
 
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const noexcept
         {
-            auto mean_x = x.colwise().mean();
-            auto mean_x2 = x.array().square().colwise().mean();
+            auto mean_x = x.rowwise().mean();
+            auto mean_x2 = x.array().square().rowwise().mean();
             auto var = mean_x2.array() - mean_x.array().square() + 1e-5;
 
             RowMatrixXf y(x);
-            y.array().rowwise() -= mean_x.array();
-            y.array().rowwise() /= var.array().sqrt();
+            y.array().colwise() -= mean_x.array();
+            y.array().colwise() /= var.array().sqrt();
+
+            y.array().colwise() *= m_w.transpose().eval().array();
+            y.array().colwise() += m_b.transpose().eval().array();
 
             return y;
         }

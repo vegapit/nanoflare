@@ -5,6 +5,8 @@
 #include "BatchNorm1d.h"
 #include "utils.h"
 
+#include <iostream>
+
 namespace MicroTorch
 {
 
@@ -13,11 +15,11 @@ namespace MicroTorch
     public:
         TCNBlock(size_t in_channels, size_t out_channels, size_t kernel_size, size_t dilation) 
             : m_inChannels(in_channels), m_outChannels(out_channels),
-            m_conv1(in_channels, out_channels, kernel_size, true, dilation ),
-            m_conv2(out_channels, out_channels, kernel_size, true, 1 ),
+            m_conv1( in_channels, out_channels, kernel_size, true, dilation ),
+            m_conv2( out_channels, out_channels, kernel_size, true, 1 ),
             m_bn1( out_channels ),
             m_bn2( out_channels ),
-            m_conv( in_channels, out_channels, 1, true)
+            m_conv( in_channels, out_channels, 1, true )
         {}
         ~TCNBlock() = default;
 
