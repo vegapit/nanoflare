@@ -14,12 +14,21 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/include )
 
-add_executable(regression_tests regression_tests.cpp)
+add_executable(layers_accuracy layers_accuracy.cpp)
 target_link_libraries(
-    regression_tests
+    layers_accuracy
     PUBLIC
     Catch2::Catch2WithMain
     nlohmann_json::nlohmann_json
+)
+
+add_executable(models_accuracy models_accuracy.cpp)
+target_link_libraries(
+    models_accuracy
+    PUBLIC
+    nlohmann_json::nlohmann_json
+    Catch2::Catch2WithMain
+    "${TORCH_LIBRARIES}"
 )
 
 add_executable(benchmark benchmark.cpp)
@@ -36,4 +45,5 @@ include(Catch)
 
 enable_testing()
 
-catch_discover_tests(regression_tests)
+catch_discover_tests(layers_accuracy)
+catch_discover_tests(models_accuracy)

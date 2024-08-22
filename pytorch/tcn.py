@@ -70,6 +70,14 @@ class TCN(AudioModel):
                     'bias': {
                         'shape': list(state_dict[f'blockStack.{i}.bn1.bias'].shape),
                         'values': state_dict[f'blockStack.{i}.bn1.bias'].flatten().cpu().numpy().tolist()
+                    },
+                    'running_mean': {
+                        'shape': list(state_dict[f'blockStack.{i}.bn1.running_mean'].shape),
+                        'values': state_dict[f'blockStack.{i}.bn1.running_mean'].flatten().cpu().numpy().tolist()
+                    },
+                    'running_var': {
+                        'shape': list(state_dict[f'blockStack.{i}.bn1.running_var'].shape),
+                        'values': state_dict[f'blockStack.{i}.bn1.running_var'].flatten().cpu().numpy().tolist()
                     }
                 },
                 'conv2': {
@@ -90,6 +98,14 @@ class TCN(AudioModel):
                     'bias': {
                         'shape': list(state_dict[f'blockStack.{i}.bn2.bias'].shape),
                         'values': state_dict[f'blockStack.{i}.bn2.bias'].flatten().cpu().numpy().tolist()
+                    },
+                    'running_mean': {
+                        'shape': list(state_dict[f'blockStack.{i}.bn2.running_mean'].shape),
+                        'values': state_dict[f'blockStack.{i}.bn2.running_mean'].flatten().cpu().numpy().tolist()
+                    },
+                    'running_var': {
+                        'shape': list(state_dict[f'blockStack.{i}.bn2.running_var'].shape),
+                        'values': state_dict[f'blockStack.{i}.bn2.running_var'].flatten().cpu().numpy().tolist()
                     }
                 },
             }
