@@ -31,7 +31,10 @@ namespace MicroTorch
             y.noalias() = m_conv2.forward( y );
             y.noalias() = elu( y );
             y.noalias() = m_bn2.forward( y );
-            return m_conv.forward( x ) + y;
+            if(m_inChannels == m_outChannels)
+                return x + y;
+            else 
+                return m_conv.forward( x ) + y;
         }
         
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)

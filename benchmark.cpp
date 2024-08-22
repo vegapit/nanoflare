@@ -151,6 +151,32 @@ inline void BM_WaveNetForward(benchmark::State& state)
         obj->forward(x);
 }
 
+inline void BM_WaveNetLibtorchForward(benchmark::State& state)
+{
+    constexpr int num_samples = 512;
+
+    torch::jit::script::Module module;
+    try
+    {
+        // Deserialize the ScriptModule from a file using torch::jit::load()
+        module = torch::jit::load("../test_data/wavenet.torchscript");
+    }
+    catch (const c10::Error& e)
+    {
+        std::cerr << e.what() << std::endl;
+        return;
+    }
+
+    std::vector<torch::jit::IValue> inputs;
+    inputs.push_back(torch::rand({1, 1, num_samples}));
+
+    torch::NoGradGuard no_grad;
+    module.eval();
+    
+    for (auto _ : state)
+        module.forward(inputs);
+}
+
 // Register the function as a benchmark
 
 BENCHMARK(BM_ResGRUForward)->Unit(benchmark::kMillisecond);
@@ -160,6 +186,7 @@ BENCHMARK(BM_ResLSTMLibtorchForward)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_TCNForward)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_TCNLibtorchForward)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_WaveNetForward)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_WaveNetLibtorchForward)->Unit(benchmark::kMillisecond);
 
 // Run the benchmark
 BENCHMARK_MAIN();

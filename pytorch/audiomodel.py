@@ -27,7 +27,7 @@ class ResidualBlock(nn.Module):
         self.gated = gated
         self.inputConv = CausalDilatedConv1d(num_channels, 2 * num_channels if gated else num_channels, kernel_size, dilation=dilation)
         self.outputConv = nn.Conv1d(num_channels, num_channels, 1)
-        self.f = nn.SoftSign()
+        self.f = nn.Tanh()
         self.g = nn.Sigmoid() # Gate activation function
         
     def forward(self, x):
@@ -43,6 +43,8 @@ class ResidualBlock(nn.Module):
 class TCNBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, dilation):
         super().__init__()
+        self.in_channels = in_channels
+        self.out_channels = out_channels
         self.conv = nn.Conv1d(in_channels, out_channels, 1)
         self.conv1 = CausalDilatedConv1d( in_channels, out_channels, kernel_size, dilation=dilation )
         self.bn1 = nn.BatchNorm1d(out_channels)
@@ -53,7 +55,10 @@ class TCNBlock(nn.Module):
     def forward(self, x: torch.Tensor):
         y = self.bn1(self.f(self.conv1(x)))
         y = self.bn2(self.f(self.conv2(y)))
-        return self.conv(x) + y
+        if(self.in_channels == self.out_channels):
+            return x + y
+        else:
+            return self.conv(x) + y
     
 def error_to_signal(y, y_pred):
     """

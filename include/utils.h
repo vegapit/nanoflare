@@ -88,9 +88,6 @@ namespace MicroTorch
 
     inline RowMatrixXf elu(const Eigen::Ref<RowMatrixXf>& m)
     {   
-        //auto zeros = RowMatrixXf::Zero(m.rows(), m.cols());
-        //auto pos = m.array().max(zeros.array());
-        //auto neg = m.array().min(zeros.array()).exp() - 1.f;
         auto pos = m.array().max(0.f);
         auto neg = m.array().min(0.f).exp() - 1.f;
         return pos + neg;
