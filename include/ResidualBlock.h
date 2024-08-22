@@ -10,8 +10,8 @@ namespace MicroTorch
     class ResidualBlock
     {
     public:
-        ResidualBlock(size_t num_channels, size_t kernel_size, size_t dilation, bool input_bias, bool output_bias, bool gated, Activation activation) 
-            : m_numChannels(num_channels), m_kernelSize(kernel_size), m_gated(gated), m_activation(activation),
+        ResidualBlock(size_t num_channels, size_t kernel_size, size_t dilation, bool input_bias, bool output_bias, bool gated) 
+            : m_numChannels(num_channels), m_kernelSize(kernel_size), m_gated(gated),
             m_inputConv(num_channels, gated ? 2 * num_channels : num_channels, kernel_size, input_bias, dilation), 
             m_outputConv(num_channels, num_channels, 1, output_bias) {}
         ~ResidualBlock() = default;
@@ -25,36 +25,11 @@ namespace MicroTorch
             {
                 RowMatrixXf y_filter = y_inner(Eigen::seqN(0, m_numChannels), Eigen::all);
                 RowMatrixXf y_gate = y_inner(Eigen::seqN(m_numChannels, m_numChannels), Eigen::all);
-
-                switch (m_activation)
-                {
-                case SIGMOID:
-                    y.array() = y_filter.array().logistic();
-                    break;
-                case TANH:
-                    y.array() = y_filter.array().tanh();
-                    break;
-                case SOFTSIGN:
-                    y.array() = y_filter.array() / ( 1.f + y_filter.array().abs() );
-                    break;
-                }
+                y.array() = y_filter.array() / ( 1.f + y_filter.array().abs() ); // SoftSign
                 y.array() *= y_gate.array().logistic();
             }
             else
-            {
-                switch (m_activation)
-                {
-                case SIGMOID:
-                    y.array() = y_inner.array().logistic();
-                    break;
-                case TANH:
-                    y.array() = y_inner.array().tanh();
-                    break;
-                case SOFTSIGN:
-                    y.array() = y_inner.array() / ( 1.f + y_inner.array().abs() );
-                    break;
-                }
-            }
+                y.array() = y_inner.array() / ( 1.f + y_inner.array().abs() ); // SoftSign
 
             y.noalias() = m_outputConv.forward( y );
 
@@ -74,6 +49,5 @@ namespace MicroTorch
         Conv1d m_outputConv;
         bool m_gated;
         size_t m_numChannels, m_kernelSize;
-        Activation m_activation;
     };
 }

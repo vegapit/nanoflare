@@ -21,58 +21,39 @@ class CausalDilatedConv1d(nn.Module):
         return y[ ..., :-self.padding] # discard right padding to preserve signal length and ensure causality
     
 class ResidualBlock(nn.Module):
-    def __init__(self, num_channels, kernel_size, dilation, gated, activation):
-        assert( activation in ["Sigmoid","Tanh","SoftSign"] )
+    def __init__(self, num_channels, kernel_size, dilation, gated):
         super().__init__()
         self.num_channels = num_channels
         self.gated = gated
-        self.activation = activation
         self.inputConv = CausalDilatedConv1d(num_channels, 2 * num_channels if gated else num_channels, kernel_size, dilation=dilation)
         self.outputConv = nn.Conv1d(num_channels, num_channels, 1)
-        match activation: # Filter activation function
-            case "Sigmoid":
-                self.f = nn.Sigmoid()
-            case "Tanh":
-                self.f = nn.Tanh()
-            case "SoftSign":
-                self.f = nn.Softsign()
+        self.f = nn.SoftSign()
         self.g = nn.Sigmoid() # Gate activation function
         
     def forward(self, x):
         #print(f"ResBlock: {x.shape}")
         if self.gated:
             ys = torch.split( self.inputConv(x), self.num_channels, dim=1) # Separate Filter and Gate
-            y = self.f(ys[0]) * self.g(ys[1])
+            y = self.f( ys[0] ) * self.g( ys[1] )
         else:
             y = self.f( self.inputConv(x) )
         y = self.outputConv( y )
         return y + x, y
 
 class TCNBlock(nn.Module):
-    def __init__(self, in_channels: int, out_channels: int, kernel_size: int, dilation: int = 1):
+    def __init__(self, in_channels, out_channels, kernel_size, dilation):
         super().__init__()
-        self.conv1 = nn.Conv1d(
-            in_channels,
-            out_channels,
-            kernel_size,
-            dilation=dilation,
-            stride=2,
-        )
-        self.relu1 = nn.PReLU(out_channels)
+        self.conv = nn.Conv1d(in_channels, out_channels, 1)
+        self.conv1 = CausalDilatedConv1d( in_channels, out_channels, kernel_size, dilation=dilation )
         self.bn1 = nn.BatchNorm1d(out_channels)
-        self.conv2 = nn.Conv1d(
-            out_channels,
-            out_channels,
-            kernel_size,
-            dilation=1
-        )
-        self.relu2 = nn.PReLU(out_channels)
+        self.conv2 = CausalDilatedConv1d( out_channels, out_channels, kernel_size, dilation=1 )
         self.bn2 = nn.BatchNorm1d(out_channels)
+        self.f = nn.ELU()
 
     def forward(self, x: torch.Tensor):
-        x = self.bn1(self.relu1(self.conv1(x)))
-        x = self.bn2(self.relu2(self.conv2(x)))
-        return x
+        y = self.bn1(self.f(self.conv1(x)))
+        y = self.bn2(self.f(self.conv2(y)))
+        return self.conv(x) + y
     
 def error_to_signal(y, y_pred):
     """

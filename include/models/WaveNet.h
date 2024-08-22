@@ -13,14 +13,14 @@ namespace MicroTorch
     class WaveNet : public BaseModel
     {
     public:
-        WaveNet(size_t input_size, size_t num_channels, size_t output_size, size_t kernel_size, std::vector<size_t> dilations, size_t stack_size, bool gated, Activation activation, float norm_mean, float norm_std) : 
-            BaseModel(norm_mean, norm_std), m_numChannels(num_channels), m_dilations(dilations), m_stackSize(stack_size), m_gated(gated), m_activation(activation),
+        WaveNet(size_t input_size, size_t num_channels, size_t output_size, size_t kernel_size, std::vector<size_t> dilations, size_t stack_size, bool gated, float norm_mean, float norm_std) : 
+            BaseModel(norm_mean, norm_std), m_numChannels(num_channels), m_dilations(dilations), m_stackSize(stack_size), m_gated(gated),
             m_inputConv(input_size, num_channels, kernel_size, true, 1),
             m_outputLinear(num_channels, output_size, false)
         {
             for(size_t k = 0; k < stack_size; k++)
                 for(auto dilation: dilations)
-                    m_blockStack.push_back( ResidualBlock(num_channels, kernel_size, dilation, true, true, gated, activation) );
+                    m_blockStack.push_back( ResidualBlock(num_channels, kernel_size, dilation, true, true, gated) );
         }
         ~WaveNet() = default;
         
@@ -63,7 +63,6 @@ namespace MicroTorch
     private:
         size_t m_numChannels, m_stackSize;
         bool m_gated;
-        Activation m_activation;
         std::vector<size_t> m_dilations;
         CausalDilatedConv1d m_inputConv;
         std::vector<ResidualBlock> m_blockStack;

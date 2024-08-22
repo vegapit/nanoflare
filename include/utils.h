@@ -86,31 +86,30 @@ namespace MicroTorch
         return out;
     }
 
-    // Model configuration
-    
-    enum Activation
-    {
-        SIGMOID,
-        TANH,
-        SOFTSIGN
-    };
+    inline RowMatrixXf elu(const Eigen::Ref<RowMatrixXf>& m)
+    {   
+        //auto zeros = RowMatrixXf::Zero(m.rows(), m.cols());
+        //auto pos = m.array().max(zeros.array());
+        //auto neg = m.array().min(zeros.array()).exp() - 1.f;
+        auto pos = m.array().max(0.f);
+        auto neg = m.array().min(0.f).exp() - 1.f;
+        return pos + neg;
+    }
 
-    NLOHMANN_JSON_SERIALIZE_ENUM( Activation, {
-        {SIGMOID, "Sigmoid"},
-        {TANH, "Tanh"},
-        {SOFTSIGN, "SoftSign"}
-    })
+    // Model configuration
 
     enum ModelType {
         RES_LSTM,
         RES_GRU,
-        WAVENET
+        WAVENET,
+        TCNET
     };
 
     NLOHMANN_JSON_SERIALIZE_ENUM( ModelType, {
         {RES_LSTM, "ResLSTM"},
         {RES_GRU, "ResGRU"},
-        {WAVENET, "WaveNet"}
+        {WAVENET, "WaveNet"},
+        {TCNET, "TCN"}
     })
 
     struct RNNParameters
@@ -132,7 +131,6 @@ namespace MicroTorch
         size_t input_size, num_channels, output_size, kernel_size, stack_size;
         bool gated;
         std::vector<size_t> dilations;
-        Activation activation;
     };
 
     inline void from_json(const nlohmann::json& j, WaveNetParameters& obj) {
@@ -143,7 +141,18 @@ namespace MicroTorch
         j.at("dilations").get_to(obj.dilations);
         j.at("stack_size").get_to(obj.stack_size);
         j.at("gated").get_to(obj.gated);
-        obj.activation = j.at("activation").template get<Activation>();
+    }
+
+    struct TCNParameters
+    {
+        size_t input_size, output_size, kernel_size, stack_size;
+    };
+
+    inline void from_json(const nlohmann::json& j, TCNParameters& obj) {
+        j.at("input_size").get_to(obj.input_size);
+        j.at("output_size").get_to(obj.output_size);
+        j.at("kernel_size").get_to(obj.kernel_size);
+        j.at("stack_size").get_to(obj.stack_size);
     }
 
     struct ModelConfig

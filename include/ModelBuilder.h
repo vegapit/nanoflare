@@ -4,6 +4,7 @@
 #include "BaseModel.h"
 #include "models/ResRNN.h"
 #include "models/WaveNet.h"
+#include "models/TCN.h"
 #include "LSTM.h"
 #include "GRU.h"
 #include "utils.h"
@@ -34,7 +35,12 @@ namespace MicroTorch
                 }
                 case WAVENET: {
                     auto parameters = data.at("parameters").template get<WaveNetParameters>();
-                    model = std::make_shared<WaveNet>(parameters.input_size, parameters.num_channels, parameters.output_size, parameters.kernel_size, parameters.dilations, parameters.stack_size, parameters.gated, parameters.activation, config.norm_mean, config.norm_std);
+                    model = std::make_shared<WaveNet>(parameters.input_size, parameters.num_channels, parameters.output_size, parameters.kernel_size, parameters.dilations, parameters.stack_size, parameters.gated, config.norm_mean, config.norm_std);
+                    break;
+                }
+                case TCNET: {
+                    auto parameters = data.at("parameters").template get<TCNParameters>();
+                    model = std::make_shared<TCN>(parameters.input_size, parameters.output_size, parameters.kernel_size, parameters.stack_size, config.norm_mean, config.norm_std);
                     break;
                 }
                 default:
