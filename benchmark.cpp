@@ -181,8 +181,8 @@ inline void BM_WaveNetLibtorchForward(benchmark::State& state)
 
 BENCHMARK(BM_ResGRUForward)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_ResGRULibtorchForward)->Unit(benchmark::kMillisecond);
-//BENCHMARK(BM_ResLSTMForward)->Unit(benchmark::kMillisecond);
-//BENCHMARK(BM_ResLSTMLibtorchForward)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_ResLSTMForward)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_ResLSTMLibtorchForward)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_TCNForward)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_TCNLibtorchForward)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_WaveNetForward)->Unit(benchmark::kMillisecond);

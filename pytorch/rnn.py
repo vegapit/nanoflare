@@ -96,11 +96,11 @@ class ResGRU(AudioModel):
         state_dict = self.state_dict()
         doc['state_dict'] = {
             'rnn': {
-                'weight_hh': {
+                'weight_hh_l0': {
                     'shape': list(state_dict['rnn.weight_hh_l0'].shape),
                     'values': state_dict['rnn.weight_hh_l0'].flatten().cpu().numpy().tolist()
                 },
-                'weight_ih': {
+                'weight_ih_l0': {
                     'shape': list(state_dict['rnn.weight_ih_l0'].shape),
                     'values': state_dict['rnn.weight_ih_l0'].flatten().cpu().numpy().tolist()
                 }

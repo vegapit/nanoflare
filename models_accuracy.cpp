@@ -45,6 +45,35 @@ bool resgru_match()
     return ( (pred - target).norm() < 1e-4 );
 }
 
+bool reslstm_match()
+{
+    constexpr int num_samples = 44100;
+
+    std::shared_ptr<BaseModel> obj;
+    std::ifstream model_file("../test_data/reslstm.json");
+    ModelBuilder::fromJson( nlohmann::json::parse(model_file), obj );
+
+    auto torch_data = torch::randn({1, num_samples});
+    auto eigen_data = torch_to_eigen( torch_data );
+    auto pred = obj->forward( eigen_data );
+
+    torch::jit::script::Module module = torch::jit::load("../test_data/reslstm.torchscript");
+    
+    std::tuple<torch::jit::IValue, torch::jit::IValue> hc { torch::zeros({1, 1, 64}) , torch::zeros({1, 1, 64}) };
+
+    std::vector<torch::jit::IValue> inputs;
+    inputs.push_back( torch_data.unsqueeze(0) );
+    inputs.push_back( hc );
+
+    torch::NoGradGuard no_grad;
+    module.eval();
+
+    auto torch_res = module.forward( inputs ).toTensor();
+    auto target = torch_to_eigen( torch_res.squeeze(0) );
+
+    return ( (pred - target).norm() < 1e-4 );
+}
+
 bool tcn_match()
 {
     constexpr int num_samples = 44100;
@@ -69,7 +98,7 @@ bool tcn_match()
     auto target = torch_to_eigen( torch_res.squeeze(0) );
 
     std::cout << pred.norm() << "|" << target.norm() << std::endl;
-    
+
     return ( (pred - target).norm() < 1e-4 );
 }
 
@@ -102,6 +131,11 @@ bool wavenet_match()
 TEST_CASE("ResGRU Test", "[resgru_match]")
 {
     REQUIRE( resgru_match() );
+}
+
+TEST_CASE("ResLSTM Test", "[reslstm_match]")
+{
+    REQUIRE( reslstm_match() );
 }
 
 TEST_CASE("TCN Test", "[tcn_match]")
