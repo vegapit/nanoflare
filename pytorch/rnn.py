@@ -33,11 +33,11 @@ class ResLSTM(AudioModel):
         state_dict = self.state_dict()
         doc['state_dict'] = {
             'rnn': {
-                'weight_hh': {
+                'weight_hh_l0': {
                     'shape': list(state_dict['rnn.weight_hh_l0'].shape),
                     'values': state_dict['rnn.weight_hh_l0'].flatten().cpu().numpy().tolist()
                 },
-                'weight_ih': {
+                'weight_ih_l0': {
                     'shape': list(state_dict['rnn.weight_ih_l0'].shape),
                     'values': state_dict['rnn.weight_ih_l0'].flatten().cpu().numpy().tolist()
                 }
@@ -50,11 +50,11 @@ class ResLSTM(AudioModel):
             }
         }
         if self.rnn_bias:
-            doc['state_dict']['rnn']['bias_hh'] = {
+            doc['state_dict']['rnn']['bias_hh_l0'] = {
                 'shape': list(state_dict['rnn.bias_hh_l0'].shape),
                 'values': state_dict['rnn.bias_hh_l0'].flatten().cpu().numpy().tolist()
             }
-            doc['state_dict']['rnn']['bias_ih'] = {
+            doc['state_dict']['rnn']['bias_ih_l0'] = {
                 'shape': list(state_dict['rnn.bias_ih_l0'].shape),
                 'values': state_dict['rnn.bias_ih_l0'].flatten().cpu().numpy().tolist()
             }
@@ -113,11 +113,11 @@ class ResGRU(AudioModel):
             }
         }
         if self.rnn_bias:
-            doc['state_dict']['rnn']['bias_hh'] = {
+            doc['state_dict']['rnn']['bias_hh_l0'] = {
                 'shape': list(state_dict['rnn.bias_hh_l0'].shape),
                 'values': state_dict['rnn.bias_hh_l0'].flatten().cpu().numpy().tolist()
             }
-            doc['state_dict']['rnn']['bias_ih'] = {
+            doc['state_dict']['rnn']['bias_ih_l0'] = {
                 'shape': list(state_dict['rnn.bias_ih_l0'].shape),
                 'values': state_dict['rnn.bias_ih_l0'].flatten().cpu().numpy().tolist()
             }

@@ -33,7 +33,7 @@ class ResidualBlock(nn.Module):
     def forward(self, x):
         #print(f"ResBlock: {x.shape}")
         if self.gated:
-            ys = torch.split( self.inputConv(x), self.num_channels, dim=1) # Separate Filter and Gate
+            ys = torch.split( self.inputConv(x), self.num_channels, dim=0) # Separate Filter and Gate
             y = self.f( ys[0] ) * self.g( ys[1] )
         else:
             y = self.f( self.inputConv(x) )

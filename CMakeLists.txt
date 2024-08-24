@@ -20,6 +20,7 @@ target_link_libraries(
     PUBLIC
     Catch2::Catch2WithMain
     nlohmann_json::nlohmann_json
+    "${TORCH_LIBRARIES}"
 )
 
 add_executable(models_accuracy models_accuracy.cpp)

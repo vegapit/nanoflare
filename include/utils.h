@@ -60,9 +60,7 @@ namespace MicroTorch
         size_t size = dilation * (in_size - 1) + 1;
         Eigen::RowVectorXf out = Eigen::RowVectorXf::Zero(size);
         for(auto i = 0; i < in_size - 1; i++)
-            for(auto k = 0; k < dilation; k++)
-                if(k == 0)
-                    out(dilation * i + k) = in(i);
+            out(dilation * i) = in(i);
         out(size - 1) = in(in_size - 1);
         return out;
     }

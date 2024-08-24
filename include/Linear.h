@@ -40,7 +40,7 @@ namespace MicroTorch
 
         size_t getInChannels() const { return m_inChannels; }
         size_t getOutChannels() const { return m_outChannels; }
-        size_t getBias() const { return m_bias; }
+        bool useBias() const { return m_bias; }
         
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)
         {

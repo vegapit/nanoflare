@@ -9,88 +9,94 @@
 
 using namespace MicroTorch;
 
+inline RowMatrixXf torch_to_eigen(const torch::Tensor& t) {
+    auto acc = t.accessor<float, 2>();
+    RowMatrixXf res( acc.size(0), acc.size(1) );
+    for(auto i = 0; i < acc.size(0); i++)
+        for(auto j = 0; j < acc.size(1); j++)
+            res(i,j) = acc[i][j];
+    return res;
+}
+
 bool resgru_match()
 {
     constexpr int num_samples = 44100;
-
-    auto torch_data = torch::randn({1, 1, num_samples});
-    Eigen::Map<RowMatrixXf> eigen_data( torch_data.data_ptr<float>(), 1, num_samples );
 
     std::shared_ptr<BaseModel> obj;
     std::ifstream model_file("../test_data/resgru.json");
     ModelBuilder::fromJson( nlohmann::json::parse(model_file), obj );
 
+    auto torch_data = torch::randn({1, num_samples});
+    auto eigen_data = torch_to_eigen( torch_data );
+    auto pred = obj->forward( eigen_data );
+
     torch::jit::script::Module module = torch::jit::load("../test_data/resgru.torchscript");
     
     std::vector<torch::jit::IValue> inputs;
-    inputs.push_back(torch_data);
-    inputs.push_back(torch::zeros({1, 1, 64}));
+    inputs.push_back( torch_data.unsqueeze(0) );
+    inputs.push_back( torch::zeros({1, 1, 64}) );
 
     torch::NoGradGuard no_grad;
     module.eval();
 
     auto torch_res = module.forward( inputs ).toTensor();
-    Eigen::Map<RowMatrixXf> target( torch_res.data_ptr<float>(), 1, num_samples );
+    auto target = torch_to_eigen( torch_res.squeeze(0) );
 
-    auto pred = obj->forward( eigen_data );
-
-    return ( (pred - target).norm() < 1e-3 );
+    return ( (pred - target).norm() < 1e-4 );
 }
 
 bool tcn_match()
 {
     constexpr int num_samples = 44100;
 
-    auto torch_data = torch::randn({1, 1, num_samples});
-    Eigen::Map<RowMatrixXf> eigen_data( torch_data.data_ptr<float>(), 1, num_samples );
-
     std::shared_ptr<BaseModel> obj;
     std::ifstream model_file("../test_data/tcn.json");
     ModelBuilder::fromJson( nlohmann::json::parse(model_file), obj );
 
+    auto torch_data = torch::randn({1, num_samples});
+    auto eigen_data = torch_to_eigen( torch_data );
+    auto pred = obj->forward( eigen_data );
+
     torch::jit::script::Module module = torch::jit::load("../test_data/tcn.torchscript");
     
     std::vector<torch::jit::IValue> inputs;
-    inputs.push_back(torch_data);
+    inputs.push_back( torch_data.unsqueeze(0) );
 
     torch::NoGradGuard no_grad;
     module.eval();
 
     auto torch_res = module.forward( inputs ).toTensor();
-    Eigen::Map<RowMatrixXf> target( torch_res.data_ptr<float>(), 1, num_samples );
+    auto target = torch_to_eigen( torch_res.squeeze(0) );
 
-    auto pred = obj->forward( eigen_data );
-
-    std::cout << (pred - target).norm() << std::endl;
-
-    return ( (pred - target).norm() < 1e-3 );
+    std::cout << pred.norm() << "|" << target.norm() << std::endl;
+    
+    return ( (pred - target).norm() < 1e-4 );
 }
 
 bool wavenet_match()
 {
     constexpr int num_samples = 44100;
 
-    auto torch_data = torch::randn({1, 1, num_samples});
-    Eigen::Map<RowMatrixXf> eigen_data( torch_data.data_ptr<float>(), 1, num_samples );
-
     std::shared_ptr<BaseModel> obj;
     std::ifstream model_file("../test_data/wavenet.json");
     ModelBuilder::fromJson( nlohmann::json::parse(model_file), obj );
 
+    auto torch_data = torch::randn({1, num_samples});
+    auto eigen_data = torch_to_eigen( torch_data );
+    auto pred = obj->forward( eigen_data );
+
     torch::jit::script::Module module = torch::jit::load("../test_data/wavenet.torchscript");
     
     std::vector<torch::jit::IValue> inputs;
-    inputs.push_back(torch_data);
+    inputs.push_back( torch_data.unsqueeze(0) );
 
     torch::NoGradGuard no_grad;
     module.eval();
 
     auto torch_res = module.forward( inputs ).toTensor();
-    Eigen::Map<RowMatrixXf> target( torch_res.data_ptr<float>(), 1, num_samples );
-
-    auto pred = obj->forward( eigen_data );
+    auto target = torch_to_eigen( torch_res.squeeze(0) );
     
-    return ( (pred - target).norm() < 1e-3 );
+    return ( (pred - target).norm() < 1e-4 );
 }
 
 TEST_CASE("ResGRU Test", "[resgru_match]")

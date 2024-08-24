@@ -36,9 +36,11 @@ namespace MicroTorch
 
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const noexcept
         {
-            RowMatrixXf y = RowMatrixXf::Zero(m_outChannels, getOutputLength( x.cols() ) );
-            Eigen::RowVectorXf input_row(x.cols());
-            Eigen::RowVectorXf weight_row(m_w[0].cols());
+            auto seqLength = x.cols();
+
+            RowMatrixXf y = RowMatrixXf::Zero(m_outChannels, getOutputLength( seqLength ) );
+            Eigen::RowVectorXf input_row( seqLength );
+            Eigen::RowVectorXf weight_row( m_kernelSize );
 
             for(auto i = 0; i < m_outChannels; i++)
             {
@@ -57,7 +59,7 @@ namespace MicroTorch
         size_t getInChannels() const { return m_inChannels; }
         size_t getOutChannels() const { return m_outChannels; }
         size_t getKernelSize() const { return m_kernelSize; }
-        size_t getBias() const { return m_bias; }
+        bool useBias() const { return m_bias; }
         
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)
         {
