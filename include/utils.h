@@ -84,13 +84,6 @@ namespace MicroTorch
         return out;
     }
 
-    inline RowMatrixXf elu(const Eigen::Ref<RowMatrixXf>& m)
-    {   
-        auto pos = m.array().max(0.f);
-        auto neg = m.array().min(0.f).exp() - 1.f;
-        return pos + neg;
-    }
-
     // Model configuration
 
     enum ModelType {

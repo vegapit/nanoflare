@@ -112,6 +112,18 @@ class TCN(AudioModel):
                         'values': state_dict[f'blockStack.{i}.bn2.running_var'].flatten().cpu().numpy().tolist()
                     }
                 },
+                'f1': {
+                    'weight': {
+                        'shape': list(state_dict[f'blockStack.{i}.f1.weight'].shape),
+                        'values': state_dict[f'blockStack.{i}.f1.weight'].flatten().cpu().numpy().tolist()
+                    }
+                },
+                'f2': {
+                    'weight': {
+                        'shape': list(state_dict[f'blockStack.{i}.f2.weight'].shape),
+                        'values': state_dict[f'blockStack.{i}.f2.weight'].flatten().cpu().numpy().tolist()
+                    }
+                }
             }
         return doc
     
