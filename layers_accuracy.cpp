@@ -280,10 +280,10 @@ bool pad_calculate()
     Eigen::RowVectorXf x(5);
     x << 1.f, 2.f, 3.f, 4.f, 5.f;
 
-    auto pred = pad(x, 2);
+    auto pred = padLeft(x, 2);
 
-    Eigen::RowVectorXf target(9);
-    target << 0.f, 0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 0.f, 0.f;
+    Eigen::RowVectorXf target(7);
+    target << 0.f, 0.f, 1.f, 2.f, 3.f, 4.f, 5.f;
 
     return ((pred - target).norm() < 1e-5);
 }

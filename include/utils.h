@@ -46,10 +46,10 @@ namespace MicroTorch
         return Eigen::Map<Eigen::VectorXf>( values.data(), shape[0] );
     } 
 
-    inline Eigen::RowVectorXf pad(const Eigen::Ref<Eigen::RowVectorXf>& in, size_t padding)
+    inline Eigen::RowVectorXf padLeft(const Eigen::Ref<Eigen::RowVectorXf>& in, size_t padding)
     {
         auto in_size = in.size();
-        Eigen::RowVectorXf out = Eigen::RowVectorXf::Zero(in_size + 2 * padding);
+        Eigen::RowVectorXf out = Eigen::RowVectorXf::Zero(in_size + padding);
         out.segment(padding, in_size) = in; 
         return out;
     }
@@ -74,16 +74,7 @@ namespace MicroTorch
             out(i) = in.segment(i, weights_size).cwiseProduct(weights).sum();
         return out;
     }
-
-    inline Eigen::RowVectorXf convolve1d(const Eigen::Ref<Eigen::RowVectorXf>& in, const Eigen::Ref<Eigen::RowVectorXf>& weights, size_t out_size)
-    {   
-        size_t weights_size = weights.size();
-        Eigen::RowVectorXf out(out_size);
-        for(auto i = 0; i < out_size; i++)
-            out(i) = in.segment(i, weights_size).cwiseProduct(weights).sum();
-        return out;
-    }
-
+    
     // Model configuration
 
     enum ModelType {

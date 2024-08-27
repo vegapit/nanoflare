@@ -13,13 +13,12 @@ class AudioModel(nn.Module):
 class CausalDilatedConv1d(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, dilation=1):
         super().__init__()
-        self.padding = (kernel_size - 1) * dilation # Add required padding on each side
-        self.conv1d = nn.Conv1d(in_channels, out_channels, kernel_size, dilation=dilation, padding=self.padding)
+        left_padding = (kernel_size - 1) * dilation # Add required padding on the left-hand side of the input
+        self.conv1d = nn.Conv1d(in_channels, out_channels, kernel_size, dilation=dilation, padding=(left_padding, 0))
 
     def forward(self, x):
-        y = self.conv1d(x)
-        return y[ ..., :-self.padding] # discard right padding to preserve signal length and ensure causality
-    
+        return self.conv1d(x)
+        
     def generate_doc(self):
         state_dict = self.state_dict()
         doc = {

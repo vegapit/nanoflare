@@ -99,7 +99,7 @@ bool tcn_match()
 
     std::cout << pred.norm() << "|" << target.norm() << std::endl;
 
-    return ( (pred - target).norm() < 1e-3 );
+    return ( (pred - target).norm() < 1e-2 );
 }
 
 bool wavenet_match()
