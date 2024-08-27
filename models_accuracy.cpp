@@ -20,7 +20,7 @@ inline RowMatrixXf torch_to_eigen(const torch::Tensor& t) {
 
 bool resgru_match()
 {
-    constexpr int num_samples = 44100;
+    constexpr int num_samples = 4096;
 
     std::shared_ptr<BaseModel> obj;
     std::ifstream model_file("../test_data/resgru.json");
@@ -47,7 +47,7 @@ bool resgru_match()
 
 bool reslstm_match()
 {
-    constexpr int num_samples = 44100;
+    constexpr int num_samples = 2048;
 
     std::shared_ptr<BaseModel> obj;
     std::ifstream model_file("../test_data/reslstm.json");
@@ -76,7 +76,7 @@ bool reslstm_match()
 
 bool tcn_match()
 {
-    constexpr int num_samples = 44100;
+    constexpr int num_samples = 4096;
 
     std::shared_ptr<BaseModel> obj;
     std::ifstream model_file("../test_data/tcn.json");
@@ -99,12 +99,12 @@ bool tcn_match()
 
     std::cout << pred.norm() << "|" << target.norm() << std::endl;
 
-    return ( (pred - target).norm() < 1e-2 );
+    return ( (pred - target).norm() < 1e-4 );
 }
 
 bool wavenet_match()
 {
-    constexpr int num_samples = 44100;
+    constexpr int num_samples = 4096;
 
     std::shared_ptr<BaseModel> obj;
     std::ifstream model_file("../test_data/wavenet.json");

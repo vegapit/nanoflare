@@ -13,11 +13,12 @@ class AudioModel(nn.Module):
 class CausalDilatedConv1d(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, dilation=1):
         super().__init__()
-        left_padding = (kernel_size - 1) * dilation # Add required padding on the left-hand side of the input
-        self.conv1d = nn.Conv1d(in_channels, out_channels, kernel_size, dilation=dilation, padding=(left_padding, 0))
+        self.padding = (kernel_size - 1) * dilation # Add required padding on both sides of the input
+        self.conv1d = nn.Conv1d(in_channels, out_channels, kernel_size, dilation=dilation, padding=self.padding)
 
     def forward(self, x):
-        return self.conv1d(x)
+        y = self.conv1d(x)
+        return y[ ..., :-self.padding] # Add remove padding on right-hande side of the output
         
     def generate_doc(self):
         state_dict = self.state_dict()
@@ -155,6 +156,19 @@ class TCNBlock(nn.Module):
             }
         }
         return doc
+
+class WaveShaper( nn.Module ):
+    def __init__(self, hidden_size, num_hidden_layers):
+        super().__init__()
+        self.input_layer = nn.Linear(1, hidden_size)
+        self.hidden_layers = nn.ModuleList( [ nn.Linear(hidden_size, hidden_size) for _ in range(num_hidden_layers) ] )
+        self.output_layer = nn.Linear(hidden_size, 1)
+        self.f = nn.ReLU()
+    def forward(self, x):
+        y = self.f( self.input_layer( x ) )
+        for layer in self.hidden_layers:
+            y = self.f( layer( y ) )
+        return x + self.output_layer( y )
     
 def error_to_signal(y, y_pred):
     """
@@ -164,5 +178,5 @@ def error_to_signal(y, y_pred):
     y, y_pred = pre_emphasis_filter(y), pre_emphasis_filter(y_pred)
     return (y - y_pred).pow(2).sum(dim=2) / y.pow(2).sum(dim=2)
 
-def pre_emphasis_filter(x, coeff=0.95): # for n >= 1, y[n] = x[n] - 0.95 * x[n-1] or y[0] = x[0]
+def pre_emphasis_filter(x, coeff=0.85): # for n >= 1, y[n] = x[n] - 0.95 * x[n-1] or y[0] = x[0]
     return torch.cat((x[:, :, 0:1], x[:, :, 1:] - coeff * x[:, :, :-1]), dim=2)

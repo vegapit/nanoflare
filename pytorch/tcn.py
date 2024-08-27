@@ -13,6 +13,7 @@ class TCN(AudioModel):
         self.linear = nn.Linear(2**stack_size, 1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.normalise( x )
         for block in self.blockStack:
             x = block(x)
         return self.linear( x.transpose(1,2) ).transpose(1,2)
