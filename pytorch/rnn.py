@@ -13,8 +13,9 @@ class ResLSTM(AudioModel):
         self.rnn = nn.LSTM(input_size, hidden_size, batch_first=True, bias=rnn_bias)
         self.linear = nn.Linear(hidden_size, output_size, bias=linear_bias)
     def forward(self, x: torch.Tensor, hc: tuple[torch.Tensor, torch.Tensor]) -> torch.Tensor:
-        y, _ = self.rnn( self.normalise(x).transpose(1,2), hc )
-        return x + self.linear( y ).transpose(1,2)
+        norm_x = self.normalise(x)
+        y, _ = self.rnn( norm_x.transpose(1,2), hc )
+        return norm_x + self.linear( y ).transpose(1,2)
     def generate_doc(self):
         doc = {
             'config': {
@@ -76,8 +77,9 @@ class ResGRU(AudioModel):
         self.rnn = nn.GRU(input_size, hidden_size, batch_first=True, bias=rnn_bias)
         self.linear = nn.Linear(hidden_size, output_size, bias=linear_bias)
     def forward(self, x: torch.Tensor, h: torch.Tensor) -> torch.Tensor:
-        y, _ = self.rnn( self.normalise(x).transpose(1,2), h )
-        return x + self.linear( y ).transpose(1,2)
+        norm_x = self.normalise(x)
+        y, _ = self.rnn( norm_x.transpose(1,2), h )
+        return norm_x + self.linear( y ).transpose(1,2)
     def generate_doc(self):
         doc = {
             'config': {

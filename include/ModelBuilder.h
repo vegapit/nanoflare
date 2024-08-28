@@ -40,7 +40,7 @@ namespace MicroTorch
                 }
                 case TCNET: {
                     auto parameters = data.at("parameters").template get<TCNParameters>();
-                    model = std::make_shared<TCN>(parameters.input_size, parameters.output_size, parameters.kernel_size, parameters.stack_size, config.norm_mean, config.norm_std);
+                    model = std::make_shared<TCN>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.kernel_size, parameters.stack_size, config.norm_mean, config.norm_std);
                     break;
                 }
                 default:

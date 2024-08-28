@@ -40,7 +40,7 @@ namespace MicroTorch
                     std::tie( y, skip_y ) = m_blockStack[k * dilations_size + i].forward( y );
                     skip_sum.array() += skip_y.array();
                 }
-            skip_sum = skip_sum.cwiseMax(0.f); // Apply ReLU
+            skip_sum.noalias() = skip_sum.cwiseMax(0.f); // Apply ReLU
             skip_sum.transposeInPlace(); // Transpose
             return m_outputLinear.forward( skip_sum ).transpose();
         }

@@ -3,19 +3,20 @@ import torch.nn as nn
 from audiomodel import AudioModel, TCNBlock
 
 class TCN(AudioModel):
-    def __init__(self, input_size, output_size, kernel_size, stack_size, norm_mean = 0.0, norm_std = 1.0):
+    def __init__(self, input_size, hidden_size, output_size, kernel_size, stack_size, norm_mean = 0.0, norm_std = 1.0):
         super().__init__(norm_mean, norm_std)
         self.input_size = input_size
+        self.hidden_size = hidden_size
         self.output_size = output_size
         self.kernel_size = kernel_size
         self.stack_size = stack_size
-        self.blockStack = nn.ModuleList([TCNBlock(1 if i == 0 else 2**stack_size, 2**stack_size, kernel_size, 2**i) for i in range(stack_size+1)])
-        self.linear = nn.Linear(2**stack_size, 1)
+        self.blockStack = nn.ModuleList([TCNBlock(input_size if i == 0 else hidden_size, hidden_size, kernel_size, 2**i) for i in range(stack_size)])
+        self.linear = nn.Linear(hidden_size, output_size)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.normalise( x )
         for block in self.blockStack:
-            x = block(x)
+            x = block( x )
         return self.linear( x.transpose(1,2) ).transpose(1,2)
 
     def generate_doc(self):
@@ -27,6 +28,7 @@ class TCN(AudioModel):
             },
             'parameters': {
                 'input_size': self.input_size,
+                'hidden_size': self.hidden_size,
                 'output_size': self.output_size,
                 'kernel_size': self.kernel_size,
                 'stack_size': self.stack_size

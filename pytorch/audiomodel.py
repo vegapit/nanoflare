@@ -170,13 +170,19 @@ class WaveShaper( nn.Module ):
             y = self.f( layer( y ) )
         return x + self.output_layer( y )
     
-def error_to_signal(y, y_pred):
+def sr_loss(y, y_pred, coeff=0.85):
     """
     Error to signal ratio with pre-emphasis filter:
     https://www.mdpi.com/2076-3417/10/3/766/htm
     """
-    y, y_pred = pre_emphasis_filter(y), pre_emphasis_filter(y_pred)
-    return (y - y_pred).pow(2).sum(dim=2) / y.pow(2).sum(dim=2)
+    y, y_pred = pre_emphasis_filter(y, coeff=coeff), pre_emphasis_filter(y_pred, coeff=coeff)
+    return (y - y_pred).pow(2).sum() / y.pow(2).sum()
 
-def pre_emphasis_filter(x, coeff=0.85): # for n >= 1, y[n] = x[n] - 0.95 * x[n-1] or y[0] = x[0]
+def dc_loss(y, y_pred):
+    """
+    DC offset loss
+    """
+    return (y - y_pred).mean()**2.0 / y.pow(2).mean()
+
+def pre_emphasis_filter(x, coeff=0.85): # for n >= 1, y[n] = x[n] - 0.85 * x[n-1] or y[0] = x[0]
     return torch.cat((x[:, :, 0:1], x[:, :, 1:] - coeff * x[:, :, :-1]), dim=2)

@@ -12,13 +12,12 @@ namespace MicroTorch
     class TCN : public BaseModel
     {
     public:
-        TCN(size_t input_size, size_t output_size, size_t kernel_size, size_t stack_size, float norm_mean, float norm_std) : 
-            BaseModel(norm_mean, norm_std), m_stackSize(stack_size),
+        TCN(size_t input_size, size_t hidden_size, size_t output_size, size_t kernel_size, size_t stack_size, float norm_mean, float norm_std) : 
+            BaseModel(norm_mean, norm_std), m_hiddenSize(hidden_size), m_stackSize(stack_size),
             m_linear(std::pow(2, stack_size), output_size, true)
         {
-            auto full_size = std::pow( 2, stack_size );
-            for(auto k = 0; k <= stack_size; k++)
-                m_blockStack.push_back( TCNBlock((k == 0) ? 1 : full_size, full_size, kernel_size, std::pow(2, k)) );
+            for(auto k = 0; k < stack_size; k++)
+                m_blockStack.push_back( TCNBlock((k == 0) ? input_size : hidden_size, hidden_size, kernel_size, std::pow(2, k)) );
         }
         ~TCN() = default;
         
@@ -34,7 +33,7 @@ namespace MicroTorch
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override final
         {
-            for(auto k = 0; k <= m_stackSize; k++)
+            for(auto k = 0; k < m_stackSize; k++)
             {
                 auto block_state_dict = state_dict[std::string("blockStack.") + std::to_string(k)].get<std::map<std::string, nlohmann::json>>();
                 m_blockStack[k].loadStateDict( block_state_dict );
@@ -44,7 +43,7 @@ namespace MicroTorch
         }
 
     private:
-        size_t m_stackSize;
+        size_t m_hiddenSize, m_stackSize;
         std::vector<TCNBlock> m_blockStack;
         Linear m_linear;
     };

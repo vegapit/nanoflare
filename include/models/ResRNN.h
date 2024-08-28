@@ -20,10 +20,11 @@ namespace MicroTorch
 
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept override
         {
-            RowMatrixXf transposed_x( x.transpose() );
-            normalise( transposed_x );
-            RowMatrixXf y = m_rnn.forward( transposed_x );
-            return x + m_linear.forward(y).transpose();
+            RowMatrixXf norm_x( x );
+            normalise( norm_x );
+            RowMatrixXf t_norm = norm_x.transpose();
+            RowMatrixXf y = m_rnn.forward( t_norm );
+            return norm_x + m_linear.forward(y).transpose();
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override

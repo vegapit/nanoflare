@@ -124,11 +124,12 @@ namespace MicroTorch
 
     struct TCNParameters
     {
-        size_t input_size, output_size, kernel_size, stack_size;
+        size_t input_size, hidden_size, output_size, kernel_size, stack_size;
     };
 
     inline void from_json(const nlohmann::json& j, TCNParameters& obj) {
         j.at("input_size").get_to(obj.input_size);
+        j.at("hidden_size").get_to(obj.hidden_size);
         j.at("output_size").get_to(obj.output_size);
         j.at("kernel_size").get_to(obj.kernel_size);
         j.at("stack_size").get_to(obj.stack_size);
