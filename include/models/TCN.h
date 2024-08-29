@@ -14,7 +14,7 @@ namespace MicroTorch
     public:
         TCN(size_t input_size, size_t hidden_size, size_t output_size, size_t kernel_size, size_t stack_size, float norm_mean, float norm_std) : 
             BaseModel(norm_mean, norm_std), m_hiddenSize(hidden_size), m_stackSize(stack_size),
-            m_linear(std::pow(2, stack_size), output_size, true)
+            m_linear(std::pow(2, stack_size), output_size, false)
         {
             for(auto k = 0; k < stack_size; k++)
                 m_blockStack.push_back( TCNBlock((k == 0) ? input_size : hidden_size, hidden_size, kernel_size, std::pow(2, k)) );

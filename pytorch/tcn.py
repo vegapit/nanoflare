@@ -11,7 +11,7 @@ class TCN(AudioModel):
         self.kernel_size = kernel_size
         self.stack_size = stack_size
         self.blockStack = nn.ModuleList([TCNBlock(input_size if i == 0 else hidden_size, hidden_size, kernel_size, 2**i) for i in range(stack_size)])
-        self.linear = nn.Linear(hidden_size, output_size)
+        self.linear = nn.Linear(hidden_size, output_size, bias=False)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.normalise( x )
@@ -40,10 +40,6 @@ class TCN(AudioModel):
                 'weight': {
                     'shape': list(state_dict['linear.weight'].shape),
                     'values': state_dict['linear.weight'].flatten().cpu().numpy().tolist()
-                },
-                'bias': {
-                    'shape': list(state_dict[f'linear.bias'].shape),
-                    'values': state_dict[f'linear.bias'].flatten().cpu().numpy().tolist()
                 }
             }
         }

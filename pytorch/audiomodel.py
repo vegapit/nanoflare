@@ -46,7 +46,7 @@ class ResidualBlock(nn.Module):
         
     def forward(self, x):
         if self.gated:
-            ys = torch.split( self.inputConv(x), self.num_channels, dim=0) # Separate Filter and Gate
+            ys = torch.split( self.inputConv(x), self.num_channels, dim=1) # Separate Filter and Gate
             y = self.f( ys[0] ) * self.g( ys[1] )
         else:
             y = self.f( self.inputConv(x) )
@@ -183,6 +183,9 @@ def dc_loss(y, y_pred):
     DC offset loss
     """
     return (y - y_pred).mean()**2.0 / y.pow(2).mean()
+
+def snr_loss(y, y_pred):
+    return (y - y_pred).var()
 
 def pre_emphasis_filter(x, coeff=0.85): # for n >= 1, y[n] = x[n] - 0.85 * x[n-1] or y[0] = x[0]
     return torch.cat((x[:, :, 0:1], x[:, :, 1:] - coeff * x[:, :, :-1]), dim=2)
