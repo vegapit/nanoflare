@@ -94,6 +94,48 @@ inline void BM_ResGRULibtorchForward(benchmark::State& state)
         module.forward(inputs);
 }
 
+inline void BM_MicroTCNForward(benchmark::State& state)
+{
+    constexpr int num_samples = 512;
+
+    std::shared_ptr<BaseModel> obj;
+    RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
+
+    std::ifstream fstream("../test_data/microtcn.json");
+    nlohmann::json data = nlohmann::json::parse(fstream);    
+    ModelBuilder::fromJson(data, obj);
+
+    for (auto _ : state)
+        obj->forward(x);
+
+}
+
+inline void BM_MicroTCNLibtorchForward(benchmark::State& state)
+{
+    constexpr int num_samples = 512;
+
+    torch::jit::script::Module module;
+    try
+    {
+        // Deserialize the ScriptModule from a file using torch::jit::load()
+        module = torch::jit::load("../test_data/microtcn.torchscript");
+    }
+    catch (const c10::Error& e)
+    {
+        std::cerr << e.what() << std::endl;
+        return;
+    }
+
+    std::vector<torch::jit::IValue> inputs;
+    inputs.push_back(torch::rand({1, 1, num_samples}));
+
+    torch::NoGradGuard no_grad;
+    module.eval();
+    
+    for (auto _ : state)
+        module.forward(inputs);
+}
+
 inline void BM_TCNForward(benchmark::State& state)
 {
     constexpr int num_samples = 512;
@@ -183,6 +225,8 @@ BENCHMARK(BM_ResGRUForward)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_ResGRULibtorchForward)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_ResLSTMForward)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_ResLSTMLibtorchForward)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_MicroTCNForward)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_MicroTCNLibtorchForward)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_TCNForward)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_TCNLibtorchForward)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_WaveNetForward)->Unit(benchmark::kMillisecond);

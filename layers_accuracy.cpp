@@ -11,6 +11,8 @@
 #include "GRU.h"
 #include "Linear.h"
 #include "LSTM.h"
+#include "MicroTCNBlock.h"
+#include "PlainSequential.h"
 #include "ResidualBlock.h"
 #include "TCNBlock.h"
 
@@ -199,6 +201,66 @@ bool lstm_pytorch_match()
     return ( (pred - target).norm() < 1e-5 );
 }
 
+bool microtcnblock_pytorch_match()
+{
+    size_t inChannels = 7;
+    size_t outChannels = 11;
+    size_t kernelSize = 3;
+    size_t dilation = 2;
+    size_t seqLength = 5;
+
+    MicroTCNBlock obj(inChannels, outChannels, kernelSize, dilation);
+    std::ifstream model_file("../test_data/microtcnblock.json");
+    obj.loadStateDict( nlohmann::json::parse(model_file) );
+
+    auto torch_data = torch::randn({ long(inChannels), long(seqLength) });
+    auto eigen_data = torch_to_eigen( torch_data );
+    auto pred = obj.forward( eigen_data );
+
+    torch::jit::script::Module module = torch::jit::load("../test_data/microtcnblock.torchscript");
+    
+    std::vector<torch::jit::IValue> inputs;
+    inputs.push_back( torch_data.unsqueeze(0) );
+
+    torch::NoGradGuard no_grad;
+    module.eval();
+
+    auto torch_res = module.forward( inputs ).toTensor();
+    auto target = torch_to_eigen( torch_res.squeeze(0) );
+    
+    return ( (pred - target).norm() < 1e-5 );
+}
+
+bool plainsequential_pytorch_match()
+{
+    size_t inChannels = 7;
+    size_t outChannels = 11;
+    size_t hiddenChannels = 8;
+    size_t numHiddenLayers = 3;
+    size_t batchSize = 5;
+
+    PlainSequential obj(inChannels, outChannels, hiddenChannels, numHiddenLayers);
+    std::ifstream model_file("../test_data/plainsequential.json");
+    obj.loadStateDict( nlohmann::json::parse(model_file) );
+
+    auto torch_data = torch::randn({ long(batchSize), long(inChannels)});
+    auto eigen_data = torch_to_eigen( torch_data );
+    auto pred = obj.forward( eigen_data );
+
+    torch::jit::script::Module module = torch::jit::load("../test_data/plainsequential.torchscript");
+    
+    std::vector<torch::jit::IValue> inputs;
+    inputs.push_back(torch_data);
+
+    torch::NoGradGuard no_grad;
+    module.eval();
+
+    auto torch_res = module.forward( inputs ).toTensor();
+    auto target = torch_to_eigen( torch_res );
+
+    return ( (pred - target).norm() < 1e-5 );
+}
+
 bool residualblock_pytorch_match()
 {
     size_t numChannels = 7;
@@ -344,6 +406,16 @@ TEST_CASE("Linear Test", "[linear_pytorch_match]")
 TEST_CASE("LSTM Test", "[lstm_pytorch_match]")
 {
     REQUIRE( lstm_pytorch_match() );
+}
+
+TEST_CASE("MicroTCNBlock Test", "[microtcnblock_pytorch_match]")
+{
+    REQUIRE( microtcnblock_pytorch_match() );
+}
+
+TEST_CASE("PlainSequential Test", "[plainsequential_pytorch_match]")
+{
+    REQUIRE( plainsequential_pytorch_match() );
 }
 
 TEST_CASE("ResidualBlock Test", "[residualblock_pytorch_match]")

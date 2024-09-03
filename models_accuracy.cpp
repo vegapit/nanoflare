@@ -18,6 +18,34 @@ inline RowMatrixXf torch_to_eigen(const torch::Tensor& t) {
     return res;
 }
 
+bool microtcn_match()
+{
+    constexpr int num_samples = 4096;
+
+    std::shared_ptr<BaseModel> obj;
+    std::ifstream model_file("../test_data/microtcn.json");
+    ModelBuilder::fromJson( nlohmann::json::parse(model_file), obj );
+
+    auto torch_data = torch::randn({1, num_samples});
+    auto eigen_data = torch_to_eigen( torch_data );
+    auto pred = obj->forward( eigen_data );
+
+    torch::jit::script::Module module = torch::jit::load("../test_data/microtcn.torchscript");
+    
+    std::vector<torch::jit::IValue> inputs;
+    inputs.push_back( torch_data.unsqueeze(0) );
+
+    torch::NoGradGuard no_grad;
+    module.eval();
+
+    auto torch_res = module.forward( inputs ).toTensor();
+    auto target = torch_to_eigen( torch_res.squeeze(0) );
+
+    std::cout << pred.norm() << "|" << target.norm() << std::endl;
+
+    return ( (pred - target).norm() < 1e-4 );
+}
+
 bool resgru_match()
 {
     constexpr int num_samples = 4096;
@@ -97,8 +125,6 @@ bool tcn_match()
     auto torch_res = module.forward( inputs ).toTensor();
     auto target = torch_to_eigen( torch_res.squeeze(0) );
 
-    std::cout << pred.norm() << "|" << target.norm() << std::endl;
-
     return ( (pred - target).norm() < 1e-4 );
 }
 
@@ -126,6 +152,11 @@ bool wavenet_match()
     auto target = torch_to_eigen( torch_res.squeeze(0) );
     
     return ( (pred - target).norm() < 1e-4 );
+}
+
+TEST_CASE("MicroTCN Test", "[microtcn_match]")
+{
+    REQUIRE( microtcn_match() );
 }
 
 TEST_CASE("ResGRU Test", "[resgru_match]")
