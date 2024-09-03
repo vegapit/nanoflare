@@ -10,10 +10,10 @@ namespace MicroTorch
     class ResidualBlock
     {
     public:
-        ResidualBlock(size_t num_channels, size_t kernel_size, size_t dilation, bool input_bias, bool output_bias, bool gated) 
+        ResidualBlock(size_t num_channels, size_t kernel_size, size_t dilation, bool gated) 
             : m_numChannels(num_channels), m_kernelSize(kernel_size), m_gated(gated),
-            m_inputConv(num_channels, gated ? 2 * num_channels : num_channels, kernel_size, input_bias, dilation), 
-            m_outputConv(num_channels, num_channels, 1, output_bias) {}
+            m_inputConv(num_channels, gated ? 2 * num_channels : num_channels, kernel_size, true, dilation), 
+            m_outputConv(num_channels, num_channels, 1, true) {}
         ~ResidualBlock() = default;
 
         inline std::pair<RowMatrixXf,RowMatrixXf> forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept
@@ -38,9 +38,9 @@ namespace MicroTorch
         
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)
         {
-            auto input_state_dict = state_dict[std::string("inputConv")].get<std::map<std::string, nlohmann::json>>();
+            auto input_state_dict = state_dict[std::string("input_conv")].get<std::map<std::string, nlohmann::json>>();
             m_inputConv.loadStateDict( input_state_dict );
-            auto output_state_dict = state_dict[std::string("outputConv")].get<std::map<std::string, nlohmann::json>>();
+            auto output_state_dict = state_dict[std::string("output_conv")].get<std::map<std::string, nlohmann::json>>();
             m_outputConv.loadStateDict( output_state_dict );
         }
 

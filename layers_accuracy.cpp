@@ -269,7 +269,7 @@ bool residualblock_pytorch_match()
     bool gated = true;
     size_t seqLength = 5;
 
-    ResidualBlock obj(numChannels, kernelSize, dilation, true, true, gated);
+    ResidualBlock obj(numChannels, kernelSize, dilation, gated);
     std::ifstream model_file("../test_data/residualblock.json");
     obj.loadStateDict( nlohmann::json::parse(model_file) );
 
@@ -280,13 +280,13 @@ bool residualblock_pytorch_match()
     torch::jit::script::Module module = torch::jit::load("../test_data/residualblock.torchscript");
     
     std::vector<torch::jit::IValue> inputs;
-    inputs.push_back(torch_data);
+    inputs.push_back( torch_data.unsqueeze(0) );
 
     torch::NoGradGuard no_grad;
     module.eval();
 
     auto torch_res = module.forward( inputs ).toTuple()->elements();
-    auto target = torch_to_eigen( torch_res[1].toTensor() );
+    auto target = torch_to_eigen( torch_res[1].toTensor().squeeze(0) );
     
     return ( (pred - target).norm() < 1e-5 );
 }

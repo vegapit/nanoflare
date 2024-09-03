@@ -5,7 +5,6 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 #include <vector>
-#include <iostream>
 
 using namespace MicroTorch;
 
@@ -40,8 +39,6 @@ bool microtcn_match()
 
     auto torch_res = module.forward( inputs ).toTensor();
     auto target = torch_to_eigen( torch_res.squeeze(0) );
-
-    std::cout << pred.norm() << "|" << target.norm() << std::endl;
 
     return ( (pred - target).norm() < 1e-4 );
 }

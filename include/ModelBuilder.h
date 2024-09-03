@@ -26,22 +26,22 @@ namespace MicroTorch
             {
                 case RES_LSTM: {
                     auto parameters = data.at("parameters").template get<RNNParameters>();
-                    model = std::make_shared<ResRNN<LSTM>>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.rnn_bias, parameters.linear_bias, config.norm_mean, config.norm_std);
+                    model = std::make_shared<ResRNN<LSTM>>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
                     break;
                 }
                 case RES_GRU: {
                     auto parameters = data.at("parameters").template get<RNNParameters>();
-                    model = std::make_shared<ResRNN<GRU>>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.rnn_bias, parameters.linear_bias, config.norm_mean, config.norm_std);
+                    model = std::make_shared<ResRNN<GRU>>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
                     break;
                 }
                 case WAVENET: {
                     auto parameters = data.at("parameters").template get<WaveNetParameters>();
-                    model = std::make_shared<WaveNet>(parameters.input_size, parameters.num_channels, parameters.output_size, parameters.kernel_size, parameters.dilations, parameters.stack_size, parameters.gated, config.norm_mean, config.norm_std);
+                    model = std::make_shared<WaveNet>(parameters.input_size, parameters.num_channels, parameters.output_size, parameters.kernel_size, parameters.dilations, parameters.stack_size, parameters.gated, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
                     break;
                 }
                 case TCNET: {
                     auto parameters = data.at("parameters").template get<TCNParameters>();
-                    model = std::make_shared<TCN>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.kernel_size, parameters.stack_size, config.norm_mean, config.norm_std);
+                    model = std::make_shared<TCN>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.kernel_size, parameters.stack_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
                     break;
                 }
                 case MICRO_TCNET: {

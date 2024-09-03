@@ -35,7 +35,7 @@ namespace MicroTorch
         {
             for(auto k = 0; k < m_stackSize; k++)
             {
-                auto block_state_dict = state_dict[std::string("blockStack.") + std::to_string(k)].get<std::map<std::string, nlohmann::json>>();
+                auto block_state_dict = state_dict[std::string("block_stack.") + std::to_string(k)].get<std::map<std::string, nlohmann::json>>();
                 m_blockStack[k].loadStateDict( block_state_dict );
             }
             auto ps_state_dict = state_dict[std::string("plain_sequential")].get<std::map<std::string, nlohmann::json>>();

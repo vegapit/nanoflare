@@ -13,7 +13,10 @@ class AudioModel(nn.Module):
 class PlainSequential( nn.Module ):
     def __init__(self, input_size, output_size, hidden_size, num_hidden_layers):
         super().__init__()
-        self.input_linear = nn.Linear(input_size, hidden_size)
+        self.hidden_size = hidden_size
+        self.num_hidden_layers = num_hidden_layers
+        self.direct_linear = nn.Linear( input_size, output_size )
+        self.input_linear = nn.Linear( input_size, hidden_size )
         self.hidden_linear = nn.ModuleList( [ nn.Linear(hidden_size, hidden_size) for _ in range(num_hidden_layers) ] )
         self.output_linear = nn.Linear(hidden_size, output_size)
         self.f = nn.ReLU()
@@ -21,10 +24,22 @@ class PlainSequential( nn.Module ):
         y = self.f( self.input_linear( x ) )
         for layer in self.hidden_linear:
             y = self.f( layer( y ) )
-        return self.output_linear( y )
+        return self.direct_linear( x ) + self.output_linear( y )
     def generate_doc(self):
         state_dict = self.state_dict()
         doc = {
+            'hidden_size': self.hidden_size,
+            'num_hidden_layers': self.num_hidden_layers,
+            'direct_linear': {
+                'weight': {
+                    'shape': list(state_dict[f'direct_linear.weight'].shape),
+                    'values': state_dict[f'direct_linear.weight'].flatten().cpu().numpy().tolist()
+                },
+                'bias': {
+                    'shape': list(state_dict[f'direct_linear.bias'].shape),
+                    'values': state_dict[f'direct_linear.bias'].flatten().cpu().numpy().tolist()
+                }
+            },
             'input_linear': {
                 'weight': {
                     'shape': list(state_dict[f'input_linear.weight'].shape),
@@ -88,32 +103,32 @@ class ResidualBlock(nn.Module):
         super().__init__()
         self.num_channels = num_channels
         self.gated = gated
-        self.inputConv = CausalDilatedConv1d(num_channels, 2 * num_channels if gated else num_channels, kernel_size, dilation=dilation)
-        self.outputConv = nn.Conv1d(num_channels, num_channels, 1)
+        self.input_conv = CausalDilatedConv1d(num_channels, 2 * num_channels if gated else num_channels, kernel_size, dilation=dilation)
+        self.output_conv = nn.Conv1d(num_channels, num_channels, 1)
         self.f = nn.Tanh()
         self.g = nn.Sigmoid() # Gate activation function
         
     def forward(self, x):
         if self.gated:
-            ys = torch.split( self.inputConv(x), self.num_channels, dim=1) # Separate Filter and Gate
+            ys = torch.split( self.input_conv(x), self.num_channels, dim=1) # Separate Filter and Gate
             y = self.f( ys[0] ) * self.g( ys[1] )
         else:
-            y = self.f( self.inputConv(x) )
-        y = self.outputConv( y )
+            y = self.f( self.input_conv(x) )
+        y = self.output_conv( y )
         return y + x, y
     
     def generate_doc(self):
         state_dict = self.state_dict()
         doc = {
-            'inputConv': self.inputConv.generate_doc(),
-            'outputConv': {
+            'input_conv': self.input_conv.generate_doc(),
+            'output_conv': {
                 'weight': {
-                    'shape': list(state_dict[f'outputConv.conv1d.weight'].shape),
-                    'values': state_dict[f'outputConv.conv1d.weight'].flatten().cpu().numpy().tolist()
+                    'shape': list(state_dict[f'output_conv.weight'].shape),
+                    'values': state_dict[f'output_conv.weight'].flatten().cpu().numpy().tolist()
                 },
                 'bias': {
-                    'shape': list(state_dict[f'outputConv.conv1d.bias'].shape),
-                    'values': state_dict[f'outputConv.conv1d.bias'].flatten().cpu().numpy().tolist()
+                    'shape': list(state_dict[f'output_conv.bias'].shape),
+                    'values': state_dict[f'output_conv.bias'].flatten().cpu().numpy().tolist()
                 }
             }
         }

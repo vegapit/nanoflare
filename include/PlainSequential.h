@@ -10,6 +10,7 @@ namespace MicroTorch
     public:
         PlainSequential(size_t in_channels, size_t out_channels, size_t hidden_channels, size_t num_hidden_layers) 
             : m_inChannels(in_channels), m_outChannels(out_channels),
+            m_directLinear(in_channels, out_channels, true),
             m_inputLinear(in_channels, hidden_channels, true),
             m_outputLinear(hidden_channels, out_channels, true)
         {
@@ -27,11 +28,13 @@ namespace MicroTorch
                 y.noalias() = linear.forward( y );
                 y.array() = y.array().cwiseMax(0.f);
             }
-            return m_outputLinear.forward( y );
+            return m_directLinear.forward( x ) + m_outputLinear.forward( y );
         }
         
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)
         {
+            auto direct_linear_state_dict = state_dict[std::string("direct_linear")].get<std::map<std::string, nlohmann::json>>();
+            m_directLinear.loadStateDict( direct_linear_state_dict );
             auto input_linear_state_dict = state_dict[std::string("input_linear")].get<std::map<std::string, nlohmann::json>>();
             m_inputLinear.loadStateDict( input_linear_state_dict );
             auto output_linear_state_dict = state_dict[std::string("output_linear")].get<std::map<std::string, nlohmann::json>>();
@@ -44,7 +47,7 @@ namespace MicroTorch
         }
 
     private:
-        Linear m_inputLinear, m_outputLinear;
+        Linear m_directLinear, m_inputLinear, m_outputLinear;
         std::vector<Linear> m_hiddenLinear;
         size_t m_inChannels, m_outChannels; 
     };

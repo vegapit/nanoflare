@@ -95,21 +95,20 @@ namespace MicroTorch
 
     struct RNNParameters
     {
-        size_t input_size, hidden_size, output_size;
-        bool rnn_bias, linear_bias;
+        size_t input_size, hidden_size, output_size, ps_hidden_size, ps_num_hidden_layers;
     };
 
     inline void from_json(const nlohmann::json& j, RNNParameters& obj) {
         j.at("input_size").get_to(obj.input_size);
         j.at("hidden_size").get_to(obj.hidden_size);
         j.at("output_size").get_to(obj.output_size);
-        j.at("rnn_bias").get_to(obj.rnn_bias);
-        j.at("linear_bias").get_to(obj.linear_bias);
+        j.at("ps_hidden_size").get_to(obj.ps_hidden_size);
+        j.at("ps_num_hidden_layers").get_to(obj.ps_num_hidden_layers);
     }
 
     struct WaveNetParameters
     {
-        size_t input_size, num_channels, output_size, kernel_size, stack_size;
+        size_t input_size, num_channels, output_size, kernel_size, stack_size, ps_hidden_size, ps_num_hidden_layers;
         bool gated;
         std::vector<size_t> dilations;
     };
@@ -122,11 +121,13 @@ namespace MicroTorch
         j.at("dilations").get_to(obj.dilations);
         j.at("stack_size").get_to(obj.stack_size);
         j.at("gated").get_to(obj.gated);
+        j.at("ps_hidden_size").get_to(obj.ps_hidden_size);
+        j.at("ps_num_hidden_layers").get_to(obj.ps_num_hidden_layers);
     }
 
     struct TCNParameters
     {
-        size_t input_size, hidden_size, output_size, kernel_size, stack_size;
+        size_t input_size, hidden_size, output_size, kernel_size, stack_size, ps_hidden_size, ps_num_hidden_layers;
     };
 
     inline void from_json(const nlohmann::json& j, TCNParameters& obj) {
@@ -135,6 +136,8 @@ namespace MicroTorch
         j.at("output_size").get_to(obj.output_size);
         j.at("kernel_size").get_to(obj.kernel_size);
         j.at("stack_size").get_to(obj.stack_size);
+        j.at("ps_hidden_size").get_to(obj.ps_hidden_size);
+        j.at("ps_num_hidden_layers").get_to(obj.ps_num_hidden_layers);
     }
 
     struct MicroTCNParameters

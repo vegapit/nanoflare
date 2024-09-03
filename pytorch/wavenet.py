@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
-from audiomodel import AudioModel, CausalDilatedConv1d, ResidualBlock
+from audiomodel import AudioModel, CausalDilatedConv1d, ResidualBlock, PlainSequential
 
 class WaveNet(AudioModel):
-    def __init__(self, input_size, num_channels, output_size, kernel_size, dilations, stack_size, gated, norm_mean=0.0, norm_std=1.0):
+    def __init__(self, input_size, num_channels, output_size, kernel_size, dilations, stack_size, gated, ps_hidden_size, ps_num_hidden_layers, norm_mean=0.0, norm_std=1.0):
         super().__init__(norm_mean, norm_std)
         self.input_size = input_size
         self.num_channels = num_channels
@@ -12,20 +12,19 @@ class WaveNet(AudioModel):
         self.dilations = dilations
         self.stack_size = stack_size
         self.gated = gated
-        self.conv = CausalDilatedConv1d(1, num_channels, kernel_size)
-        self.blockStack = nn.ModuleList([ ResidualBlock(num_channels, kernel_size, d, gated) for d in dilations ] * stack_size)
-        self.linear = nn.Linear(num_channels, 1, bias=False)
+        self.conv = CausalDilatedConv1d(input_size, num_channels, kernel_size)
+        self.block_stack = nn.ModuleList([ ResidualBlock(num_channels, kernel_size, d, gated) for d in dilations ] * stack_size)
+        self.plain_sequential = PlainSequential( num_channels, output_size, ps_hidden_size, ps_num_hidden_layers )
         self.relu = nn.ReLU()
         
     def forward(self, x):
-        #print(f"WaveNet: {x.shape}")
         x = self.normalise(x)
         y = self.conv( x )
         skip_sum = torch.zeros_like(y)
-        for block in self.blockStack:
+        for block in self.block_stack:
             y, skip_y = block(y)
             skip_sum += skip_y
-        return self.linear( self.relu(skip_sum).transpose(1,2) ).transpose(1,2)
+        return self.plain_sequential( self.relu(skip_sum).transpose(1,2) ).transpose(1,2)
 
     def generate_doc(self):
         doc = {
@@ -41,51 +40,18 @@ class WaveNet(AudioModel):
                 'kernel_size': self.kernel_size,
                 'dilations': self.dilations,
                 'stack_size': self.stack_size,
-                'gated': self.gated
+                'gated': self.gated,
+                'ps_hidden_size': self.plain_sequential.hidden_size,
+                'ps_num_hidden_layers': self.plain_sequential.num_hidden_layers
             }
         }
         state_dict = self.state_dict()
         doc['state_dict'] = {
-            'conv': {
-                'weight': {
-                    'shape': list(state_dict['conv.conv1d.weight'].shape),
-                    'values': state_dict['conv.conv1d.weight'].flatten().cpu().numpy().tolist()
-                },
-                'bias': {
-                    'shape': list(state_dict['conv.conv1d.bias'].shape),
-                    'values': state_dict['conv.conv1d.bias'].flatten().cpu().numpy().tolist()
-                }
-            },
-            'linear': {
-                'weight': {
-                    'shape': list(state_dict['linear.weight'].shape),
-                    'values': state_dict['linear.weight'].flatten().cpu().numpy().tolist()
-                }
-            }
+            'conv': self.conv.generate_doc(),
+            'plain_sequential': self.plain_sequential.generate_doc()
         }
-        for i,_ in enumerate(self.blockStack):
-            doc['state_dict'][f'blockStack.{i}'] = {
-                'inputConv': {
-                    'weight': {
-                        'shape': list(state_dict[f'blockStack.{i}.inputConv.conv1d.weight'].shape),
-                        'values': state_dict[f'blockStack.{i}.inputConv.conv1d.weight'].flatten().cpu().numpy().tolist()
-                    },
-                    'bias': {
-                        'shape': list(state_dict[f'blockStack.{i}.inputConv.conv1d.bias'].shape),
-                        'values': state_dict[f'blockStack.{i}.inputConv.conv1d.bias'].flatten().cpu().numpy().tolist()
-                    }
-                },
-                'outputConv': {
-                    'weight': {
-                        'shape': list(state_dict[f'blockStack.{i}.outputConv.weight'].shape),
-                        'values': state_dict[f'blockStack.{i}.outputConv.weight'].flatten().cpu().numpy().tolist()
-                    },
-                    'bias': {
-                        'shape': list(state_dict[f'blockStack.{i}.outputConv.bias'].shape),
-                        'values': state_dict[f'blockStack.{i}.outputConv.bias'].flatten().cpu().numpy().tolist()
-                    }
-                }
-            }
+        for i, block in enumerate(self.block_stack):
+            doc['state_dict'][f'block_stack.{i}'] = block.generate_doc()
         return doc
         
 if __name__ == "__main__":

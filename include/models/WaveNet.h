@@ -4,7 +4,7 @@
 #include "BaseModel.h"
 #include "ResidualBlock.h"
 #include "CausalDilatedConv1d.h"
-#include "Linear.h"
+#include "PlainSequential.h"
 #include "utils.h"
 
 namespace MicroTorch
@@ -13,14 +13,14 @@ namespace MicroTorch
     class WaveNet : public BaseModel
     {
     public:
-        WaveNet(size_t input_size, size_t num_channels, size_t output_size, size_t kernel_size, std::vector<size_t> dilations, size_t stack_size, bool gated, float norm_mean, float norm_std) : 
+        WaveNet(size_t input_size, size_t num_channels, size_t output_size, size_t kernel_size, std::vector<size_t> dilations, size_t stack_size, bool gated, size_t ps_hidden_size, size_t ps_num_hidden_layers, float norm_mean, float norm_std) : 
             BaseModel(norm_mean, norm_std), m_numChannels(num_channels), m_dilations(dilations), m_stackSize(stack_size), m_gated(gated),
             m_inputConv(input_size, num_channels, kernel_size, true, 1),
-            m_outputLinear(num_channels, output_size, false)
+            m_plainSequential(num_channels, output_size, ps_hidden_size, ps_num_hidden_layers)
         {
             for(size_t k = 0; k < stack_size; k++)
                 for(auto dilation: dilations)
-                    m_blockStack.push_back( ResidualBlock(num_channels, kernel_size, dilation, true, true, gated) );
+                    m_blockStack.push_back( ResidualBlock(num_channels, kernel_size, dilation, gated) );
         }
         ~WaveNet() = default;
         
@@ -42,7 +42,7 @@ namespace MicroTorch
                 }
             skip_sum.noalias() = skip_sum.cwiseMax(0.f); // Apply ReLU
             skip_sum.transposeInPlace(); // Transpose
-            return m_outputLinear.forward( skip_sum ).transpose();
+            return m_plainSequential.forward( skip_sum ).transpose();
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override final
@@ -53,11 +53,11 @@ namespace MicroTorch
                 for(size_t i = 0; i < m_dilations.size(); i++)
                 {
                     size_t idx = k * m_dilations.size() + i;
-                    auto block_state_dict = state_dict[std::string("blockStack.") + std::to_string(idx)].get<std::map<std::string, nlohmann::json>>();
+                    auto block_state_dict = state_dict[std::string("block_stack.") + std::to_string(idx)].get<std::map<std::string, nlohmann::json>>();
                     m_blockStack[idx].loadStateDict( block_state_dict );
                 }
-            auto linear_state_dict = state_dict[std::string("linear")].get<std::map<std::string, nlohmann::json>>();
-            m_outputLinear.loadStateDict( linear_state_dict );
+            auto ps_state_dict = state_dict[std::string("plain_sequential")].get<std::map<std::string, nlohmann::json>>();
+            m_plainSequential.loadStateDict( ps_state_dict );
         }
 
     private:
@@ -66,6 +66,6 @@ namespace MicroTorch
         std::vector<size_t> m_dilations;
         CausalDilatedConv1d m_inputConv;
         std::vector<ResidualBlock> m_blockStack;
-        Linear m_outputLinear;
+        PlainSequential m_plainSequential;
     };
 }
