@@ -11,9 +11,9 @@ class ResLSTM(AudioModel):
         self.rnn = nn.LSTM(input_size, hidden_size, batch_first=True)
         self.plain_sequential = PlainSequential(hidden_size, output_size, ps_hidden_size, ps_num_hidden_layers)
     def forward(self, x: torch.Tensor, hc: tuple[torch.Tensor, torch.Tensor]) -> torch.Tensor:
-        norm_x = self.normalise(x)
+        norm_x = self.normalise( x )
         y, _ = self.rnn( norm_x.transpose(1,2), hc )
-        return x + self.plain_sequential( y ).transpose(1,2)
+        return norm_x + self.plain_sequential( y ).transpose(1,2)
     def generate_doc(self):
         doc = {
             'config': {
@@ -62,9 +62,9 @@ class ResGRU(AudioModel):
         self.rnn = nn.GRU(input_size, hidden_size, batch_first=True)
         self.plain_sequential = PlainSequential(hidden_size, output_size, ps_hidden_size, ps_num_hidden_layers)
     def forward(self, x: torch.Tensor, h: torch.Tensor) -> torch.Tensor:
-        norm_x = self.normalise(x)
+        norm_x = self.normalise( x )
         y, _ = self.rnn( norm_x.transpose(1,2), h )
-        return x + self.plain_sequential( y ).transpose(1,2)
+        return norm_x + self.plain_sequential( y ).transpose(1,2)
     def generate_doc(self):
         doc = {
             'config': {

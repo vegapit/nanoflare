@@ -28,7 +28,10 @@ namespace MicroTorch
                 y.noalias() = linear.forward( y );
                 y.array() = y.array().cwiseMax(0.f);
             }
-            return m_directLinear.forward( x ) + m_outputLinear.forward( y );
+            if(m_inChannels == m_outChannels)
+                return x + m_outputLinear.forward( y );
+            else
+                return m_directLinear.forward( x ) + m_outputLinear.forward( y );
         }
         
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)

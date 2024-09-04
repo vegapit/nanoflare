@@ -13,6 +13,8 @@ class AudioModel(nn.Module):
 class PlainSequential( nn.Module ):
     def __init__(self, input_size, output_size, hidden_size, num_hidden_layers):
         super().__init__()
+        self.input_size = input_size
+        self.output_size = output_size
         self.hidden_size = hidden_size
         self.num_hidden_layers = num_hidden_layers
         self.direct_linear = nn.Linear( input_size, output_size )
@@ -24,7 +26,11 @@ class PlainSequential( nn.Module ):
         y = self.f( self.input_linear( x ) )
         for layer in self.hidden_linear:
             y = self.f( layer( y ) )
-        return self.direct_linear( x ) + self.output_linear( y )
+        if self.input_size == self.output_size:
+            return x + self.output_linear( y )
+        else:
+            return self.direct_linear( x ) + self.output_linear( y )
+    
     def generate_doc(self):
         state_dict = self.state_dict()
         doc = {

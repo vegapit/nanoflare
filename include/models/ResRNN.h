@@ -25,7 +25,7 @@ namespace MicroTorch
             normalise( norm_x );
             RowMatrixXf t_norm = norm_x.transpose();
             RowMatrixXf y = m_rnn.forward( t_norm );
-            return x + m_plainSequential.forward( y ).transpose();
+            return norm_x + m_plainSequential.forward( y ).transpose();
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override

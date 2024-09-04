@@ -20,7 +20,7 @@ class WaveNet(AudioModel):
     def forward(self, x):
         x = self.normalise(x)
         y = self.conv( x )
-        skip_sum = torch.zeros_like(y)
+        skip_sum = torch.zeros_like( y )
         for block in self.block_stack:
             y, skip_y = block(y)
             skip_sum += skip_y
