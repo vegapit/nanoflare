@@ -19,7 +19,7 @@ namespace MicroTorch
         }
         ~PlainSequential() = default;
 
-        inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept
+        inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const noexcept
         {
             RowMatrixXf y = m_inputLinear.forward( x ).cwiseMax(0.f);
             for(auto& linear: m_hiddenLinear)

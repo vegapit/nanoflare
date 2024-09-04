@@ -18,11 +18,10 @@ namespace MicroTorch
             m_w = v;
         }
 
-
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const noexcept
         {
-            RowMatrixXf pos = x.array().max(0.f);
-            RowMatrixXf neg = x.array().min(0.f);
+            RowMatrixXf pos = x.cwiseMax(0.f);
+            RowMatrixXf neg = x.cwiseMin(0.f);
             RowMatrixXf scaled_neg = neg.array().colwise() * m_w.transpose().eval().array();
             return pos + scaled_neg;
         }

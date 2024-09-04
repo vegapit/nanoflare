@@ -17,11 +17,10 @@ namespace MicroTorch
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept
         {
             RowMatrixXf y( x.rows(), m_cell.getHiddenSize() );
-            Eigen::RowVectorXf row( x.cols() );
+            std::vector<Eigen::RowVectorXf> x_rows( x.rowwise().begin(), x.rowwise().end() );
             for(auto i = 0; i < x.rows(); i++)
             {
-                row = x.row(i);
-                m_cell.forward( row, m_h );
+                m_cell.forward( x_rows[i], m_h );
                 y.row(i) = m_h; // Assign h to output
             }
             return y;

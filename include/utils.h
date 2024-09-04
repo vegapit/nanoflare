@@ -46,7 +46,7 @@ namespace MicroTorch
         return Eigen::Map<Eigen::VectorXf>( values.data(), shape[0] );
     } 
 
-    inline Eigen::RowVectorXf padLeft(const Eigen::Ref<Eigen::RowVectorXf>& in, size_t padding)
+    inline Eigen::RowVectorXf padLeft(const Eigen::Ref<Eigen::RowVectorXf>& in, size_t padding) noexcept
     {
         auto in_size = in.size();
         Eigen::RowVectorXf out = Eigen::RowVectorXf::Zero(in_size + padding);
@@ -54,7 +54,7 @@ namespace MicroTorch
         return out;
     }
 
-    inline Eigen::RowVectorXf dilate(const Eigen::Ref<Eigen::RowVectorXf>& in, size_t dilation)
+    inline Eigen::RowVectorXf dilate(const Eigen::Ref<Eigen::RowVectorXf>& in, size_t dilation) noexcept
     {
         size_t in_size = in.size();
         size_t size = dilation * (in_size - 1) + 1;
@@ -65,7 +65,7 @@ namespace MicroTorch
         return out;
     }
 
-    inline Eigen::RowVectorXf convolve1d(const Eigen::Ref<Eigen::RowVectorXf>& in, const Eigen::Ref<Eigen::RowVectorXf>& weights)
+    inline Eigen::RowVectorXf convolve1d(const Eigen::Ref<Eigen::RowVectorXf>& in, const Eigen::Ref<Eigen::RowVectorXf>& weights) noexcept
     {   
         size_t weights_size = weights.size();
         size_t out_size = in.size() - weights_size + 1;
@@ -74,7 +74,7 @@ namespace MicroTorch
             out(i) = in.segment(i, weights_size).cwiseProduct(weights).sum();
         return out;
     }
-    
+
     // Model configuration
 
     enum ModelType {
