@@ -205,11 +205,11 @@ class TCNBlock(nn.Module):
                 },
                 'running_mean': {
                     'shape': list(state_dict[f'bn2.running_mean'].shape),
-                    'values': state_dict[f'bn1.running_mean'].flatten().cpu().numpy().tolist()
+                    'values': state_dict[f'bn2.running_mean'].flatten().cpu().numpy().tolist()
                 },
                 'running_var': {
                     'shape': list(state_dict[f'bn2.running_var'].shape),
-                    'values': state_dict[f'bn1.running_var'].flatten().cpu().numpy().tolist()
+                    'values': state_dict[f'bn2.running_var'].flatten().cpu().numpy().tolist()
                 }
             },
             'f1': {
