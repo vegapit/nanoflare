@@ -21,13 +21,9 @@ namespace MicroTorch
 
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept
         {
-            auto y = m_inputLinear.forward( x );
-            y.array() = y.array().cwiseMax(0.f);
+            RowMatrixXf y = m_inputLinear.forward( x ).cwiseMax(0.f);
             for(auto& linear: m_hiddenLinear)
-            {
-                y.noalias() = linear.forward( y );
-                y.array() = y.array().cwiseMax(0.f);
-            }
+                y.noalias() = linear.forward( y ).cwiseMax(0.f);
             if(m_inChannels == m_outChannels)
                 return x + m_outputLinear.forward( y );
             else
