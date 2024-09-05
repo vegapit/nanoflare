@@ -8,7 +8,7 @@
 
 using namespace MicroTorch;
 
-inline void BM_ResLSTMForward(benchmark::State& state)
+inline void BM_ResLSTM(benchmark::State& state)
 {
     constexpr int num_samples = 512;
 
@@ -20,10 +20,18 @@ inline void BM_ResLSTMForward(benchmark::State& state)
     ModelBuilder::fromJson(data, obj);
 
     for (auto _ : state)
+    {
+        auto start = std::chrono::high_resolution_clock::now();
         obj->forward(x);
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsed_seconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+
+        state.SetIterationTime(elapsed_seconds.count());
+        state.counters["RTF[512@44.1kHz]"] = double(num_samples) / ( 44100.0 * elapsed_seconds.count() );
+    }
 }
 
-inline void BM_ResLSTMLibtorchForward(benchmark::State& state)
+inline void BM_ResLSTMLibtorch(benchmark::State& state)
 {
     constexpr int num_samples = 512;
 
@@ -49,10 +57,18 @@ inline void BM_ResLSTMLibtorchForward(benchmark::State& state)
     module.eval();
     
     for (auto _ : state)
+    {
+        auto start = std::chrono::high_resolution_clock::now();
         module.forward(inputs);
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsed_seconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+
+        state.SetIterationTime(elapsed_seconds.count());
+        state.counters["RTF[512@44.1kHz]"] = double(num_samples) / ( 44100.0 * elapsed_seconds.count() );
+    }
 }
 
-inline void BM_ResGRUForward(benchmark::State& state)
+inline void BM_ResGRU(benchmark::State& state)
 {
     constexpr int num_samples = 512;
 
@@ -64,10 +80,18 @@ inline void BM_ResGRUForward(benchmark::State& state)
     ModelBuilder::fromJson(data, obj);
 
     for (auto _ : state)
+    {
+        auto start = std::chrono::high_resolution_clock::now();
         obj->forward(x);
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsed_seconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+
+        state.SetIterationTime(elapsed_seconds.count());
+        state.counters["RTF[512@44.1kHz]"] = double(num_samples) / ( 44100.0 * elapsed_seconds.count() );
+    }
 }
 
-inline void BM_ResGRULibtorchForward(benchmark::State& state)
+inline void BM_ResGRULibtorch(benchmark::State& state)
 {
     constexpr int num_samples = 512;
 
@@ -91,12 +115,20 @@ inline void BM_ResGRULibtorchForward(benchmark::State& state)
     module.eval();
     
     for (auto _ : state)
+    {
+        auto start = std::chrono::high_resolution_clock::now();
         module.forward(inputs);
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsed_seconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+
+        state.SetIterationTime(elapsed_seconds.count());
+        state.counters["RTF[512@44.1kHz]"] = double(num_samples) / ( 44100.0 * elapsed_seconds.count() );
+    }
 }
 
-inline void BM_MicroTCNForward(benchmark::State& state)
+inline void BM_MicroTCN(benchmark::State& state)
 {
-    constexpr int num_samples = 512;
+    constexpr int num_samples = 512 + 256;
 
     std::shared_ptr<BaseModel> obj;
     RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
@@ -106,13 +138,21 @@ inline void BM_MicroTCNForward(benchmark::State& state)
     ModelBuilder::fromJson(data, obj);
 
     for (auto _ : state)
+    {
+        auto start = std::chrono::high_resolution_clock::now();
         obj->forward(x);
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsed_seconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+
+        state.SetIterationTime(elapsed_seconds.count());
+        state.counters["RTF[512@44.1kHz]"] = double(num_samples) / ( 44100.0 * elapsed_seconds.count() );
+    }
 
 }
 
-inline void BM_MicroTCNLibtorchForward(benchmark::State& state)
+inline void BM_MicroTCNLibtorch(benchmark::State& state)
 {
-    constexpr int num_samples = 512;
+    constexpr int num_samples = 512 + 256;
 
     torch::jit::script::Module module;
     try
@@ -133,12 +173,20 @@ inline void BM_MicroTCNLibtorchForward(benchmark::State& state)
     module.eval();
     
     for (auto _ : state)
+    {
+        auto start = std::chrono::high_resolution_clock::now();
         module.forward(inputs);
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsed_seconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+
+        state.SetIterationTime(elapsed_seconds.count());
+        state.counters["RTF[512@44.1kHz]"] = double(num_samples) / ( 44100.0 * elapsed_seconds.count() );
+    }
 }
 
-inline void BM_TCNForward(benchmark::State& state)
+inline void BM_TCN(benchmark::State& state)
 {
-    constexpr int num_samples = 512;
+    constexpr int num_samples = 512 + 256;
 
     std::shared_ptr<BaseModel> obj;
     RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
@@ -148,13 +196,21 @@ inline void BM_TCNForward(benchmark::State& state)
     ModelBuilder::fromJson(data, obj);
 
     for (auto _ : state)
+    {
+        auto start = std::chrono::high_resolution_clock::now();
         obj->forward(x);
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsed_seconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+
+        state.SetIterationTime(elapsed_seconds.count());
+        state.counters["RTF[512@44.1kHz]"] = double(num_samples) / ( 44100.0 * elapsed_seconds.count() );
+    }
 
 }
 
-inline void BM_TCNLibtorchForward(benchmark::State& state)
+inline void BM_TCNLibtorch(benchmark::State& state)
 {
-    constexpr int num_samples = 512;
+    constexpr int num_samples = 512 + 256;
 
     torch::jit::script::Module module;
     try
@@ -175,12 +231,20 @@ inline void BM_TCNLibtorchForward(benchmark::State& state)
     module.eval();
     
     for (auto _ : state)
+    {
+        auto start = std::chrono::high_resolution_clock::now();
         module.forward(inputs);
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsed_seconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+
+        state.SetIterationTime(elapsed_seconds.count());
+        state.counters["RTF[512@44.1kHz]"] = double(num_samples) / ( 44100.0 * elapsed_seconds.count() );
+    }
 }
 
-inline void BM_WaveNetForward(benchmark::State& state)
+inline void BM_WaveNet(benchmark::State& state)
 {
-    constexpr int num_samples = 512;
+    constexpr int num_samples = 512 + 256;
 
     std::shared_ptr<BaseModel> obj;
     RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
@@ -190,12 +254,20 @@ inline void BM_WaveNetForward(benchmark::State& state)
     ModelBuilder::fromJson(data, obj);
 
     for (auto _ : state)
+    {
+        auto start = std::chrono::high_resolution_clock::now();
         obj->forward(x);
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsed_seconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+
+        state.SetIterationTime(elapsed_seconds.count());
+        state.counters["RTF[512@44.1kHz]"] = double(num_samples) / ( 44100.0 * elapsed_seconds.count() );
+    }
 }
 
-inline void BM_WaveNetLibtorchForward(benchmark::State& state)
+inline void BM_WaveNetLibtorch(benchmark::State& state)
 {
-    constexpr int num_samples = 512;
+    constexpr int num_samples = 512 + 256;
 
     torch::jit::script::Module module;
     try
@@ -216,21 +288,29 @@ inline void BM_WaveNetLibtorchForward(benchmark::State& state)
     module.eval();
     
     for (auto _ : state)
+    {
+        auto start = std::chrono::high_resolution_clock::now();
         module.forward(inputs);
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsed_seconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+
+        state.SetIterationTime(elapsed_seconds.count());
+        state.counters["RTF[512@44.1kHz]"] = double(num_samples) / ( 44100.0 * elapsed_seconds.count() );
+    }
 }
 
 // Register the function as a benchmark
 
-BENCHMARK(BM_ResGRUForward)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_ResGRULibtorchForward)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_ResLSTMForward)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_ResLSTMLibtorchForward)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_MicroTCNForward)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_MicroTCNLibtorchForward)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_TCNForward)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_TCNLibtorchForward)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_WaveNetForward)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_WaveNetLibtorchForward)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_ResGRU)->UseManualTime()->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_ResGRULibtorch)->UseManualTime()->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_ResLSTM)->UseManualTime()->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_ResLSTMLibtorch)->UseManualTime()->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_MicroTCN)->UseManualTime()->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_MicroTCNLibtorch)->UseManualTime()->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_TCN)->UseManualTime()->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_TCNLibtorch)->UseManualTime()->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_WaveNet)->UseManualTime()->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_WaveNetLibtorch)->UseManualTime()->Unit(benchmark::kMillisecond);
 
 // Run the benchmark
 BENCHMARK_MAIN();
