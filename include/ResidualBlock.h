@@ -25,8 +25,7 @@ namespace MicroTorch
             {
                 RowMatrixXf y_filter = y_inner(Eigen::seqN(0, m_numChannels), Eigen::all);
                 RowMatrixXf y_gate = y_inner(Eigen::seqN(m_numChannels, m_numChannels), Eigen::all);
-                y.array() = y_filter.array().tanh(); 
-                y.array() *= y_gate.array().logistic();
+                y.array() = y_filter.array().tanh() * y_gate.array().logistic();
             }
             else
                 y.array() = y_inner.array().tanh();

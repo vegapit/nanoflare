@@ -337,15 +337,18 @@ bool convolve1d_calculate()
     return ((pred - target).norm() < 1e-5);
 }
 
-bool pad_calculate()
+bool dilatedcausalconvolve1d_calculate()
 {
     Eigen::RowVectorXf x(5);
-    x << 1.f, 2.f, 3.f, 4.f, 5.f;
+    x << 0.f, 1.f, 2.f, 3.f, 4.f;
 
-    auto pred = padLeft(x, 2);
+    Eigen::RowVectorXf w(3);
+    w << 1.f, 0.5f, -1.f;
 
-    Eigen::RowVectorXf target(7);
-    target << 0.f, 0.f, 1.f, 2.f, 3.f, 4.f, 5.f;
+    auto pred = dilatedcausalconvolve1d(x, w, 2);
+
+    Eigen::RowVectorXf target(5);
+    target << 0.f, -1.f, -2.f, -2.5f, -3.0f;
 
     return ((pred - target).norm() < 1e-5);
 }
@@ -368,9 +371,9 @@ TEST_CASE("convolve1d Test", "[convolve1d_calculate]")
     REQUIRE( convolve1d_calculate() );
 }
 
-TEST_CASE("pad Test", "[pad_calculate]")
+TEST_CASE("dilatedcausalconvolve1d Test", "[pad_calculate]")
 {
-    REQUIRE( pad_calculate() );
+    REQUIRE( dilatedcausalconvolve1d_calculate() );
 }
 
 TEST_CASE("dilate Test", "[dilate_calculate]")

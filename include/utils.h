@@ -46,14 +46,6 @@ namespace MicroTorch
         return Eigen::Map<Eigen::VectorXf>( values.data(), shape[0] );
     } 
 
-    inline Eigen::RowVectorXf padLeft(const Eigen::Ref<Eigen::RowVectorXf>& in, size_t padding) noexcept
-    {
-        auto in_size = in.size();
-        Eigen::RowVectorXf out = Eigen::RowVectorXf::Zero(in_size + padding);
-        out.segment(padding, in_size) = in; 
-        return out;
-    }
-
     inline Eigen::RowVectorXf dilate(const Eigen::Ref<Eigen::RowVectorXf>& in, size_t dilation) noexcept
     {
         size_t in_size = in.size();
@@ -72,6 +64,19 @@ namespace MicroTorch
         Eigen::RowVectorXf out(out_size);
         for(auto i = 0; i < out_size; i++)
             out(i) = in.segment(i, weights_size).cwiseProduct(weights).sum();
+        return out;
+    }
+
+    inline Eigen::RowVectorXf dilatedcausalconvolve1d(const Eigen::Ref<Eigen::RowVectorXf>& in, const Eigen::Ref<Eigen::RowVectorXf>& weights, size_t dilation) noexcept
+    {   
+        size_t weights_size = weights.size();
+        size_t left_padding = dilation * ( weights_size - 1 );
+        size_t out_size = in.size();
+        Eigen::RowVectorXf out = Eigen::RowVectorXf::Zero(out_size);
+        for(auto i = 0; i < out_size; i++)
+            for(auto k = 0; k < weights_size; k++)
+                if(i + k * dilation >= left_padding)
+                    out(i) += weights(k) * in(i + k * dilation - left_padding);
         return out;
     }
 
