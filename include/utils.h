@@ -63,7 +63,7 @@ namespace MicroTorch
         size_t out_size = in.size() - weights_size + 1;
         Eigen::RowVectorXf out(out_size);
         for(auto i = 0; i < out_size; i++)
-            out(i) = in.segment(i, weights_size).cwiseProduct(weights).sum();
+            out(i) = in.segment(i, weights_size).dot(weights);
         return out;
     }
 

@@ -62,12 +62,9 @@ namespace MicroTorch
                 nx_inner += m_bih.segment(2*m_hiddenSize,m_hiddenSize);
                 nh_inner += m_bhh.segment(2*m_hiddenSize,m_hiddenSize);
             }
-
-            Eigen::VectorXf n_inner;
-            n_inner.array() = nx_inner.array() + r_inner.array().logistic() * nh_inner.array();
-
-            Eigen::VectorXf z;
-            z.array() = z_inner.array().logistic();
+            
+            auto n_inner = nx_inner.array() + r_inner.array().logistic() * nh_inner.array();
+            auto z = z_inner.array().logistic();
 
             h.array() = (1.f - z.array()) * n_inner.array().tanh() + z.array() * h.array();
         }

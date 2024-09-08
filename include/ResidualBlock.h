@@ -22,11 +22,7 @@ namespace MicroTorch
             RowMatrixXf y(m_numChannels, x.cols());
             
             if(m_gated)
-            {
-                RowMatrixXf y_filter = y_inner(Eigen::seqN(0, m_numChannels), Eigen::all);
-                RowMatrixXf y_gate = y_inner(Eigen::seqN(m_numChannels, m_numChannels), Eigen::all);
-                y.array() = y_filter.array().tanh() * y_gate.array().logistic();
-            }
+                y.array() = y_inner.topRows(m_numChannels).array().tanh() * y_inner.bottomRows(m_numChannels).array().logistic();
             else
                 y.array() = y_inner.array().tanh();
 
@@ -34,7 +30,7 @@ namespace MicroTorch
 
             return std::make_pair(y + x, y); // (Res,Skip)
         }
-        
+
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)
         {
             auto input_state_dict = state_dict[std::string("input_conv")].get<std::map<std::string, nlohmann::json>>();
