@@ -51,6 +51,8 @@ bool batchnorm1d_pytorch_match()
     auto torch_res = module.forward( inputs ).toTensor();
     auto target = torch_to_eigen( torch_res.squeeze(0) );
 
+    std::cout << pred.norm() << "|" << target.norm() << std::endl;
+    
     return ( (pred - target).norm() < 1e-5 );
 }
 

@@ -11,7 +11,8 @@ namespace MicroTorch
     public:
         BatchNorm1d(size_t num_channels) : 
             m_numChannels(num_channels), m_w(Eigen::RowVectorXf::Ones(num_channels)), m_b(Eigen::RowVectorXf::Zero(num_channels)),
-            m_runningMean(Eigen::RowVectorXf::Zero(num_channels)), m_runningVar(Eigen::RowVectorXf::Ones(num_channels))
+            m_runningMean(Eigen::RowVectorXf::Zero(num_channels)), m_runningVar(Eigen::RowVectorXf::Ones(num_channels)),
+            m_factor(Eigen::RowVectorXf::Ones(num_channels)), m_bias(Eigen::RowVectorXf::Zero(num_channels))
         {}
         ~BatchNorm1d() = default;
 
@@ -41,14 +42,10 @@ namespace MicroTorch
 
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const noexcept
         {
-            RowMatrixXf y(x);
-            y.array().colwise() -= m_runningMean.transpose().eval().array();
-            y.array().colwise() /= (m_runningVar.transpose().eval().array() + 1e-5).sqrt();
-
-            y.array().colwise() *= m_w.transpose().eval().array();
-            y.array().colwise() += m_b.transpose().eval().array();
-
-            return y;
+            RowMatrixXf y = x.transpose();
+            for( auto row: y.rowwise() )
+                row.array() = row.array() * m_factor.array() + m_bias.array();
+            return y.transpose();
         }
 
         size_t getNumChannels() const { return m_numChannels; }
@@ -63,11 +60,15 @@ namespace MicroTorch
             setRunningMean( running_mean );
             auto running_var = loadVector( std::string("running_var"), state_dict );
             setRunningVar( running_var );
+
+            m_factor.array() = m_w.array() / (m_runningVar.array() + 1e-5).sqrt();
+            m_bias.array() = m_b.array() - m_runningMean.array() * m_factor.array();
         }
 
     private:
         size_t m_numChannels;
-        Eigen::RowVectorXf m_w, m_b, m_runningMean, m_runningVar;
+        RowMatrixXf m_w, m_b, m_runningMean, m_runningVar;
+        RowMatrixXf m_factor, m_bias;
     };
 
 }
