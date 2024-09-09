@@ -1,7 +1,7 @@
 #pragma once
 
 #include <eigen3/Eigen/Dense>
-#include "BaseModel.h"
+#include "models/BaseModel.h"
 #include "ResidualBlock.h"
 #include "CausalDilatedConv1d.h"
 #include "PlainSequential.h"

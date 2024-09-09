@@ -20,10 +20,8 @@ namespace MicroTorch
 
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const noexcept
         {
-            RowMatrixXf pos = x.cwiseMax(0.f);
-            RowMatrixXf neg = x.cwiseMin(0.f);
-            RowMatrixXf scaled_neg = neg.array().colwise() * m_w.transpose().eval().array();
-            return pos + scaled_neg;
+            RowMatrixXf scaled_neg = x.cwiseMin(0.f).array().colwise() * m_w.transpose().eval().array();
+            return x.cwiseMax(0.f) + scaled_neg;
         }
 
         size_t getNumChannels() const { return m_numChannels; }

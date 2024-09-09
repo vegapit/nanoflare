@@ -1,7 +1,7 @@
 #pragma once
 
 #include <nlohmann/json.hpp>
-#include "BaseModel.h"
+#include "models/BaseModel.h"
 #include "models/ResRNN.h"
 #include "models/WaveNet.h"
 #include "models/TCN.h"

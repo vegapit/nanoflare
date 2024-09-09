@@ -1,7 +1,7 @@
 #pragma once
 
 #include <eigen3/Eigen/Dense>
-#include "BaseModel.h"
+#include "models/BaseModel.h"
 #include "MicroTCNBlock.h"
 #include "PlainSequential.h"
 #include "utils.h"

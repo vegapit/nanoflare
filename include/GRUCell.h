@@ -50,17 +50,17 @@ namespace MicroTorch
 
         inline void forward( const Eigen::Ref<Eigen::VectorXf>& x, Eigen::Ref<Eigen::VectorXf> h ) const noexcept
         {
-            Eigen::VectorXf r_inner = m_wih.middleRows(0,m_hiddenSize) * x + m_whh.middleRows(0,m_hiddenSize) * h;
+            Eigen::VectorXf r_inner = m_wih.topRows(m_hiddenSize) * x + m_whh.topRows(m_hiddenSize) * h;
             Eigen::VectorXf z_inner = m_wih.middleRows(m_hiddenSize,m_hiddenSize) * x + m_whh.middleRows(m_hiddenSize,m_hiddenSize) * h;
-            Eigen::VectorXf nx_inner = m_wih.middleRows(2*m_hiddenSize,m_hiddenSize) * x;
-            Eigen::VectorXf nh_inner = m_whh.middleRows(2*m_hiddenSize,m_hiddenSize) * h;
+            Eigen::VectorXf nx_inner = m_wih.bottomRows(m_hiddenSize) * x;
+            Eigen::VectorXf nh_inner = m_whh.bottomRows(m_hiddenSize) * h;
 
             if(m_bias)
             {
-                r_inner += m_bih.segment(0,m_hiddenSize) + m_bhh.segment(0,m_hiddenSize);
+                r_inner += m_bih.head(m_hiddenSize) + m_bhh.head(m_hiddenSize);
                 z_inner += m_bih.segment(m_hiddenSize,m_hiddenSize) + m_bhh.segment(m_hiddenSize,m_hiddenSize);
-                nx_inner += m_bih.segment(2*m_hiddenSize,m_hiddenSize);
-                nh_inner += m_bhh.segment(2*m_hiddenSize,m_hiddenSize);
+                nx_inner += m_bih.tail(m_hiddenSize);
+                nh_inner += m_bhh.tail(m_hiddenSize);
             }
             
             auto n_inner = nx_inner.array() + r_inner.array().logistic() * nh_inner.array();

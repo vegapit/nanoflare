@@ -1,10 +1,9 @@
 #pragma once
 
 #include <eigen3/Eigen/Dense>
-#include "BaseModel.h"
+#include "models/BaseModel.h"
 #include "PlainSequential.h"
 #include "utils.h"
-#include <iostream>
 
 namespace MicroTorch
 {
@@ -19,7 +18,7 @@ namespace MicroTorch
         {}
         ~ResRNN() = default;
 
-        inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept override
+        inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept override final
         {
             RowMatrixXf norm_x( x );
             normalise( norm_x );

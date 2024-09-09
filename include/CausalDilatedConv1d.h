@@ -40,7 +40,6 @@ namespace MicroTorch
             RowMatrixXf y = RowMatrixXf::Zero(m_outChannels, x.cols());
             for(auto i = 0; i < m_outChannels; i++)
             {
-                //std::vector<Eigen::RowVectorXf> dilated_weight_rows( m_dilatedW[i].rowwise().begin(), m_dilatedW[i].rowwise().end() );
                 std::vector<Eigen::RowVectorXf> w_rows( m_w[i].rowwise().begin(), m_w[i].rowwise().end() );
                 for(auto j = 0; j < m_inChannels; j++)
                     y.row(i) += dilatedcausalconvolve1d( x_rows[j], w_rows[j], m_dilation );
