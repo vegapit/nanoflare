@@ -16,31 +16,7 @@ namespace MicroTorch
         {}
         ~BatchNorm1d() = default;
 
-        void setRunningMean(const Eigen::Ref<Eigen::RowVectorXf>& v)
-        {
-            assert(v.size() == m_numChannels);
-            m_runningMean = v;
-        }
-
-        void setRunningVar(const Eigen::Ref<Eigen::RowVectorXf>& v)
-        {
-            assert(v.size() == m_numChannels);
-            m_runningVar= v;
-        }
-
-        void setWeight(const Eigen::Ref<Eigen::RowVectorXf>& v)
-        {
-            assert(v.size() == m_numChannels);
-            m_w = v;
-        }
-
-        void setBias(const Eigen::Ref<Eigen::RowVectorXf>& v)
-        {
-            assert(v.size() == m_numChannels);
-            m_b = v;
-        }
-
-        inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const noexcept
+        inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept
         {
             RowMatrixXf y = x.transpose();
             for( auto row: y.rowwise() )
@@ -66,9 +42,33 @@ namespace MicroTorch
         }
 
     private:
+        
+        void setRunningMean(const Eigen::Ref<Eigen::RowVectorXf>& v)
+        {
+            assert(v.size() == m_numChannels);
+            m_runningMean = v;
+        }
+
+        void setRunningVar(const Eigen::Ref<Eigen::RowVectorXf>& v)
+        {
+            assert(v.size() == m_numChannels);
+            m_runningVar= v;
+        }
+
+        void setWeight(const Eigen::Ref<Eigen::RowVectorXf>& v)
+        {
+            assert(v.size() == m_numChannels);
+            m_w = v;
+        }
+
+        void setBias(const Eigen::Ref<Eigen::RowVectorXf>& v)
+        {
+            assert(v.size() == m_numChannels);
+            m_b = v;
+        }
+
         size_t m_numChannels;
-        RowMatrixXf m_w, m_b, m_runningMean, m_runningVar;
-        RowMatrixXf m_factor, m_bias;
+        RowMatrixXf m_w, m_b, m_runningMean, m_runningVar, m_factor, m_bias;
     };
 
 }

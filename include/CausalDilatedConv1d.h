@@ -18,19 +18,6 @@ namespace MicroTorch
         }
         ~CausalDilatedConv1d() = default;
 
-        void setWeight(size_t channel, const Eigen::Ref<RowMatrixXf>& m)
-        {
-            assert(m.rows() == m_inChannels);
-            assert(m.cols() == m_kernelSize);
-            m_w[channel] = m;
-        }
-
-        void setBias(const Eigen::Ref<Eigen::RowVectorXf>& v)
-        {
-            assert(v.size() == m_outChannels);
-            m_b = v;
-        }
-
         inline size_t getOutputLength( size_t in_length ) const { return in_length; }
 
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const noexcept
@@ -65,6 +52,20 @@ namespace MicroTorch
         }
 
     private:
+
+        void setWeight(size_t channel, const Eigen::Ref<RowMatrixXf>& m)
+        {
+            assert(m.rows() == m_inChannels);
+            assert(m.cols() == m_kernelSize);
+            m_w[channel] = m;
+        }
+
+        void setBias(const Eigen::Ref<Eigen::RowVectorXf>& v)
+        {
+            assert(v.size() == m_outChannels);
+            m_b = v;
+        }
+
         size_t m_inChannels, m_outChannels, m_kernelSize, m_dilation, m_internalPadding;
         bool m_bias;
 

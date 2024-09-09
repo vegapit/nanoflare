@@ -16,20 +16,6 @@ namespace MicroTorch
         {}
         ~Linear() = default;
 
-        void setWeight(const Eigen::Ref<RowMatrixXf>& m)
-        {
-            assert(m.rows() == m_outChannels);
-            assert(m.cols() == m_inChannels);
-            m_w = m;
-            m_transW = m.transpose();
-        }
-
-        void setBias(const Eigen::Ref<Eigen::RowVectorXf>& v)
-        {
-            assert(v.size() == m_outChannels);
-            m_b = v;
-        }
-
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const noexcept
         {
             RowMatrixXf y = x * m_transW;
@@ -54,6 +40,21 @@ namespace MicroTorch
         }
 
     private:
+
+        void setWeight(const Eigen::Ref<RowMatrixXf>& m)
+        {
+            assert(m.rows() == m_outChannels);
+            assert(m.cols() == m_inChannels);
+            m_w = m;
+            m_transW = m.transpose();
+        }
+
+        void setBias(const Eigen::Ref<Eigen::RowVectorXf>& v)
+        {
+            assert(v.size() == m_outChannels);
+            m_b = v;
+        }
+
         RowMatrixXf m_w, m_transW;
         Eigen::RowVectorXf m_b;
 
