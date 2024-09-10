@@ -16,15 +16,11 @@ namespace MicroTorch
         {}
         ~BatchNorm1d() = default;
 
-        inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept
+        inline void apply( Eigen::Ref<RowMatrixXf> x ) noexcept
         {
-            RowMatrixXf y = x.transpose();
-            for( auto row: y.rowwise() )
-                row.array() = row.array() * m_factor.array() + m_bias.array();
-            return y.transpose();
+            x.array().colwise() *= m_factor.transpose().eval().array();
+            x.array().colwise() += m_bias.transpose().eval().array();
         }
-
-        size_t getNumChannels() const { return m_numChannels; }
         
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)
         {
@@ -68,7 +64,7 @@ namespace MicroTorch
         }
 
         size_t m_numChannels;
-        RowMatrixXf m_w, m_b, m_runningMean, m_runningVar, m_factor, m_bias;
+        Eigen::RowVectorXf m_w, m_b, m_runningMean, m_runningVar, m_factor, m_bias;
     };
 
 }

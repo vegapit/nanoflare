@@ -23,8 +23,8 @@ namespace MicroTorch
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept
         {
             auto y = m_conv1.forward( x );
-            y.noalias() = m_f1.forward( y );
-            y.noalias() = m_bn1.forward( y );
+            m_f1.apply( y );
+            m_bn1.apply( y );
             if(m_inChannels == m_outChannels)
                 return x + y;
             else 

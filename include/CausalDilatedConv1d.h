@@ -10,7 +10,7 @@ namespace MicroTorch
     {
     public:
         CausalDilatedConv1d(size_t in_channels, size_t out_channels, size_t kernel_size, bool bias, size_t dilation) : m_inChannels(in_channels), m_outChannels(out_channels), 
-            m_kernelSize(kernel_size), m_bias(bias), m_dilation(dilation), m_internalPadding(dilation * (kernel_size - 1)), 
+            m_kernelSize(kernel_size), m_bias(bias), m_dilation(dilation), 
             m_w(std::vector<RowMatrixXf>(out_channels)), m_b(Eigen::RowVectorXf::Zero(out_channels))
         {
             for(auto i = 0; i < out_channels; i++)
@@ -66,7 +66,7 @@ namespace MicroTorch
             m_b = v;
         }
 
-        size_t m_inChannels, m_outChannels, m_kernelSize, m_dilation, m_internalPadding;
+        size_t m_inChannels, m_outChannels, m_kernelSize, m_dilation;
         bool m_bias;
 
         std::vector<RowMatrixXf> m_w; // W = [Outs, Ins, Kernel]

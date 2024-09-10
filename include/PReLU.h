@@ -12,14 +12,12 @@ namespace MicroTorch
         PReLU(size_t num_channels) : m_numChannels(num_channels), m_w(Eigen::RowVectorXf::Zero(num_channels)) {}
         ~PReLU() = default;
 
-        inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const noexcept
+        inline void apply( Eigen::Ref<RowMatrixXf> x ) const noexcept
         {
-            RowMatrixXf scaled_neg = x.cwiseMin(0.f).array().colwise() * m_w.transpose().eval().array();
-            return x.cwiseMax(0.f) + scaled_neg;
+            for( auto col: x.colwise() )
+                col = col.cwiseMax( 0.f ) + col.cwiseMin( 0.f ).cwiseProduct( m_w );
         }
 
-        size_t getNumChannels() const { return m_numChannels; }
-        
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)
         {
             auto w = loadVector( std::string("weight"), state_dict );

@@ -38,7 +38,7 @@ bool batchnorm1d_pytorch_match()
 
     auto torch_data = torch::randn({long(numChannels), long(seqLength) });
     auto eigen_data = torch_to_eigen( torch_data );
-    auto pred = obj.forward( eigen_data );
+    obj.apply( eigen_data );
 
     torch::jit::script::Module module = torch::jit::load("../test_data/batchnorm1d.torchscript");
     
@@ -50,10 +50,8 @@ bool batchnorm1d_pytorch_match()
 
     auto torch_res = module.forward( inputs ).toTensor();
     auto target = torch_to_eigen( torch_res.squeeze(0) );
-
-    std::cout << pred.norm() << "|" << target.norm() << std::endl;
     
-    return ( (pred - target).norm() < 1e-5 );
+    return ( (eigen_data - target).norm() < 1e-5 );
 }
 
 bool causaldilatedconv1d_pytorch_match()
