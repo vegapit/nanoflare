@@ -208,6 +208,64 @@ inline void BM_TCN(benchmark::State& state)
 
 }
 
+inline void BM_SCC(benchmark::State& state)
+{
+    constexpr int num_samples = 512 + 256;
+
+    std::shared_ptr<BaseModel> obj;
+    RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
+
+    std::ifstream fstream("../test_data/scc.json");
+    nlohmann::json data = nlohmann::json::parse(fstream);    
+    ModelBuilder::fromJson(data, obj);
+
+    for (auto _ : state)
+    {
+        auto start = std::chrono::high_resolution_clock::now();
+        obj->forward(x);
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsed_seconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+
+        state.SetIterationTime(elapsed_seconds.count());
+        state.counters["RTF[512@44.1kHz]"] = double(num_samples) / ( 44100.0 * elapsed_seconds.count() );
+    }
+
+}
+
+inline void BM_SCCLibtorch(benchmark::State& state)
+{
+    constexpr int num_samples = 512 + 256;
+
+    torch::jit::script::Module module;
+    try
+    {
+        // Deserialize the ScriptModule from a file using torch::jit::load()
+        module = torch::jit::load("../test_data/scc.torchscript");
+    }
+    catch (const c10::Error& e)
+    {
+        std::cerr << e.what() << std::endl;
+        return;
+    }
+
+    std::vector<torch::jit::IValue> inputs;
+    inputs.push_back(torch::rand({1, 1, num_samples}));
+
+    torch::NoGradGuard no_grad;
+    module.eval();
+    
+    for (auto _ : state)
+    {
+        auto start = std::chrono::high_resolution_clock::now();
+        module.forward(inputs);
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsed_seconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+
+        state.SetIterationTime(elapsed_seconds.count());
+        state.counters["RTF[512@44.1kHz]"] = double(num_samples) / ( 44100.0 * elapsed_seconds.count() );
+    }
+}
+
 inline void BM_TCNLibtorch(benchmark::State& state)
 {
     constexpr int num_samples = 512 + 256;
@@ -307,6 +365,8 @@ BENCHMARK(BM_ResLSTM)->UseManualTime()->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_ResLSTMLibtorch)->UseManualTime()->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_MicroTCN)->UseManualTime()->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_MicroTCNLibtorch)->UseManualTime()->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_SCC)->UseManualTime()->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_SCCLibtorch)->UseManualTime()->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_TCN)->UseManualTime()->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_TCNLibtorch)->UseManualTime()->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_WaveNet)->UseManualTime()->Unit(benchmark::kMillisecond);

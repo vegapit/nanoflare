@@ -83,19 +83,21 @@ namespace MicroTorch
     // Model configuration
 
     enum ModelType {
+        MICRO_TCNET,
         RES_LSTM,
         RES_GRU,
+        SCCNET,
         WAVENET,
-        TCNET,
-        MICRO_TCNET
+        TCNET
     };
 
     NLOHMANN_JSON_SERIALIZE_ENUM( ModelType, {
+        {MICRO_TCNET, "MicroTCN"},
         {RES_LSTM, "ResLSTM"},
         {RES_GRU, "ResGRU"},
-        {WAVENET, "WaveNet"},
+        {SCCNET, "SCC"},
         {TCNET, "TCN"},
-        {MICRO_TCNET, "MicroTCN"}
+        {WAVENET, "WaveNet"}
     })
 
     struct RNNParameters
@@ -158,6 +160,16 @@ namespace MicroTorch
         j.at("stack_size").get_to(obj.stack_size);
         j.at("ps_hidden_size").get_to(obj.ps_hidden_size);
         j.at("ps_num_hidden_layers").get_to(obj.ps_num_hidden_layers);
+    }
+
+    struct SCCParameters
+    {
+        size_t kernel_size, depth_size;
+    };
+
+    inline void from_json(const nlohmann::json& j, SCCParameters& obj) {
+        j.at("kernel_size").get_to(obj.kernel_size);
+        j.at("depth_size").get_to(obj.depth_size);
     }
 
     struct ModelConfig

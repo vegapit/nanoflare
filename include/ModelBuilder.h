@@ -2,10 +2,11 @@
 
 #include <nlohmann/json.hpp>
 #include "models/BaseModel.h"
-#include "models/ResRNN.h"
-#include "models/WaveNet.h"
-#include "models/TCN.h"
 #include "models/MicroTCN.h"
+#include "models/ResRNN.h"
+#include "models/SCC.h"
+#include "models/TCN.h"
+#include "models/WaveNet.h"
 #include "LSTM.h"
 #include "GRU.h"
 #include "utils.h"
@@ -24,6 +25,11 @@ namespace MicroTorch
 
             switch (config.model_type)
             {
+                case MICRO_TCNET: {
+                    auto parameters = data.at("parameters").template get<MicroTCNParameters>();
+                    model = std::make_shared<MicroTCN>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.kernel_size, parameters.stack_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
+                    break;
+                }
                 case RES_LSTM: {
                     auto parameters = data.at("parameters").template get<RNNParameters>();
                     model = std::make_shared<ResRNN<LSTM>>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
@@ -34,9 +40,9 @@ namespace MicroTorch
                     model = std::make_shared<ResRNN<GRU>>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
                     break;
                 }
-                case WAVENET: {
-                    auto parameters = data.at("parameters").template get<WaveNetParameters>();
-                    model = std::make_shared<WaveNet>(parameters.input_size, parameters.num_channels, parameters.output_size, parameters.kernel_size, parameters.dilations, parameters.stack_size, parameters.gated, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
+                case SCCNET: {
+                    auto parameters = data.at("parameters").template get<SCCParameters>();
+                    model = std::make_shared<SCC>(parameters.kernel_size, parameters.depth_size, config.norm_mean, config.norm_std);
                     break;
                 }
                 case TCNET: {
@@ -44,9 +50,9 @@ namespace MicroTorch
                     model = std::make_shared<TCN>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.kernel_size, parameters.stack_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
                     break;
                 }
-                case MICRO_TCNET: {
-                    auto parameters = data.at("parameters").template get<MicroTCNParameters>();
-                    model = std::make_shared<MicroTCN>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.kernel_size, parameters.stack_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
+                case WAVENET: {
+                    auto parameters = data.at("parameters").template get<WaveNetParameters>();
+                    model = std::make_shared<WaveNet>(parameters.input_size, parameters.num_channels, parameters.output_size, parameters.kernel_size, parameters.dilations, parameters.stack_size, parameters.gated, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
                     break;
                 }
                 default:

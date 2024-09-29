@@ -99,6 +99,32 @@ bool reslstm_match()
     return ( (pred - target).norm() < 1e-4 );
 }
 
+bool scc_match()
+{
+    constexpr int num_samples = 2048;
+
+    std::shared_ptr<BaseModel> obj;
+    std::ifstream model_file("../test_data/scc.json");
+    ModelBuilder::fromJson( nlohmann::json::parse(model_file), obj );
+
+    auto torch_data = torch::randn({1, num_samples});
+    auto eigen_data = torch_to_eigen( torch_data );
+    auto pred = obj->forward( eigen_data );
+
+    torch::jit::script::Module module = torch::jit::load("../test_data/scc.torchscript");
+    
+    std::vector<torch::jit::IValue> inputs;
+    inputs.push_back( torch_data.unsqueeze(0) );
+
+    torch::NoGradGuard no_grad;
+    module.eval();
+
+    auto torch_res = module.forward( inputs ).toTensor();
+    auto target = torch_to_eigen( torch_res.squeeze(0) );
+
+    return ( (pred - target).norm() < 1e-4 );
+}
+
 bool tcn_match()
 {
     constexpr int num_samples = 4096;
@@ -164,6 +190,11 @@ TEST_CASE("ResGRU Test", "[resgru_match]")
 TEST_CASE("ResLSTM Test", "[reslstm_match]")
 {
     REQUIRE( reslstm_match() );
+}
+
+TEST_CASE("SCC Test", "[scc_match]")
+{
+    REQUIRE( scc_match() );
 }
 
 TEST_CASE("TCN Test", "[tcn_match]")

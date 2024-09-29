@@ -7,6 +7,7 @@
 
 #include "BatchNorm1d.h"
 #include "Conv1d.h"
+#include "ConvClipper.h"
 #include "CausalDilatedConv1d.h"
 #include "GRU.h"
 #include "Linear.h"
@@ -100,6 +101,34 @@ bool conv1d_pytorch_match()
     auto pred = obj.forward( eigen_data );
 
     torch::jit::script::Module module = torch::jit::load("../test_data/conv1d.torchscript");
+    
+    std::vector<torch::jit::IValue> inputs;
+    inputs.push_back(torch_data);
+
+    torch::NoGradGuard no_grad;
+    module.eval();
+
+    auto torch_res = module.forward( inputs ).toTensor();
+    auto target = torch_to_eigen( torch_res );
+
+    return ( (pred - target).norm() < 1e-5 );
+}
+
+bool convclipper_pytorch_match()
+{
+    size_t kernelSize = 12;
+    size_t dilation = 1;
+    size_t seqLength = 64;
+
+    ConvClipper obj(kernelSize, dilation);
+    std::ifstream model_file("../test_data/convclipper.json");
+    obj.loadStateDict( nlohmann::json::parse(model_file) );
+
+    auto torch_data = torch::randn({ 1, long(seqLength) });
+    auto eigen_data = torch_to_eigen( torch_data );
+    auto pred = obj.forward( eigen_data );
+
+    torch::jit::script::Module module = torch::jit::load("../test_data/convclipper.torchscript");
     
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back(torch_data);
@@ -394,6 +423,11 @@ TEST_CASE("CausalDilatedConv1D Test", "[causaldilatedconv1d_pytorch_match]")
 TEST_CASE("Conv1D Test", "[conv1d_pytorch_match]")
 {
     REQUIRE( conv1d_pytorch_match() );
+}
+
+TEST_CASE("ConvClipper Test", "[convclipper_pytorch_match]")
+{
+    REQUIRE( convclipper_pytorch_match() );
 }
 
 TEST_CASE("GRU Test", "[gru_pytorch_match]")
