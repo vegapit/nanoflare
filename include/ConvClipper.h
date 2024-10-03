@@ -10,43 +10,33 @@ namespace MicroTorch
     class ConvClipper
     {
     public:
-        ConvClipper(size_t kernel_size, size_t dilation) : m_inputConv( 1, 1, kernel_size, true, dilation ), m_outputConv( 1, 1, kernel_size, true, 1 ) {}
+        ConvClipper(size_t input_size, size_t output_size, size_t kernel_size, size_t dilation) : m_conv( input_size, output_size, kernel_size, true, dilation ) {}
         ~ConvClipper() = default;
 
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept
         {
-            RowMatrixXf y = m_inputConv.forward( x );
-            y.noalias() = y.cwiseMin( m_ceiling ).cwiseMax( m_floor );
-            return m_outputConv.forward( y );
+            RowMatrixXf y = m_conv.forward( x );
+            RowMatrixXf z = y.array() + m_coefSoftsign * y.array() / (1.0 + y.array().abs()) + m_coefTanh * y.array().tanh();
+            z.noalias() = z.cwiseMin( m_ceiling ).cwiseMax( m_floor );
+            return z;
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)
         {
-            auto input_state_dict = state_dict[std::string("input_conv")].get<std::map<std::string, nlohmann::json>>();
-            m_inputConv.loadStateDict( input_state_dict );
-            auto output_state_dict = state_dict[std::string("output_conv")].get<std::map<std::string, nlohmann::json>>();
-            m_outputConv.loadStateDict( output_state_dict );
+            auto conv_state_dict = state_dict[std::string("conv")].get<std::map<std::string, nlohmann::json>>();
+            m_conv.loadStateDict( conv_state_dict );
             auto floor = loadVector( std::string("floor"), state_dict );
-            setFloor( floor );
+            m_floor = -1.f / (1.f + std::exp(-5.f * floor(0)));
             auto ceiling = loadVector( std::string("ceiling"), state_dict );
-            setCeiling( ceiling );
+            m_ceiling = 1.f / (1.f + std::exp(-5.f * ceiling(0)));
+            auto coef_softsign = loadVector( std::string("coef_softsign"), state_dict );
+            m_coefSoftsign = coef_softsign(0); 
+            auto coef_tanh = loadVector( std::string("coef_tanh"), state_dict );
+            m_coefTanh = coef_tanh(0);
         }
 
     private:
-
-        void setFloor(const Eigen::Ref<Eigen::RowVectorXf>& v)
-        {
-            assert(v.size() == 1);
-            m_floor = -1.f / (1.f + std::exp(-5.f * v(0)));
-        }
-
-        void setCeiling(const Eigen::Ref<Eigen::RowVectorXf>& v)
-        {
-            assert(v.size() == 1);
-            m_ceiling = 1.f / (1.f + std::exp(-5.f * v(0)));
-        }
-
-        CausalDilatedConv1d m_inputConv, m_outputConv;
-        float m_floor, m_ceiling;
+        CausalDilatedConv1d m_conv;
+        float m_floor, m_ceiling, m_coefSoftsign, m_coefTanh;
     };
 }

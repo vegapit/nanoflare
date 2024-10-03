@@ -117,10 +117,10 @@ bool conv1d_pytorch_match()
 bool convclipper_pytorch_match()
 {
     size_t kernelSize = 12;
-    size_t dilation = 1;
+    size_t dilation = 4;
     size_t seqLength = 64;
 
-    ConvClipper obj(kernelSize, dilation);
+    ConvClipper obj(1, 1, kernelSize, dilation);
     std::ifstream model_file("../test_data/convclipper.json");
     obj.loadStateDict( nlohmann::json::parse(model_file) );
 

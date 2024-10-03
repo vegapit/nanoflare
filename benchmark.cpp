@@ -208,14 +208,14 @@ inline void BM_TCN(benchmark::State& state)
 
 }
 
-inline void BM_SCC(benchmark::State& state)
+inline void BM_ConvWaveshaper(benchmark::State& state)
 {
     constexpr int num_samples = 512 + 256;
 
     std::shared_ptr<BaseModel> obj;
     RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
 
-    std::ifstream fstream("../test_data/scc.json");
+    std::ifstream fstream("../test_data/convwaveshaper.json");
     nlohmann::json data = nlohmann::json::parse(fstream);    
     ModelBuilder::fromJson(data, obj);
 
@@ -232,7 +232,7 @@ inline void BM_SCC(benchmark::State& state)
 
 }
 
-inline void BM_SCCLibtorch(benchmark::State& state)
+inline void BM_ConvWaveshaperLibtorch(benchmark::State& state)
 {
     constexpr int num_samples = 512 + 256;
 
@@ -240,7 +240,7 @@ inline void BM_SCCLibtorch(benchmark::State& state)
     try
     {
         // Deserialize the ScriptModule from a file using torch::jit::load()
-        module = torch::jit::load("../test_data/scc.torchscript");
+        module = torch::jit::load("../test_data/convwaveshaper.torchscript");
     }
     catch (const c10::Error& e)
     {
@@ -365,8 +365,8 @@ BENCHMARK(BM_ResLSTM)->UseManualTime()->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_ResLSTMLibtorch)->UseManualTime()->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_MicroTCN)->UseManualTime()->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_MicroTCNLibtorch)->UseManualTime()->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_SCC)->UseManualTime()->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_SCCLibtorch)->UseManualTime()->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_ConvWaveshaper)->UseManualTime()->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_ConvWaveshaperLibtorch)->UseManualTime()->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_TCN)->UseManualTime()->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_TCNLibtorch)->UseManualTime()->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_WaveNet)->UseManualTime()->Unit(benchmark::kMillisecond);

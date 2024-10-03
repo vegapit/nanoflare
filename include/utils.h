@@ -86,7 +86,7 @@ namespace MicroTorch
         MICRO_TCNET,
         RES_LSTM,
         RES_GRU,
-        SCCNET,
+        CONVWAVESHAPER,
         WAVENET,
         TCNET
     };
@@ -95,7 +95,7 @@ namespace MicroTorch
         {MICRO_TCNET, "MicroTCN"},
         {RES_LSTM, "ResLSTM"},
         {RES_GRU, "ResGRU"},
-        {SCCNET, "SCC"},
+        {CONVWAVESHAPER, "ConvWaveshaper"},
         {TCNET, "TCN"},
         {WAVENET, "WaveNet"}
     })
@@ -162,14 +162,15 @@ namespace MicroTorch
         j.at("ps_num_hidden_layers").get_to(obj.ps_num_hidden_layers);
     }
 
-    struct SCCParameters
+    struct ConvWaveshaperParameters
     {
-        size_t kernel_size, depth_size;
+        size_t kernel_size, depth_size, num_channels;
     };
 
-    inline void from_json(const nlohmann::json& j, SCCParameters& obj) {
+    inline void from_json(const nlohmann::json& j, ConvWaveshaperParameters& obj) {
         j.at("kernel_size").get_to(obj.kernel_size);
         j.at("depth_size").get_to(obj.depth_size);
+        j.at("num_channels").get_to(obj.num_channels);
     }
 
     struct ModelConfig

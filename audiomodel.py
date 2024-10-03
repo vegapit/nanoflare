@@ -284,23 +284,23 @@ class MicroTCNBlock(nn.Module):
             }
         }
         return doc
-    
+
 class ConvClipper( nn.Module ):
-    def __init__(self, kernel_size, dilation):
+    def __init__(self, input_size, output_size, kernel_size, dilation):
         super().__init__()
-        self.input_conv = CausalDilatedConv1d(1, 1, kernel_size, dilation)
-        self.output_conv = CausalDilatedConv1d(1, 1, kernel_size, 1)
+        self.conv = CausalDilatedConv1d(input_size, output_size, kernel_size, dilation)
         self.floor = nn.parameter.Parameter( torch.zeros(1), requires_grad=True )
         self.ceiling = nn.parameter.Parameter( torch.zeros(1), requires_grad=True )
+        self.coef_softsign = nn.parameter.Parameter( torch.randn(1), requires_grad=True )
+        self.coef_tanh = nn.parameter.Parameter( torch.randn(1), requires_grad=True )
     def forward(self, x):
-        y = self.input_conv( x )
-        y = torch.clip( y, -torch.sigmoid( 5.0 * self.floor ), torch.sigmoid( 5.0 * self.ceiling ) )
-        return self.output_conv( y )
+        y = self.conv( x )
+        z = y + self.coef_softsign * nn.functional.softsign( y ) + self.coef_tanh * nn.functional.tanh( y )
+        return torch.clip( z, -torch.sigmoid( 5.0 * self.floor ), torch.sigmoid( 5.0 * self.ceiling ) )
     def generate_doc(self):
         state_dict = self.state_dict()
         doc = {
-            'input_conv': self.input_conv.generate_doc(),
-            'output_conv': self.output_conv.generate_doc(),
+            'conv': self.conv.generate_doc(),
             'floor': {
                 'shape': list(state_dict[f'floor'].shape),
                 'values': state_dict[f'floor'].flatten().cpu().numpy().tolist()
@@ -308,6 +308,14 @@ class ConvClipper( nn.Module ):
             'ceiling': {
                 'shape': list(state_dict[f'ceiling'].shape),
                 'values': state_dict[f'ceiling'].flatten().cpu().numpy().tolist()
+            },
+            'coef_softsign': {
+                'shape': list(state_dict[f'coef_softsign'].shape),
+                'values': state_dict[f'coef_softsign'].flatten().cpu().numpy().tolist()
+            },
+            'coef_tanh': {
+                'shape': list(state_dict[f'coef_tanh'].shape),
+                'values': state_dict[f'coef_tanh'].flatten().cpu().numpy().tolist()
             }
         }
         return doc

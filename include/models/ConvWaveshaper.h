@@ -8,16 +8,18 @@
 namespace MicroTorch
 {
 
-    class SCC : public BaseModel
+    class ConvWaveshaper : public BaseModel
     {
     public:
-        SCC(size_t kernel_size, size_t depth_size, float norm_mean, float norm_std) : BaseModel(norm_mean, norm_std), 
+        ConvWaveshaper(size_t kernel_size, size_t depth_size, size_t num_channels, float norm_mean, float norm_std) : BaseModel(norm_mean, norm_std), 
             m_kernelSize(kernel_size), m_depthSize(depth_size)
         {
-            for(auto k = 0; k < depth_size; k++)
-                m_stack.push_back( ConvClipper(kernel_size, std::pow(2, k)) );
+            m_stack.push_back( ConvClipper(1, num_channels, kernel_size, 1) );
+            for(auto k = 1; k < depth_size - 1; k++)
+                m_stack.push_back( ConvClipper(num_channels, num_channels, kernel_size, std::pow(2, k)) );
+            m_stack.push_back( ConvClipper(num_channels, 1, kernel_size, std::pow(2, depth_size - 1)) );    
         }
-        ~SCC() = default;
+        ~ConvWaveshaper() = default;
         
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept override final
         {

@@ -3,14 +3,14 @@ import json
 
 from audiomodel import PlainSequential, CausalDilatedConv1d, ResidualBlock, TCNBlock, MicroTCNBlock, ConvClipper
 from rnn import ResGRU, ResLSTM
-from scc import SCC
+from convwaveshaper import ConvWaveshaper
 from tcn import TCN, MicroTCN
 from wavenet import WaveNet
 
 layers = {
     # Layers
     'causaldilatedconv1d': CausalDilatedConv1d(7, 11, 3, 2),
-    'convclipper': ConvClipper( 12, 1 ),
+    'convclipper': ConvClipper( 1, 1, 12, 4 ),
     'tcnblock': MicroTCNBlock( 7, 11, 3, 2),
     'plainsequential': PlainSequential( 7, 11, 8, 3),
     'residualblock': ResidualBlock( 7, 3, 2, True),
@@ -20,12 +20,12 @@ layers = {
 mu, sigma = 0.1, 0.9
 
 models = {
+    'convwaveshaper': ConvWaveshaper( 4, 8, 12 ),
     'microtcn': MicroTCN(1, 8, 1, 3, 8, 16, 3, mu, sigma),
     'resgru': ResGRU(1, 64, 1, 8, 3, mu, sigma),
     'reslstm': ResLSTM(1, 64, 1, 8, 3, mu, sigma),
-    'scc': SCC( 128, 3 ),
-    'tcn': TCN(1, 8, 1, 3, 8, 8, 3, mu, sigma),
-    'wavenet': WaveNet(1, 8, 1, 3, [1, 2, 4, 8, 16, 32, 64, 128], 1, True, 8, 3, mu, sigma)
+    'tcn': TCN(1, 7, 1, 4, 8, 8, 3, mu, sigma),
+    'wavenet': WaveNet(1, 7, 1, 4, [1, 2, 4, 8, 16, 32, 64, 128], 1, True, 8, 3, mu, sigma)
 }
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@
 #include "models/BaseModel.h"
 #include "models/MicroTCN.h"
 #include "models/ResRNN.h"
-#include "models/SCC.h"
+#include "models/ConvWaveshaper.h"
 #include "models/TCN.h"
 #include "models/WaveNet.h"
 #include "LSTM.h"
@@ -40,9 +40,9 @@ namespace MicroTorch
                     model = std::make_shared<ResRNN<GRU>>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
                     break;
                 }
-                case SCCNET: {
-                    auto parameters = data.at("parameters").template get<SCCParameters>();
-                    model = std::make_shared<SCC>(parameters.kernel_size, parameters.depth_size, config.norm_mean, config.norm_std);
+                case CONVWAVESHAPER: {
+                    auto parameters = data.at("parameters").template get<ConvWaveshaperParameters>();
+                    model = std::make_shared<ConvWaveshaper>(parameters.kernel_size, parameters.depth_size, parameters.num_channels, config.norm_mean, config.norm_std);
                     break;
                 }
                 case TCNET: {
