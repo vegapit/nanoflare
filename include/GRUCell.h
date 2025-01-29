@@ -48,7 +48,7 @@ namespace MicroTorch
         size_t getHiddenSize() const { return m_hiddenSize; }
         bool isBiased() const { return m_bias; }
 
-        inline void forward( const Eigen::Ref<Eigen::VectorXf>& x, Eigen::Ref<Eigen::VectorXf> h ) const noexcept
+        inline void forward( const Eigen::Ref<const Eigen::VectorXf>& x, Eigen::Ref<Eigen::VectorXf> h ) const noexcept
         {
             Eigen::VectorXf r_inner = m_wih.topRows(m_hiddenSize) * x + m_whh.topRows(m_hiddenSize) * h;
             Eigen::VectorXf z_inner = m_wih.middleRows(m_hiddenSize,m_hiddenSize) * x + m_whh.middleRows(m_hiddenSize,m_hiddenSize) * h;

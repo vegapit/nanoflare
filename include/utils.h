@@ -46,7 +46,7 @@ namespace MicroTorch
         return Eigen::Map<Eigen::VectorXf>( values.data(), shape[0] );
     } 
 
-    inline Eigen::RowVectorXf dilate(const Eigen::Ref<Eigen::RowVectorXf>& in, size_t dilation) noexcept
+    inline Eigen::RowVectorXf dilate(const Eigen::Ref<const Eigen::RowVectorXf>& in, size_t dilation) noexcept
     {
         size_t in_size = in.size();
         size_t size = dilation * (in_size - 1) + 1;
@@ -57,7 +57,7 @@ namespace MicroTorch
         return out;
     }
 
-    inline Eigen::RowVectorXf convolve1d(const Eigen::Ref<Eigen::RowVectorXf>& in, const Eigen::Ref<Eigen::RowVectorXf>& weights) noexcept
+    inline Eigen::RowVectorXf convolve1d(const Eigen::Ref<const Eigen::RowVectorXf>& in, const Eigen::Ref<const Eigen::RowVectorXf>& weights) noexcept
     {   
         size_t weights_size = weights.size();
         size_t out_size = in.size() - weights_size + 1;
@@ -67,7 +67,7 @@ namespace MicroTorch
         return out;
     }
 
-    inline Eigen::RowVectorXf dilatedcausalconvolve1d(const Eigen::Ref<Eigen::RowVectorXf>& in, const Eigen::Ref<Eigen::RowVectorXf>& weights, size_t dilation) noexcept
+    inline Eigen::RowVectorXf dilatedcausalconvolve1d(const Eigen::Ref<const Eigen::RowVectorXf>& in, const Eigen::Ref<const Eigen::RowVectorXf>& weights, size_t dilation) noexcept
     {   
         size_t weights_size = weights.size();
         size_t left_padding = dilation * ( weights_size - 1 );

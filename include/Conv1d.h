@@ -23,12 +23,10 @@ namespace MicroTorch
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const noexcept
         {
             RowMatrixXf y = RowMatrixXf::Zero(m_outChannels, getOutputLength( x.cols() ) );
-            std::vector<Eigen::RowVectorXf> x_rows(x.rowwise().begin(), x.rowwise().end());
             for(auto i = 0; i < m_outChannels; i++)
             {
-                std::vector<Eigen::RowVectorXf> w_rows(m_w[i].rowwise().begin(), m_w[i].rowwise().end());
                 for(auto j = 0; j < m_inChannels; j++)
-                    y.row(i) += convolve1d(x_rows[j], w_rows[j]);
+                    y.row(i) += convolve1d(x.row(j), m_w[i].row(j));
                 if(m_bias)
                     y.row(i).array() += m_b(i);
             }
