@@ -23,7 +23,7 @@ namespace MicroTorch
         {
             RowMatrixXf y = m_inputLinear.forward( x ).cwiseMax(0.f);
             for(auto& linear: m_hiddenLinear)
-                y.noalias() = linear.forward( y ).cwiseMax(0.f);
+                y = linear.forward( y ).cwiseMax(0.f);
             if(m_inChannels == m_outChannels)
                 return x + m_outputLinear.forward( y );
             else

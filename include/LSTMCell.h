@@ -50,12 +50,12 @@ namespace MicroTorch
         bool isBiased() const { return m_bias; }
 
         inline void forward(const Eigen::Ref<const Eigen::VectorXf>& x, Eigen::Ref<Eigen::VectorXf> h, Eigen::Ref<Eigen::VectorXf> c) const noexcept {
-            Eigen::VectorXf combined_inner = (m_wih * x) + (m_whh * h); // Key optimization
+            Eigen::VectorXf mat = (m_wih * x) + (m_whh * h); // Key optimization
 
-            auto i_inner = combined_inner.head(m_hiddenSize);
-            auto f_inner = combined_inner.segment(m_hiddenSize, m_hiddenSize);
-            auto g_inner = combined_inner.segment(2 * m_hiddenSize, m_hiddenSize);
-            auto o_inner = combined_inner.tail(m_hiddenSize);
+            auto i_inner = mat.head(m_hiddenSize);
+            auto f_inner = mat.segment(m_hiddenSize, m_hiddenSize);
+            auto g_inner = mat.segment(2 * m_hiddenSize, m_hiddenSize);
+            auto o_inner = mat.tail(m_hiddenSize);
 
             if (m_bias) {
                 i_inner += m_bih.head(m_hiddenSize) + m_bhh.head(m_hiddenSize);

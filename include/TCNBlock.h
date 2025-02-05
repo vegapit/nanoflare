@@ -29,7 +29,7 @@ namespace MicroTorch
             m_f1.apply( y );
             m_bn1.apply( y );
             
-            y.noalias() = m_conv2.forward( y );
+            y = m_conv2.forward( y );
             m_f2.apply( y );
             m_bn2.apply( y );
             

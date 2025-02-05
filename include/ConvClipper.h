@@ -15,11 +15,10 @@ namespace MicroTorch
 
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept
         {
-            RowMatrixXf y = m_conv.forward( x );
-            y.array() = y.array() + (m_coefSoftsign * y).array() / (1.0 + (m_coefSoftsign * y).array().abs());
-            y.array() = y.array() + (m_coefTanh * y).array().tanh();
-            y.noalias() = y.cwiseMin( m_ceiling ).cwiseMax( m_floor );
-            return y;
+            auto y = m_conv.forward( x );
+            y.array() += (m_coefSoftsign * y).array() / (1.f + (m_coefSoftsign * y).array().abs());
+            y.array() += (m_coefTanh * y).array().tanh();
+            return y.cwiseMin( m_ceiling ).cwiseMax( m_floor );
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)
