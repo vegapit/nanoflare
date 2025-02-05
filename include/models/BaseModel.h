@@ -21,8 +21,10 @@ namespace MicroTorch
 
         inline void normalise( Eigen::Ref<RowMatrixXf> x ) noexcept
         {
-            x.array() -= m_normMean; // center
-            x.array() /= m_normStd; // scale
+            if(m_normMean != 0.f)
+                x.array() -= m_normMean; // center
+            if(m_normStd != 1.f)
+                x.array() /= m_normStd; // scale
         }
 
         float getNormMean() const { return m_normMean; }

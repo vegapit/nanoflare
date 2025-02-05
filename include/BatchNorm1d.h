@@ -21,7 +21,7 @@ namespace MicroTorch
             x.array().colwise() *= m_factor.transpose().eval().array();
             x.array().colwise() += m_bias.transpose().eval().array();
         }
-        
+
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)
         {
             auto w = loadVector( std::string("weight"), state_dict );

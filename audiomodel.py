@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from torchaudio.functional import lowpass_biquad, highpass_biquad
 
 class AudioModel(nn.Module):
     def __init__(self, norm_mean: float, norm_std: float):
@@ -295,8 +296,9 @@ class ConvClipper( nn.Module ):
         self.coef_tanh = nn.parameter.Parameter( torch.randn(1), requires_grad=True )
     def forward(self, x):
         y = self.conv( x )
-        z = y + self.coef_softsign * nn.functional.softsign( y ) + self.coef_tanh * nn.functional.tanh( y )
-        return torch.clip( z, -torch.sigmoid( 5.0 * self.floor ), torch.sigmoid( 5.0 * self.ceiling ) )
+        y = y + nn.functional.softsign( self.coef_softsign  * y )
+        y = y + nn.functional.tanh( self.coef_tanh * y )
+        return torch.clip( y, min=-torch.sigmoid( 5.0 * self.floor ), max=torch.sigmoid( 5.0 * self.ceiling ) )
     def generate_doc(self):
         state_dict = self.state_dict()
         doc = {
@@ -320,12 +322,9 @@ class ConvClipper( nn.Module ):
         }
         return doc
     
-def sr_loss(y, y_pred, coeff=0.85):
-    """
-    Error to signal ratio with pre-emphasis filter:
-    https://www.mdpi.com/2076-3417/10/3/766/htm
-    """
-    y, y_pred = pre_emphasis_filter(y, coeff=coeff), pre_emphasis_filter(y_pred, coeff=coeff)
+def sr_loss(y, y_pred, low_freq, high_freq, sample_rate):
+    y = bandpass_filter(y, low_freq, high_freq, sample_rate)
+    y_pred = bandpass_filter(y_pred, low_freq, high_freq, sample_rate)
     return (y - y_pred).pow(2).sum() / y.pow(2).sum()
 
 def dc_loss(y, y_pred):
@@ -337,5 +336,6 @@ def dc_loss(y, y_pred):
 def snr_loss(y, y_pred):
     return (y - y_pred).var()
 
-def pre_emphasis_filter(x, coeff=0.85): # for n >= 1, y[n] = x[n] - 0.85 * x[n-1] or y[0] = x[0]
-    return torch.cat((x[:, :, 0:1], x[:, :, 1:] - coeff * x[:, :, :-1]), dim=2)
+def bandpass_filter(x, low_freq, high_freq, sample_rate):
+    x = highpass_biquad( x, sample_rate, low_freq )
+    return lowpass_biquad( x, sample_rate, high_freq )

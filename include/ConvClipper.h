@@ -16,9 +16,10 @@ namespace MicroTorch
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept
         {
             RowMatrixXf y = m_conv.forward( x );
-            RowMatrixXf z = y.array() + m_coefSoftsign * y.array() / (1.0 + y.array().abs()) + m_coefTanh * y.array().tanh();
-            z.noalias() = z.cwiseMin( m_ceiling ).cwiseMax( m_floor );
-            return z;
+            y.array() = y.array() + (m_coefSoftsign * y).array() / (1.0 + (m_coefSoftsign * y).array().abs());
+            y.array() = y.array() + (m_coefTanh * y).array().tanh();
+            y.noalias() = y.cwiseMin( m_ceiling ).cwiseMax( m_floor );
+            return y;
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)
@@ -26,9 +27,9 @@ namespace MicroTorch
             auto conv_state_dict = state_dict[std::string("conv")].get<std::map<std::string, nlohmann::json>>();
             m_conv.loadStateDict( conv_state_dict );
             auto floor = loadVector( std::string("floor"), state_dict );
-            m_floor = -1.f / (1.f + std::exp(-5.f * floor(0)));
+            m_floor = -sigmoid(5.f * floor(0));
             auto ceiling = loadVector( std::string("ceiling"), state_dict );
-            m_ceiling = 1.f / (1.f + std::exp(-5.f * ceiling(0)));
+            m_ceiling = sigmoid(5.f * ceiling(0));
             auto coef_softsign = loadVector( std::string("coef_softsign"), state_dict );
             m_coefSoftsign = coef_softsign(0); 
             auto coef_tanh = loadVector( std::string("coef_tanh"), state_dict );
@@ -36,6 +37,9 @@ namespace MicroTorch
         }
 
     private:
+
+       inline static float sigmoid(const float& x) { return 1.f / (1.f + std::exp(-x)); }
+
         CausalDilatedConv1d m_conv;
         float m_floor, m_ceiling, m_coefSoftsign, m_coefTanh;
     };

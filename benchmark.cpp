@@ -128,7 +128,7 @@ inline void BM_ResGRULibtorch(benchmark::State& state)
 
 inline void BM_MicroTCN(benchmark::State& state)
 {
-    constexpr int num_samples = 512 + 256;
+    constexpr int num_samples = 512 + 128;
 
     std::shared_ptr<BaseModel> obj;
     RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
@@ -152,7 +152,7 @@ inline void BM_MicroTCN(benchmark::State& state)
 
 inline void BM_MicroTCNLibtorch(benchmark::State& state)
 {
-    constexpr int num_samples = 512 + 256;
+    constexpr int num_samples = 512 + 128;
 
     torch::jit::script::Module module;
     try
@@ -186,7 +186,7 @@ inline void BM_MicroTCNLibtorch(benchmark::State& state)
 
 inline void BM_TCN(benchmark::State& state)
 {
-    constexpr int num_samples = 512 + 256;
+    constexpr int num_samples = 512 + 128;
 
     std::shared_ptr<BaseModel> obj;
     RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
@@ -210,7 +210,7 @@ inline void BM_TCN(benchmark::State& state)
 
 inline void BM_ConvWaveshaper(benchmark::State& state)
 {
-    constexpr int num_samples = 512 + 256;
+    constexpr int num_samples = 512 + 128;
 
     std::shared_ptr<BaseModel> obj;
     RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
@@ -234,7 +234,7 @@ inline void BM_ConvWaveshaper(benchmark::State& state)
 
 inline void BM_ConvWaveshaperLibtorch(benchmark::State& state)
 {
-    constexpr int num_samples = 512 + 256;
+    constexpr int num_samples = 512 + 128;
 
     torch::jit::script::Module module;
     try
@@ -268,7 +268,7 @@ inline void BM_ConvWaveshaperLibtorch(benchmark::State& state)
 
 inline void BM_TCNLibtorch(benchmark::State& state)
 {
-    constexpr int num_samples = 512 + 256;
+    constexpr int num_samples = 512 + 128;
 
     torch::jit::script::Module module;
     try
@@ -302,7 +302,7 @@ inline void BM_TCNLibtorch(benchmark::State& state)
 
 inline void BM_WaveNet(benchmark::State& state)
 {
-    constexpr int num_samples = 512 + 256;
+    constexpr int num_samples = 512 + 128;
 
     std::shared_ptr<BaseModel> obj;
     RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
@@ -325,7 +325,7 @@ inline void BM_WaveNet(benchmark::State& state)
 
 inline void BM_WaveNetLibtorch(benchmark::State& state)
 {
-    constexpr int num_samples = 512 + 256;
+    constexpr int num_samples = 512 + 128;
 
     torch::jit::script::Module module;
     try

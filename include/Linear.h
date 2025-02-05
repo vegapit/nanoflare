@@ -15,7 +15,7 @@ namespace MicroTorch
             m_b(Eigen::RowVectorXf::Zero(out_channels))
         {}
         ~Linear() = default;
-
+        
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const noexcept
         {
             RowMatrixXf y = x * m_transW;

@@ -51,19 +51,29 @@ namespace MicroTorch
         size_t in_size = in.size();
         size_t size = dilation * (in_size - 1) + 1;
         Eigen::RowVectorXf out = Eigen::RowVectorXf::Zero(size);
+
+        const float* in_ptr = in.data();
+        float* out_ptr = out.data();
+
         for(auto i = 0; i < in_size - 1; i++)
-            out(dilation * i) = in(i);
-        out(size - 1) = in(in_size - 1);
+            out_ptr[dilation * i] = in_ptr[i];
+        out_ptr[size - 1] = in_ptr[in_size - 1];
         return out;
     }
 
     inline Eigen::RowVectorXf convolve1d(const Eigen::Ref<const Eigen::RowVectorXf>& in, const Eigen::Ref<const Eigen::RowVectorXf>& weights) noexcept
-    {   
+    {
         size_t weights_size = weights.size();
         size_t out_size = in.size() - weights_size + 1;
-        Eigen::RowVectorXf out(out_size);
-        for(auto i = 0; i < out_size; i++)
-            out(i) = in.segment(i, weights_size).dot(weights);
+        Eigen::RowVectorXf out = Eigen::RowVectorXf::Zero(out_size);
+
+        const float* in_ptr = in.data();
+        const float* weights_ptr = weights.data();
+        float* out_ptr = out.data();
+
+        for (size_t i = 0; i < out_size; ++i)
+            for (size_t j = 0; j < weights_size; ++j)
+                out_ptr[i] += in_ptr[i + j] * weights_ptr[j];
         return out;
     }
 
@@ -73,10 +83,15 @@ namespace MicroTorch
         size_t left_padding = dilation * ( weights_size - 1 );
         size_t out_size = in.size();
         Eigen::RowVectorXf out = Eigen::RowVectorXf::Zero(out_size);
+
+        const float* in_ptr = in.data();
+        const float* weights_ptr = weights.data();
+        float* out_ptr = out.data();
+
         for(auto i = 0; i < out_size; i++)
             for(auto k = 0; k < weights_size; k++)
                 if(i + k * dilation >= left_padding)
-                    out(i) += weights(k) * in(i + k * dilation - left_padding);
+                    out_ptr[i] += weights_ptr[k] * in_ptr[i + k * dilation - left_padding];
         return out;
     }
 

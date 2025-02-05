@@ -26,7 +26,7 @@ namespace MicroTorch
             RowMatrixXf norm_x( x );
             normalise( norm_x );
             for(auto& unit: m_stack )
-                norm_x.noalias() = unit.forward( norm_x );
+                norm_x = unit.forward( norm_x );
             return norm_x;
         }
 

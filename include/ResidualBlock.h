@@ -26,7 +26,7 @@ namespace MicroTorch
             else
                 y.array() = y_inner.array().tanh();
 
-            y.noalias() = m_outputConv.forward( y );
+            y = m_outputConv.forward( y );
 
             return std::make_pair(y + x, y); // (Res,Skip)
         }

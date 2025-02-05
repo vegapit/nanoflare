@@ -29,7 +29,7 @@ namespace MicroTorch
             else
                 return m_directLinear.forward( x ) + m_outputLinear.forward( y );
         }
-        
+
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)
         {
             auto direct_linear_state_dict = state_dict[std::string("direct_linear")].get<std::map<std::string, nlohmann::json>>();

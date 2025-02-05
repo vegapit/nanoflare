@@ -26,7 +26,7 @@ namespace MicroTorch
             RowMatrixXf norm_x( x );
             normalise( norm_x );
             for(auto& block: m_blockStack )
-                norm_x.noalias() = block.forward( norm_x );
+                norm_x = block.forward( norm_x );
             norm_x.transposeInPlace();
             return m_plainSequential.forward( norm_x ).transpose();
         }

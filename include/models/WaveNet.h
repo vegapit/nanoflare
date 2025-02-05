@@ -23,7 +23,7 @@ namespace MicroTorch
                     m_blockStack.push_back( ResidualBlock(num_channels, kernel_size, dilation, gated) );
         }
         ~WaveNet() = default;
-        
+
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept override final
         {
             auto dilations_size = m_dilations.size();
@@ -38,7 +38,7 @@ namespace MicroTorch
                 for(auto i = 0; i < dilations_size; i++)
                 {
                     std::tie( y, skip_y ) = m_blockStack[k * dilations_size + i].forward( y );
-                    skip_sum.array() += skip_y.array();
+                    skip_sum += skip_y;
                 }
 
             RowMatrixXf res = skip_sum.cwiseMax(0.f).transpose();
