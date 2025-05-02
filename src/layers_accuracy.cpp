@@ -34,14 +34,14 @@ bool batchnorm1d_pytorch_match()
     size_t seqLength = 5;
 
     BatchNorm1d obj(numChannels);
-    std::ifstream model_file("../test_data/batchnorm1d.json");
+    std::ifstream model_file("../data/batchnorm1d.json");
     obj.loadStateDict( nlohmann::json::parse(model_file) );
 
     auto torch_data = torch::randn({long(numChannels), long(seqLength) });
     auto eigen_data = torch_to_eigen( torch_data );
     obj.apply( eigen_data );
 
-    torch::jit::script::Module module = torch::jit::load("../test_data/batchnorm1d.torchscript");
+    torch::jit::script::Module module = torch::jit::load("../data/batchnorm1d.torchscript");
     
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back( torch_data.unsqueeze(0) );
@@ -64,14 +64,14 @@ bool causaldilatedconv1d_pytorch_match()
     size_t seqLength = 5;
 
     CausalDilatedConv1d obj(inChannels, outChannels, kernelSize, true, dilation);
-    std::ifstream model_file("../test_data/causaldilatedconv1d.json");
+    std::ifstream model_file("../data/causaldilatedconv1d.json");
     obj.loadStateDict( nlohmann::json::parse(model_file) );
 
     auto torch_data = torch::randn({ long(inChannels), long(seqLength) });
     auto eigen_data = torch_to_eigen( torch_data );
     auto pred = obj.forward( eigen_data );
 
-    torch::jit::script::Module module = torch::jit::load("../test_data/causaldilatedconv1d.torchscript");
+    torch::jit::script::Module module = torch::jit::load("../data/causaldilatedconv1d.torchscript");
     
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back(torch_data);
@@ -93,14 +93,14 @@ bool conv1d_pytorch_match()
     size_t seqLength = 5;
 
     Conv1d obj(inChannels, outChannels, kernelSize, true);
-    std::ifstream model_file("../test_data/conv1d.json");
+    std::ifstream model_file("../data/conv1d.json");
     obj.loadStateDict( nlohmann::json::parse(model_file) );
 
     auto torch_data = torch::randn({ long(inChannels), long(seqLength) });
     auto eigen_data = torch_to_eigen( torch_data );
     auto pred = obj.forward( eigen_data );
 
-    torch::jit::script::Module module = torch::jit::load("../test_data/conv1d.torchscript");
+    torch::jit::script::Module module = torch::jit::load("../data/conv1d.torchscript");
     
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back(torch_data);
@@ -121,14 +121,14 @@ bool convclipper_pytorch_match()
     size_t seqLength = 64;
 
     ConvClipper obj(1, 1, kernelSize, dilation);
-    std::ifstream model_file("../test_data/convclipper.json");
+    std::ifstream model_file("../data/convclipper.json");
     obj.loadStateDict( nlohmann::json::parse(model_file) );
 
     auto torch_data = torch::randn({ 1, long(seqLength) });
     auto eigen_data = torch_to_eigen( torch_data );
     auto pred = obj.forward( eigen_data );
 
-    torch::jit::script::Module module = torch::jit::load("../test_data/convclipper.torchscript");
+    torch::jit::script::Module module = torch::jit::load("../data/convclipper.torchscript");
     
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back(torch_data);
@@ -149,14 +149,14 @@ bool gru_pytorch_match()
     size_t seqLength = 5;
     
     GRU obj(inputSize, hiddenSize, true);
-    std::ifstream model_file("../test_data/gru.json");
+    std::ifstream model_file("../data/gru.json");
     obj.loadStateDict( nlohmann::json::parse(model_file) );
 
     auto torch_data = torch::randn({ long(seqLength), long(inputSize) });
     auto eigen_data = torch_to_eigen( torch_data );
     auto pred = obj.forward( eigen_data );
 
-    torch::jit::script::Module module = torch::jit::load("../test_data/gru.torchscript");
+    torch::jit::script::Module module = torch::jit::load("../data/gru.torchscript");
 
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back( torch_data );
@@ -178,14 +178,14 @@ bool linear_pytorch_match()
     size_t batchSize = 5;
 
     Linear obj(inChannels, outChannels, true);
-    std::ifstream model_file("../test_data/linear.json");
+    std::ifstream model_file("../data/linear.json");
     obj.loadStateDict( nlohmann::json::parse(model_file) );
 
     auto torch_data = torch::randn({ long(batchSize), long(inChannels)});
     auto eigen_data = torch_to_eigen( torch_data );
     auto pred = obj.forward( eigen_data );
 
-    torch::jit::script::Module module = torch::jit::load("../test_data/linear.torchscript");
+    torch::jit::script::Module module = torch::jit::load("../data/linear.torchscript");
     
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back(torch_data);
@@ -206,14 +206,14 @@ bool lstm_pytorch_match()
     size_t seqLength = 5;
     
     LSTM obj(inputSize, hiddenSize, true);
-    std::ifstream model_file("../test_data/lstm.json");
+    std::ifstream model_file("../data/lstm.json");
     obj.loadStateDict( nlohmann::json::parse(model_file) );
 
     auto torch_data = torch::randn({ long(seqLength), long(inputSize) });
     auto eigen_data = torch_to_eigen( torch_data );
     auto pred = obj.forward( eigen_data );
 
-    torch::jit::script::Module module = torch::jit::load("../test_data/lstm.torchscript");
+    torch::jit::script::Module module = torch::jit::load("../data/lstm.torchscript");
     
     std::tuple<torch::jit::IValue, torch::jit::IValue> hc { torch::zeros({ 1, long(hiddenSize)}) , torch::zeros({ 1, long(hiddenSize)}) };
 
@@ -239,14 +239,14 @@ bool microtcnblock_pytorch_match()
     size_t seqLength = 5;
 
     MicroTCNBlock obj(inChannels, outChannels, kernelSize, dilation);
-    std::ifstream model_file("../test_data/microtcnblock.json");
+    std::ifstream model_file("../data/microtcnblock.json");
     obj.loadStateDict( nlohmann::json::parse(model_file) );
 
     auto torch_data = torch::randn({ long(inChannels), long(seqLength) });
     auto eigen_data = torch_to_eigen( torch_data );
     auto pred = obj.forward( eigen_data );
 
-    torch::jit::script::Module module = torch::jit::load("../test_data/microtcnblock.torchscript");
+    torch::jit::script::Module module = torch::jit::load("../data/microtcnblock.torchscript");
     
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back( torch_data.unsqueeze(0) );
@@ -269,14 +269,14 @@ bool plainsequential_pytorch_match()
     size_t batchSize = 5;
 
     PlainSequential obj(inChannels, outChannels, hiddenChannels, numHiddenLayers);
-    std::ifstream model_file("../test_data/plainsequential.json");
+    std::ifstream model_file("../data/plainsequential.json");
     obj.loadStateDict( nlohmann::json::parse(model_file) );
 
     auto torch_data = torch::randn({ long(batchSize), long(inChannels)});
     auto eigen_data = torch_to_eigen( torch_data );
     auto pred = obj.forward( eigen_data );
 
-    torch::jit::script::Module module = torch::jit::load("../test_data/plainsequential.torchscript");
+    torch::jit::script::Module module = torch::jit::load("../data/plainsequential.torchscript");
     
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back(torch_data);
@@ -299,14 +299,14 @@ bool residualblock_pytorch_match()
     size_t seqLength = 5;
 
     ResidualBlock obj(numChannels, kernelSize, dilation, gated);
-    std::ifstream model_file("../test_data/residualblock.json");
+    std::ifstream model_file("../data/residualblock.json");
     obj.loadStateDict( nlohmann::json::parse(model_file) );
 
     auto torch_data = torch::randn({ long(numChannels), long(seqLength)});
     auto eigen_data = torch_to_eigen( torch_data );
     auto pred = obj.forward( eigen_data ).second;
 
-    torch::jit::script::Module module = torch::jit::load("../test_data/residualblock.torchscript");
+    torch::jit::script::Module module = torch::jit::load("../data/residualblock.torchscript");
     
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back( torch_data.unsqueeze(0) );
@@ -329,14 +329,14 @@ bool tcnblock_pytorch_match()
     size_t seqLength = 5;
 
     TCNBlock obj(inChannels, outChannels, kernelSize, dilation);
-    std::ifstream model_file("../test_data/tcnblock.json");
+    std::ifstream model_file("../data/tcnblock.json");
     obj.loadStateDict( nlohmann::json::parse(model_file) );
 
     auto torch_data = torch::randn({ long(inChannels), long(seqLength) });
     auto eigen_data = torch_to_eigen( torch_data );
     auto pred = obj.forward( eigen_data );
 
-    torch::jit::script::Module module = torch::jit::load("../test_data/tcnblock.torchscript");
+    torch::jit::script::Module module = torch::jit::load("../data/tcnblock.torchscript");
     
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back( torch_data.unsqueeze(0) );

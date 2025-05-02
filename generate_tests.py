@@ -1,11 +1,11 @@
 import torch
 import json
 
-from audiomodel import PlainSequential, CausalDilatedConv1d, ResidualBlock, TCNBlock, MicroTCNBlock, ConvClipper
-from rnn import ResGRU, ResLSTM
-from convwaveshaper import ConvWaveshaper
-from tcn import TCN, MicroTCN
-from wavenet import WaveNet
+from pytorch.audiomodel import PlainSequential, CausalDilatedConv1d, ResidualBlock, TCNBlock, MicroTCNBlock, ConvClipper
+from pytorch.rnn import ResGRU, ResLSTM
+from pytorch.convwaveshaper import ConvWaveshaper
+from pytorch.tcn import TCN, MicroTCN
+from pytorch.wavenet import WaveNet
 
 layers = {
     # Layers
@@ -33,15 +33,15 @@ if __name__ == "__main__":
     for layer_name, layer in layers.items():
         print(layer_name)
         doc = layer.generate_doc()
-        with open(f'test_data/{layer_name}.json', 'w') as file:
+        with open(f'data/{layer_name}.json', 'w') as file:
             json.dump(doc, file)
         script_module = torch.jit.script(layer)
-        script_module.save(f'test_data/{layer_name}.torchscript')
+        script_module.save(f'data/{layer_name}.torchscript')
 
     for model_name, model in models.items():
         print(model_name)
         doc = model.generate_doc()
-        with open(f'test_data/{model_name}.json', 'w') as file:
+        with open(f'data/{model_name}.json', 'w') as file:
             json.dump(doc, file)
         script_module = torch.jit.script(model)
-        script_module.save(f'test_data/{model_name}.torchscript')
+        script_module.save(f'data/{model_name}.torchscript')

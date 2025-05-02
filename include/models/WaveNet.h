@@ -1,6 +1,6 @@
 #pragma once
 
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include "models/BaseModel.h"
 #include "ResidualBlock.h"
 #include "CausalDilatedConv1d.h"

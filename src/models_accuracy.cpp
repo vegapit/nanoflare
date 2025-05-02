@@ -22,14 +22,14 @@ bool microtcn_match()
     constexpr int num_samples = 4096;
 
     std::shared_ptr<BaseModel> obj;
-    std::ifstream model_file("../test_data/microtcn.json");
+    std::ifstream model_file("../data/microtcn.json");
     ModelBuilder::fromJson( nlohmann::json::parse(model_file), obj );
 
     auto torch_data = torch::randn({1, num_samples});
     auto eigen_data = torch_to_eigen( torch_data );
     auto pred = obj->forward( eigen_data );
 
-    torch::jit::script::Module module = torch::jit::load("../test_data/microtcn.torchscript");
+    torch::jit::script::Module module = torch::jit::load("../data/microtcn.torchscript");
     
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back( torch_data.unsqueeze(0) );
@@ -48,14 +48,14 @@ bool resgru_match()
     constexpr int num_samples = 4096;
 
     std::shared_ptr<BaseModel> obj;
-    std::ifstream model_file("../test_data/resgru.json");
+    std::ifstream model_file("../data/resgru.json");
     ModelBuilder::fromJson( nlohmann::json::parse(model_file), obj );
 
     auto torch_data = torch::randn({1, num_samples});
     auto eigen_data = torch_to_eigen( torch_data );
     auto pred = obj->forward( eigen_data );
 
-    torch::jit::script::Module module = torch::jit::load("../test_data/resgru.torchscript");
+    torch::jit::script::Module module = torch::jit::load("../data/resgru.torchscript");
     
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back( torch_data.unsqueeze(0) );
@@ -75,14 +75,14 @@ bool reslstm_match()
     constexpr int num_samples = 2048;
 
     std::shared_ptr<BaseModel> obj;
-    std::ifstream model_file("../test_data/reslstm.json");
+    std::ifstream model_file("../data/reslstm.json");
     ModelBuilder::fromJson( nlohmann::json::parse(model_file), obj );
 
     auto torch_data = torch::randn({1, num_samples});
     auto eigen_data = torch_to_eigen( torch_data );
     auto pred = obj->forward( eigen_data );
 
-    torch::jit::script::Module module = torch::jit::load("../test_data/reslstm.torchscript");
+    torch::jit::script::Module module = torch::jit::load("../data/reslstm.torchscript");
     
     std::tuple<torch::jit::IValue, torch::jit::IValue> hc { torch::zeros({1, 1, 64}) , torch::zeros({1, 1, 64}) };
 
@@ -104,14 +104,14 @@ bool convwaveshaper_match()
     constexpr int num_samples = 2048;
 
     std::shared_ptr<BaseModel> obj;
-    std::ifstream model_file("../test_data/convwaveshaper.json");
+    std::ifstream model_file("../data/convwaveshaper.json");
     ModelBuilder::fromJson( nlohmann::json::parse(model_file), obj );
 
     auto torch_data = torch::randn({1, num_samples});
     auto eigen_data = torch_to_eigen( torch_data );
     auto pred = obj->forward( eigen_data );
 
-    torch::jit::script::Module module = torch::jit::load("../test_data/convwaveshaper.torchscript");
+    torch::jit::script::Module module = torch::jit::load("../data/convwaveshaper.torchscript");
     
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back( torch_data.unsqueeze(0) );
@@ -130,14 +130,14 @@ bool tcn_match()
     constexpr int num_samples = 4096;
 
     std::shared_ptr<BaseModel> obj;
-    std::ifstream model_file("../test_data/tcn.json");
+    std::ifstream model_file("../data/tcn.json");
     ModelBuilder::fromJson( nlohmann::json::parse(model_file), obj );
 
     auto torch_data = torch::randn({1, num_samples});
     auto eigen_data = torch_to_eigen( torch_data );
     auto pred = obj->forward( eigen_data );
 
-    torch::jit::script::Module module = torch::jit::load("../test_data/tcn.torchscript");
+    torch::jit::script::Module module = torch::jit::load("../data/tcn.torchscript");
     
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back( torch_data.unsqueeze(0) );
@@ -156,14 +156,14 @@ bool wavenet_match()
     constexpr int num_samples = 4096;
 
     std::shared_ptr<BaseModel> obj;
-    std::ifstream model_file("../test_data/wavenet.json");
+    std::ifstream model_file("../data/wavenet.json");
     ModelBuilder::fromJson( nlohmann::json::parse(model_file), obj );
 
     auto torch_data = torch::randn({1, num_samples});
     auto eigen_data = torch_to_eigen( torch_data );
     auto pred = obj->forward( eigen_data );
 
-    torch::jit::script::Module module = torch::jit::load("../test_data/wavenet.torchscript");
+    torch::jit::script::Module module = torch::jit::load("../data/wavenet.torchscript");
     
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back( torch_data.unsqueeze(0) );
