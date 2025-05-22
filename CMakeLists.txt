@@ -6,17 +6,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED true)
 project( microtorch )
 
 find_package(catch2 3 REQUIRED)
-find_package(nlohmann_json 3.11.3 REQUIRED)
-find_package(Torch REQUIRED PATHS "/Users/korchov/3rdparty/libtorch")
+find_package(Torch REQUIRED PATHS ${LIBTORCH_DIR})
 
-# fmt
-add_subdirectory("/Users/korchov/3rdparty/fmt" ${CMAKE_BINARY_DIR}/fmt)
-
-# Nanobench
-add_subdirectory("/Users/korchov/3rdparty/nanobench" ${CMAKE_BINARY_DIR}/nanobench)
-
-# Eigen 3
-include_directories("/Users/korchov/3rdparty/eigen-3.4.0/")
+# Submodules
+add_subdirectory(${CMAKE_SOURCE_DIR}/fmt)
+add_subdirectory(${CMAKE_SOURCE_DIR}/json)
+add_subdirectory(${CMAKE_SOURCE_DIR}/nanobench)
+include_directories(${CMAKE_SOURCE_DIR}/eigen)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 

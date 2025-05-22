@@ -1,0 +1,16 @@
+[submodule "nanobench"]
+	path = nanobench
+	url = https://github.com/martinus/nanobench
+	ignore = dirty
+[submodule "eigen"]
+	path = eigen
+	url = https://gitlab.com/libeigen/eigen.git
+	ignore = dirty
+[submodule "fmt"]
+	path = fmt
+	url = https://github.com/fmtlib/fmt
+	ignore = dirty
+[submodule "json"]
+	path = json
+	url = https://github.com/nlohmann/json
+	ignore = dirty
