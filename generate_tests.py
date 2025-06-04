@@ -33,15 +33,15 @@ if __name__ == "__main__":
     for layer_name, layer in layers.items():
         print(layer_name)
         doc = layer.generate_doc()
-        with open(f'data/{layer_name}.json', 'w') as file:
+        with open(f'tests/data/{layer_name}.json', 'w') as file:
             json.dump(doc, file)
         script_module = torch.jit.script(layer)
-        script_module.save(f'data/{layer_name}.torchscript')
+        script_module.save(f'tests/data/{layer_name}.torchscript')
 
     for model_name, model in models.items():
         print(model_name)
         doc = model.generate_doc()
-        with open(f'data/{model_name}.json', 'w') as file:
+        with open(f'tests/data/{model_name}.json', 'w') as file:
             json.dump(doc, file)
         script_module = torch.jit.script(model)
         script_module.save(f'data/{model_name}.torchscript')
