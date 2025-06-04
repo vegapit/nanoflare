@@ -1,7 +1,7 @@
 import torch
 import json
 
-from pytorch.audiomodel import PlainSequential, CausalDilatedConv1d, ResidualBlock, TCNBlock, MicroTCNBlock, ConvClipper
+from pytorch.modules import PlainSequential, CausalDilatedConv1d, ResidualBlock, TCNBlock, MicroTCNBlock, ConvClipper
 from pytorch.rnn import ResGRU, ResLSTM
 from pytorch.convwaveshaper import ConvWaveshaper
 from pytorch.tcn import TCN, MicroTCN
@@ -11,7 +11,7 @@ layers = {
     # Layers
     'causaldilatedconv1d': CausalDilatedConv1d(7, 11, 3, 2),
     'convclipper': ConvClipper( 1, 1, 12, 4 ),
-    'tcnblock': MicroTCNBlock( 7, 11, 3, 2),
+    'microtcnblock': MicroTCNBlock( 7, 11, 3, 2),
     'plainsequential': PlainSequential( 7, 11, 8, 3),
     'residualblock': ResidualBlock( 7, 3, 2, True),
     'tcnblock': TCNBlock( 7, 11, 3, 2),

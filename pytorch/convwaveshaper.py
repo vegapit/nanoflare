@@ -1,9 +1,9 @@
 import torch
 from torch import nn
 from collections import OrderedDict
-from .audiomodel import AudioModel, ConvClipper
+from .modules import BaseModel, ConvClipper
 
-class ConvWaveshaper( AudioModel ):
+class ConvWaveshaper( BaseModel ):
     def __init__(self, kernel_size, depth_size, num_channels, norm_mean = 0.0, norm_std = 1.0):
         super().__init__(norm_mean, norm_std)
         self.kernel_size = kernel_size

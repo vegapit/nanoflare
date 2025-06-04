@@ -1,16 +1,15 @@
 [submodule "eigen"]
-	path = microtorch/eigen
+	path = nanoflare/eigen
 	url = https://gitlab.com/libeigen/eigen.git
 	ignore = dirty
 [submodule "json"]
-	path = microtorch/json
+	path = nanoflare/json
 	url = https://github.com/nlohmann/json
 	ignore = dirty
 [submodule "fmt"]
 	path = tests/fmt
 	url = https://github.com/fmtlib/fmt
 	ignore = dirty
-[submodule "nanobench"]
-	path = tests/nanobench
-	url = https://github.com/martinus/nanobench
-	ignore = dirty
+[submodule "tests/Catch2"]
+	path = tests/Catch2
+	url = https://github.com/catchorg/Catch2.git

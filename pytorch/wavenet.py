@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
-from .audiomodel import AudioModel, CausalDilatedConv1d, ResidualBlock, PlainSequential
+from .modules import BaseModel, CausalDilatedConv1d, ResidualBlock, PlainSequential
 
-class WaveNet(AudioModel):
+class WaveNet( BaseModel ):
     def __init__(self, input_size, num_channels, output_size, kernel_size, dilations, stack_size, gated, ps_hidden_size, ps_num_hidden_layers, norm_mean=0.0, norm_std=1.0):
         super().__init__(norm_mean, norm_std)
         self.input_size = input_size

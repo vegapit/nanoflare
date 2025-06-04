@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
-from .audiomodel import AudioModel, TCNBlock, MicroTCNBlock, PlainSequential
+from .modules import BaseModel, TCNBlock, MicroTCNBlock, PlainSequential
 
-class TCN(AudioModel):
+class TCN( BaseModel ):
     def __init__(self, input_size, hidden_size, output_size, kernel_size, stack_size, ps_hidden_size, ps_num_hidden_layers, norm_mean = 0.0, norm_std = 1.0):
         super().__init__(norm_mean, norm_std)
         self.input_size = input_size
@@ -43,7 +43,7 @@ class TCN(AudioModel):
             doc['state_dict'][f'block_stack.{i}'] = block.generate_doc()
         return doc
 
-class MicroTCN(AudioModel):
+class MicroTCN( BaseModel ):
     def __init__(self, input_size, hidden_size, output_size, kernel_size, stack_size, ps_hidden_size, ps_num_hidden_layers, norm_mean = 0.0, norm_std = 1.0):
         super().__init__(norm_mean, norm_std)
         self.input_size = input_size

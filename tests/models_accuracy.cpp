@@ -7,9 +7,10 @@
 #include <vector>
 #include "filesystem.h"
 
-using namespace MicroTorch;
+using namespace NanoFlare;
 
-inline RowMatrixXf torch_to_eigen(const torch::Tensor& t) {
+inline RowMatrixXf torch_to_eigen(const torch::Tensor& t)
+{
     auto acc = t.accessor<float, 2>();
     RowMatrixXf res( acc.size(0), acc.size(1) );
     for(auto i = 0; i < acc.size(0); i++)
@@ -18,10 +19,10 @@ inline RowMatrixXf torch_to_eigen(const torch::Tensor& t) {
     return res;
 }
 
-bool convwaveshaper_match()
-{
-    constexpr int num_samples = 2048;
+constexpr int num_samples = 2048;
 
+TEST_CASE("ConvWaveshaper Test", "[ConvWaveshaper]")
+{
     filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= filesystem::path("tests/data/convwaveshaper.json");
     filesystem::path tsPath( PROJECT_SOURCE_DIR );
@@ -46,13 +47,11 @@ bool convwaveshaper_match()
     auto torch_res = module.forward( inputs ).toTensor();
     auto target = torch_to_eigen( torch_res.squeeze(0) );
 
-    return ( (pred - target).norm() < 1e-4 );
+    REQUIRE( (pred - target).norm() < 1e-4 );
 }
 
-bool microtcn_match()
+TEST_CASE("MicroTCN Test", "[MicroTCN]")
 {
-    constexpr int num_samples = 4096;
-
     filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= filesystem::path("tests/data/microtcn.json");
     filesystem::path tsPath( PROJECT_SOURCE_DIR );
@@ -77,13 +76,11 @@ bool microtcn_match()
     auto torch_res = module.forward( inputs ).toTensor();
     auto target = torch_to_eigen( torch_res.squeeze(0) );
 
-    return ( (pred - target).norm() < 1e-4 );
+    REQUIRE( (pred - target).norm() < 1e-4 );
 }
 
-bool resgru_match()
+TEST_CASE("ResGRU Test", "[ResGRU]")
 {
-    constexpr int num_samples = 4096;
-
     filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= filesystem::path("tests/data/resgru.json");
     filesystem::path tsPath( PROJECT_SOURCE_DIR );
@@ -109,13 +106,11 @@ bool resgru_match()
     auto torch_res = module.forward( inputs ).toTensor();
     auto target = torch_to_eigen( torch_res.squeeze(0) );
 
-    return ( (pred - target).norm() < 1e-4 );
+    REQUIRE( (pred - target).norm() < 1e-4 );
 }
 
-bool reslstm_match()
+TEST_CASE("ResLSTM Test", "[ResLSTM]")
 {
-    constexpr int num_samples = 2048;
-
     filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= filesystem::path("tests/data/reslstm.json");
     filesystem::path tsPath( PROJECT_SOURCE_DIR );
@@ -143,13 +138,11 @@ bool reslstm_match()
     auto torch_res = module.forward( inputs ).toTensor();
     auto target = torch_to_eigen( torch_res.squeeze(0) );
 
-    return ( (pred - target).norm() < 1e-4 );
+    REQUIRE( (pred - target).norm() < 1e-4 );
 }
 
-bool tcn_match()
+TEST_CASE("TCN Test", "[TCN]")
 {
-    constexpr int num_samples = 4096;
-
     filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= filesystem::path("tests/data/tcn.json");
     filesystem::path tsPath( PROJECT_SOURCE_DIR );
@@ -174,13 +167,11 @@ bool tcn_match()
     auto torch_res = module.forward( inputs ).toTensor();
     auto target = torch_to_eigen( torch_res.squeeze(0) );
 
-    return ( (pred - target).norm() < 1e-4 );
+    REQUIRE( (pred - target).norm() < 1e-4 );
 }
 
-bool wavenet_match()
+TEST_CASE("WaveNet Test", "[WaveNet]")
 {
-    constexpr int num_samples = 4096;
-
     filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= filesystem::path("tests/data/wavenet.json");
     filesystem::path tsPath( PROJECT_SOURCE_DIR );
@@ -205,35 +196,5 @@ bool wavenet_match()
     auto torch_res = module.forward( inputs ).toTensor();
     auto target = torch_to_eigen( torch_res.squeeze(0) );
     
-    return ( (pred - target).norm() < 1e-4 );
-}
-
-TEST_CASE("ConvWaveshaper Test", "[convwaveshaper_match]")
-{
-    REQUIRE( convwaveshaper_match() );
-}
-
-TEST_CASE("MicroTCN Test", "[microtcn_match]")
-{
-    REQUIRE( microtcn_match() );
-}
-
-TEST_CASE("ResGRU Test", "[resgru_match]")
-{
-    REQUIRE( resgru_match() );
-}
-
-TEST_CASE("ResLSTM Test", "[reslstm_match]")
-{
-    REQUIRE( reslstm_match() );
-}
-
-TEST_CASE("TCN Test", "[tcn_match]")
-{
-    REQUIRE( tcn_match() );
-}
-
-TEST_CASE("WaveNet Test", "[wavenet_match]")
-{
-    REQUIRE( wavenet_match() );
+    REQUIRE( (pred - target).norm() < 1e-4 );
 }

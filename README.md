@@ -1,6 +1,6 @@
 ```
 cmake -B build -D LIBTORCH_DIR=$LIBTORCH
-cmake -build build -config Release
+cmake --build build --config Release
 
 cd build
 

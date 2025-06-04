@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
-from .audiomodel import AudioModel, PlainSequential
+from .modules import BaseModel, PlainSequential
 
-class ResLSTM(AudioModel):
+class ResLSTM( BaseModel ):
     def __init__(self, input_size, hidden_size, output_size, ps_hidden_size, ps_num_hidden_layers, norm_mean = 0.0, norm_std = 1.0):
         super().__init__(norm_mean, norm_std)
         self.input_size = input_size
@@ -53,7 +53,7 @@ class ResLSTM(AudioModel):
         }
         return doc
 
-class ResGRU(AudioModel):
+class ResGRU( BaseModel ):
     def __init__(self, input_size, hidden_size, output_size, ps_hidden_size, ps_num_hidden_layers, norm_mean = 0.0, norm_std = 1.0):
         super().__init__(norm_mean, norm_std)
         self.input_size = input_size
