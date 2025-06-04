@@ -44,4 +44,4 @@ if __name__ == "__main__":
         with open(f'tests/data/{model_name}.json', 'w') as file:
             json.dump(doc, file)
         script_module = torch.jit.script(model)
-        script_module.save(f'data/{model_name}.torchscript')
+        script_module.save(f'tests/data/{model_name}.torchscript')
