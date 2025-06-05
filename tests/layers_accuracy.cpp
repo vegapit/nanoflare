@@ -6,14 +6,14 @@
 #include <torch/torch.h>
 #include "filesystem.h"
 
-#include "ConvClipper.h"
-#include "CausalDilatedConv1d.h"
-#include "GRU.h"
-#include "LSTM.h"
-#include "MicroTCNBlock.h"
-#include "PlainSequential.h"
-#include "ResidualBlock.h"
-#include "TCNBlock.h"
+#include "nanoflare/layers/ConvClipper.h"
+#include "nanoflare/layers/CausalDilatedConv1d.h"
+#include "nanoflare/layers/GRU.h"
+#include "nanoflare/layers/LSTM.h"
+#include "nanoflare/layers/MicroTCNBlock.h"
+#include "nanoflare/layers/PlainSequential.h"
+#include "nanoflare/layers/ResidualBlock.h"
+#include "nanoflare/layers/TCNBlock.h"
 
 using namespace NanoFlare;
 

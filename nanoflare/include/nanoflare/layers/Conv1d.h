@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Eigen/Dense>
-#include "utils.h"
+#include "nanoflare/utils.h"
 
 namespace NanoFlare
 {

@@ -1,25 +1,29 @@
 #pragma once
 
 #include <Eigen/Dense>
-#include "GRUCell.h"
+#include "nanoflare/layers/LSTMCell.h"
 
 namespace NanoFlare
 {
 
-    class GRU
+    class LSTM
     {
     public:
-        GRU(size_t input_size, size_t hidden_size, bool bias) : m_cell(input_size, hidden_size, bias), m_h(Eigen::VectorXf::Zero(hidden_size)) {}
-        ~GRU() = default;
+        LSTM(size_t input_size, size_t hidden_size, bool bias) : m_cell(input_size, hidden_size, bias), m_h(Eigen::VectorXf::Zero(hidden_size)), m_c(Eigen::VectorXf::Zero(hidden_size)) {}
+        ~LSTM() = default;
 
-        void resetState() { m_h.setZero(); }
+        void resetState()
+        {
+            m_h.setZero();
+            m_c.setZero();
+        }
 
         inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept
         {
             RowMatrixXf y( x.rows(), m_cell.getHiddenSize() );
             for(auto i = 0; i < x.rows(); i++)
             {
-                m_cell.forward( x.row(i), m_h );
+                m_cell.forward( x.row(i), m_h, m_c );
                 y.row(i) = m_h; // Assign h to output
             }
             return y;
@@ -42,8 +46,8 @@ namespace NanoFlare
         }
         
     private:
-        Eigen::VectorXf m_h;
-        GRUCell m_cell;
+        Eigen::VectorXf m_h, m_c;
+        LSTMCell m_cell;
     };
 
 }

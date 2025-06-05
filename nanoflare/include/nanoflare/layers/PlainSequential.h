@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Linear.h"
+#include "nanoflare/layers/Linear.h"
 
 namespace NanoFlare
 {

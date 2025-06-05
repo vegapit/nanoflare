@@ -1,15 +1,15 @@
 #pragma once
 
 #include <nlohmann/json.hpp>
-#include "models/BaseModel.h"
-#include "models/MicroTCN.h"
-#include "models/ResRNN.h"
-#include "models/ConvWaveshaper.h"
-#include "models/TCN.h"
-#include "models/WaveNet.h"
-#include "LSTM.h"
-#include "GRU.h"
-#include "utils.h"
+#include "nanoflare/models/BaseModel.h"
+#include "nanoflare/models/MicroTCN.h"
+#include "nanoflare/models/ResRNN.h"
+#include "nanoflare/models/ConvWaveshaper.h"
+#include "nanoflare/models/TCN.h"
+#include "nanoflare/models/WaveNet.h"
+#include "nanoflare/layers/LSTM.h"
+#include "nanoflare/layers/GRU.h"
+#include "nanoflare/utils.h"
 
 namespace NanoFlare
 {

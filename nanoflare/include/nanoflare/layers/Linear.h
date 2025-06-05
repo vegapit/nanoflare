@@ -2,7 +2,7 @@
 
 #include <Eigen/Dense>
 #include <assert.h>
-#include "utils.h"
+#include "nanoflare/utils.h"
 
 namespace NanoFlare
 {

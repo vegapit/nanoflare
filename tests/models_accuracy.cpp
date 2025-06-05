@@ -1,5 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
-#include "ModelBuilder.h"
+#include "nanoflare/ModelBuilder.h"
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <torch/script.h>

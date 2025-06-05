@@ -15,6 +15,7 @@ target_link_libraries(
     nlohmann_json::nlohmann_json
     "${TORCH_LIBRARIES}"
 )
+target_compile_options(layers_accuracy PRIVATE -march=native)
 add_test(NAME layers_accuracy COMMAND layers_accuracy)
 
 add_executable(models_accuracy models_accuracy.cpp)
@@ -26,6 +27,7 @@ target_link_libraries(
     nlohmann_json::nlohmann_json
     "${TORCH_LIBRARIES}"
 )
+target_compile_options(models_accuracy PRIVATE -march=native)
 add_test(NAME models_accuracy COMMAND models_accuracy)
 
 add_executable(models_benchmarking models_benchmarking.cpp)

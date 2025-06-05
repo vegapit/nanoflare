@@ -4,7 +4,7 @@
 #include <nlohmann/json.hpp>
 #include <assert.h>
 #include <fstream>
-#include "utils.h"
+#include "nanoflare/utils.h"
 
 namespace NanoFlare
 {

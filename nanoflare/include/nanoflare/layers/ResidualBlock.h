@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Conv1d.h"
-#include "CausalDilatedConv1d.h"
-#include "utils.h"
+#include "nanoflare/layers/Conv1d.h"
+#include "nanoflare/layers/CausalDilatedConv1d.h"
+#include "nanoflare/utils.h"
 
 namespace NanoFlare
 {

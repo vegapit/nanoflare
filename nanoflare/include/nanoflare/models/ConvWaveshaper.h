@@ -1,9 +1,9 @@
 #pragma once
 
 #include <Eigen/Dense>
-#include "models/BaseModel.h"
-#include "ConvClipper.h"
-#include "utils.h"
+#include "nanoflare/models/BaseModel.h"
+#include "nanoflare/layers/ConvClipper.h"
+#include "nanoflare/utils.h"
 
 namespace NanoFlare
 {

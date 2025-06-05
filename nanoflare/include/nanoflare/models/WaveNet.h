@@ -1,11 +1,11 @@
 #pragma once
 
 #include <Eigen/Dense>
-#include "models/BaseModel.h"
-#include "ResidualBlock.h"
-#include "CausalDilatedConv1d.h"
-#include "PlainSequential.h"
-#include "utils.h"
+#include "nanoflare/models/BaseModel.h"
+#include "nanoflare/layers/ResidualBlock.h"
+#include "nanoflare/layers/CausalDilatedConv1d.h"
+#include "nanoflare/layers/PlainSequential.h"
+#include "nanoflare/utils.h"
 
 namespace NanoFlare
 {
