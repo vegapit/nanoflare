@@ -1,11 +1,12 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/benchmark/catch_benchmark.hpp>
-#include "nanoflare/ModelBuilder.h"
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <torch/script.h>
 #include <torch/torch.h>
 #include <vector>
+
+#include "nanoflare/ModelBuilder.h"
 #include "filesystem.h"
 
 using namespace NanoFlare;

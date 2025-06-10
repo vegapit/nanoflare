@@ -67,13 +67,8 @@ namespace NanoFlare
         size_t out_size = in.size() - weights_size + 1;
         Eigen::RowVectorXf out = Eigen::RowVectorXf::Zero(out_size);
 
-        const float* in_ptr = in.data();
-        const float* weights_ptr = weights.data();
-        float* out_ptr = out.data();
-
         for (size_t i = 0; i < out_size; ++i)
-            for (size_t j = 0; j < weights_size; ++j)
-                out_ptr[i] += in_ptr[i + j] * weights_ptr[j];
+            out(i) = in.segment(i, weights_size).cwiseProduct(weights).sum();
         return out;
     }
 
@@ -90,8 +85,8 @@ namespace NanoFlare
 
         for(auto i = 0; i < out_size; i++)
             for(auto k = 0; k < weights_size; k++)
-                if(i + k * dilation >= left_padding)
-                    out_ptr[i] += weights_ptr[k] * in_ptr[i + k * dilation - left_padding];
+                if(i + k * dilation >= left_padding) // Avoid adding zero inputs
+                    out_ptr[i] += weights_ptr[k] * in_ptr[i - left_padding + k * dilation];
         return out;
     }
 
