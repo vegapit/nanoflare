@@ -9,7 +9,7 @@
 #include "nanoflare/ModelBuilder.h"
 #include "filesystem.h"
 
-using namespace NanoFlare;
+using namespace Nanoflare;
 
 constexpr int num_samples = 512;
 

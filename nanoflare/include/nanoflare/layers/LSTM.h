@@ -3,7 +3,7 @@
 #include <Eigen/Dense>
 #include "nanoflare/layers/LSTMCell.h"
 
-namespace NanoFlare
+namespace Nanoflare
 {
 
     class LSTM

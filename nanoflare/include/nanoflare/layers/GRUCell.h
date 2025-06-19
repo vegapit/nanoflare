@@ -5,7 +5,7 @@
 #include <functional>
 #include "nanoflare/utils.h"
 
-namespace NanoFlare
+namespace Nanoflare
 {
     class GRUCell
     {

@@ -3,7 +3,7 @@
 #include <Eigen/Dense>
 #include "nanoflare/layers/GRUCell.h"
 
-namespace NanoFlare
+namespace Nanoflare
 {
 
     class GRU

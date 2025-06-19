@@ -7,7 +7,7 @@
 #include <vector>
 #include "filesystem.h"
 
-using namespace NanoFlare;
+using namespace Nanoflare;
 
 inline RowMatrixXf torch_to_eigen(const torch::Tensor& t)
 {

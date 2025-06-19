@@ -3,7 +3,7 @@
 #include <Eigen/Dense>
 #include "nanoflare/utils.h"
 
-namespace NanoFlare
+namespace Nanoflare
 {
     class PReLU
     {

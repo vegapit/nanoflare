@@ -2,9 +2,54 @@
 
 Nanoflare is a header-only C++17 library designed to be a fast and lightweight alternative to Libtorch for real-time inference of Pytorch models. It was originally developed for audio processing but can be extended at will.
 
-## Usage & Dependencies
+## Usage
 
-The library uses [Eigen3](https://gitlab.com/libeigen/eigen.git) for fast matrix computation, and [nlohmann::json](https://github.com/nlohmann/json.git) for saving and loading models to file. Both are defined as Git submodules and are consequently built with the library.
+At this time, Pytorch models can not be directly imported. Instead, the workflow consists in defining a neural network architecture in Python using the Pytorch wrapper class provided, calibrate it, serialise it as JSON and load it from file as a C++ object using the `ModelBuilder` factory function.
+
+## Layers & Models
+
+The basic layer types currently available are:
+
+* BatchNorm1d
+* Conv1d
+* GRU
+* GRUCell
+* Linear
+* LSTM
+* LSTMCell
+* PReLU
+
+They were used to define the following custom block types:
+
+* CausalDilatedConv1d
+* ConvClipper
+* MicroTCNBlock
+* PlainSequential
+* ResidualBlock
+* TCNBlock
+
+Which were in turn used to define the following models:
+
+* ConvWaveshaper
+* MicroTCN
+* ResRNN e.g. ResGRU or ResLSTM
+* TCN
+* WaveNet
+
+## Dependencies
+
+The library uses [Eigen3](https://gitlab.com/libeigen/eigen.git) for fast matrix computation, and [nlohmann::json](https://github.com/nlohmann/json.git) for saving and loading models to file. Both are defined as Git submodules and built with the library.
+
+The easiest way to use the library is to add it as a Git submodule to your project and register the subdirectory with CMake. For example:
+
+```
+add_subdirectory(${CMAKE_SOURCE_DIR}/nanoflare)
+
+add_executable(mymodel)
+target_link_libraries(mymodel PRIVATE nanoflare)
+```
+
+To get the inference to run at optimal speed, do not forget to set optimisation tags to the compiler e.g. -march=native in OSX
 
 ## Tests and Benchmark
 

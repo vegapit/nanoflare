@@ -1,11 +1,12 @@
 #pragma once
 
+#include <nlohmann/json.hpp>
 #include <Eigen/Dense>
 #include "nanoflare/models/BaseModel.h"
 #include "nanoflare/layers/ConvClipper.h"
 #include "nanoflare/utils.h"
 
-namespace NanoFlare
+namespace Nanoflare
 {
 
     class ConvWaveshaper : public BaseModel
@@ -43,4 +44,15 @@ namespace NanoFlare
         size_t m_kernelSize, m_depthSize;
         std::vector<ConvClipper> m_stack;
     };
+
+    struct ConvWaveshaperParameters
+    {
+        size_t kernel_size, depth_size, num_channels;
+    };
+
+    inline void from_json(const nlohmann::json& j, ConvWaveshaperParameters& obj) {
+        j.at("kernel_size").get_to(obj.kernel_size);
+        j.at("depth_size").get_to(obj.depth_size);
+        j.at("num_channels").get_to(obj.num_channels);
+    }
 }

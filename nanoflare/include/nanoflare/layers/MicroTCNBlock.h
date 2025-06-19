@@ -5,7 +5,7 @@
 #include "nanoflare/layers/BatchNorm1d.h"
 #include "nanoflare/layers/PReLU.h"
 
-namespace NanoFlare
+namespace Nanoflare
 {
 
     class MicroTCNBlock

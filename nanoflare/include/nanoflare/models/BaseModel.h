@@ -1,12 +1,12 @@
 #pragma once
 
-#include <Eigen/Dense>
 #include <nlohmann/json.hpp>
+#include <Eigen/Dense>
 #include <assert.h>
 #include <fstream>
 #include "nanoflare/utils.h"
 
-namespace NanoFlare
+namespace Nanoflare
 {
 
     class BaseModel

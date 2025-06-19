@@ -2,7 +2,7 @@
 
 #include "nanoflare/layers/Linear.h"
 
-namespace NanoFlare
+namespace Nanoflare
 {
 
     class PlainSequential

@@ -4,7 +4,7 @@
 #include "nanoflare/layers/CausalDilatedConv1d.h"
 #include "nanoflare/utils.h"
 
-namespace NanoFlare
+namespace Nanoflare
 {
 
     class ResidualBlock

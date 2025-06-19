@@ -9,10 +9,39 @@
 #include "nanoflare/models/WaveNet.h"
 #include "nanoflare/layers/LSTM.h"
 #include "nanoflare/layers/GRU.h"
-#include "nanoflare/utils.h"
 
-namespace NanoFlare
+namespace Nanoflare
 {
+
+    enum ModelType {
+        MICRO_TCNET,
+        RES_LSTM,
+        RES_GRU,
+        CONVWAVESHAPER,
+        WAVENET,
+        TCNET
+    };
+
+    NLOHMANN_JSON_SERIALIZE_ENUM( ModelType, {
+        {MICRO_TCNET, "MicroTCN"},
+        {RES_LSTM, "ResLSTM"},
+        {RES_GRU, "ResGRU"},
+        {CONVWAVESHAPER, "ConvWaveshaper"},
+        {TCNET, "TCN"},
+        {WAVENET, "WaveNet"}
+    })
+
+    struct ModelConfig
+    {
+        ModelType model_type;
+        float norm_mean, norm_std;
+    };
+
+    inline void from_json(const nlohmann::json& j, ModelConfig& obj) {
+        obj.model_type = j.at("model_type").template get<ModelType>();
+        j.at("norm_mean").get_to(obj.norm_mean);
+        j.at("norm_std").get_to(obj.norm_std);
+    }
 
     struct ModelBuilder
     {
@@ -25,24 +54,24 @@ namespace NanoFlare
 
             switch (config.model_type)
             {
+                case CONVWAVESHAPER: {
+                    auto parameters = data.at("parameters").template get<ConvWaveshaperParameters>();
+                    model = std::make_shared<ConvWaveshaper>(parameters.kernel_size, parameters.depth_size, parameters.num_channels, config.norm_mean, config.norm_std);
+                    break;
+                }
                 case MICRO_TCNET: {
                     auto parameters = data.at("parameters").template get<MicroTCNParameters>();
                     model = std::make_shared<MicroTCN>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.kernel_size, parameters.stack_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
                     break;
                 }
                 case RES_LSTM: {
-                    auto parameters = data.at("parameters").template get<RNNParameters>();
+                    auto parameters = data.at("parameters").template get<ResRNNParameters>();
                     model = std::make_shared<ResRNN<LSTM>>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
                     break;
                 }
                 case RES_GRU: {
-                    auto parameters = data.at("parameters").template get<RNNParameters>();
+                    auto parameters = data.at("parameters").template get<ResRNNParameters>();
                     model = std::make_shared<ResRNN<GRU>>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
-                    break;
-                }
-                case CONVWAVESHAPER: {
-                    auto parameters = data.at("parameters").template get<ConvWaveshaperParameters>();
-                    model = std::make_shared<ConvWaveshaper>(parameters.kernel_size, parameters.depth_size, parameters.num_channels, config.norm_mean, config.norm_std);
                     break;
                 }
                 case TCNET: {

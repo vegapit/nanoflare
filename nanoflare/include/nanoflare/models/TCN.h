@@ -1,12 +1,13 @@
 #pragma once
 
+#include <nlohmann/json.hpp>
 #include <Eigen/Dense>
 #include "nanoflare/models/BaseModel.h"
 #include "nanoflare/layers/TCNBlock.h"
 #include "nanoflare/layers/PlainSequential.h"
 #include "nanoflare/utils.h"
 
-namespace NanoFlare
+namespace Nanoflare
 {
 
     class TCN : public BaseModel
@@ -47,4 +48,20 @@ namespace NanoFlare
         std::vector<TCNBlock> m_blockStack;
         PlainSequential m_plainSequential;
     };
+
+
+    struct TCNParameters
+    {
+        size_t input_size, hidden_size, output_size, kernel_size, stack_size, ps_hidden_size, ps_num_hidden_layers;
+    };
+
+    inline void from_json(const nlohmann::json& j, TCNParameters& obj) {
+        j.at("input_size").get_to(obj.input_size);
+        j.at("hidden_size").get_to(obj.hidden_size);
+        j.at("output_size").get_to(obj.output_size);
+        j.at("kernel_size").get_to(obj.kernel_size);
+        j.at("stack_size").get_to(obj.stack_size);
+        j.at("ps_hidden_size").get_to(obj.ps_hidden_size);
+        j.at("ps_num_hidden_layers").get_to(obj.ps_num_hidden_layers);
+    }
 }

@@ -4,7 +4,7 @@
 #include <assert.h>
 #include "nanoflare/utils.h"
 
-namespace NanoFlare
+namespace Nanoflare
 {
     class Linear
     {
