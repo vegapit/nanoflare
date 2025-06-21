@@ -13,32 +13,15 @@
 namespace Nanoflare
 {
 
-    enum ModelType {
-        MICRO_TCNET,
-        RES_LSTM,
-        RES_GRU,
-        CONVWAVESHAPER,
-        WAVENET,
-        TCNET
-    };
-
-    NLOHMANN_JSON_SERIALIZE_ENUM( ModelType, {
-        {MICRO_TCNET, "MicroTCN"},
-        {RES_LSTM, "ResLSTM"},
-        {RES_GRU, "ResGRU"},
-        {CONVWAVESHAPER, "ConvWaveshaper"},
-        {TCNET, "TCN"},
-        {WAVENET, "WaveNet"}
-    })
-
     struct ModelConfig
     {
-        ModelType model_type;
         float norm_mean, norm_std;
+        std::map<std::string, nlohmann::json> meta_data;
     };
 
-    inline void from_json(const nlohmann::json& j, ModelConfig& obj) {
-        obj.model_type = j.at("model_type").template get<ModelType>();
+    inline void from_json(const nlohmann::json& j, ModelConfig& obj)
+    {
+        obj.meta_data = j.at("meta_data").template get<std::map<std::string, nlohmann::json>>();
         j.at("norm_mean").get_to(obj.norm_mean);
         j.at("norm_std").get_to(obj.norm_std);
     }
@@ -52,41 +35,40 @@ namespace Nanoflare
             auto config = data.at("config").template get<ModelConfig>();
             auto state_dict = data.at("state_dict").get<std::map<std::string, nlohmann::json>>();
 
-            switch (config.model_type)
+            std::string model_type;
+            config.meta_data["model_type"].get_to(model_type);
+
+            if( model_type == "ConvWaveshaper")
             {
-                case CONVWAVESHAPER: {
-                    auto parameters = data.at("parameters").template get<ConvWaveshaperParameters>();
-                    model = std::make_shared<ConvWaveshaper>(parameters.kernel_size, parameters.depth_size, parameters.num_channels, config.norm_mean, config.norm_std);
-                    break;
-                }
-                case MICRO_TCNET: {
-                    auto parameters = data.at("parameters").template get<MicroTCNParameters>();
-                    model = std::make_shared<MicroTCN>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.kernel_size, parameters.stack_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
-                    break;
-                }
-                case RES_LSTM: {
-                    auto parameters = data.at("parameters").template get<ResRNNParameters>();
-                    model = std::make_shared<ResRNN<LSTM>>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
-                    break;
-                }
-                case RES_GRU: {
-                    auto parameters = data.at("parameters").template get<ResRNNParameters>();
-                    model = std::make_shared<ResRNN<GRU>>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
-                    break;
-                }
-                case TCNET: {
-                    auto parameters = data.at("parameters").template get<TCNParameters>();
-                    model = std::make_shared<TCN>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.kernel_size, parameters.stack_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
-                    break;
-                }
-                case WAVENET: {
-                    auto parameters = data.at("parameters").template get<WaveNetParameters>();
-                    model = std::make_shared<WaveNet>(parameters.input_size, parameters.num_channels, parameters.output_size, parameters.kernel_size, parameters.dilations, parameters.stack_size, parameters.gated, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
-                    break;
-                }
-                default:
-                    return;
+                auto parameters = data.at("parameters").template get<ConvWaveshaperParameters>();
+                model = std::make_shared<ConvWaveshaper>(parameters.kernel_size, parameters.depth_size, parameters.num_channels, config.norm_mean, config.norm_std);
             }
+            else if( model_type == "MicroTCN" )
+            {
+                auto parameters = data.at("parameters").template get<MicroTCNParameters>();
+                model = std::make_shared<MicroTCN>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.kernel_size, parameters.stack_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
+            }
+            else if( model_type == "ResGRU" )
+            {
+                auto parameters = data.at("parameters").template get<ResRNNParameters>();
+                model = std::make_shared<ResRNN<GRU>>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
+            }
+            else if( model_type == "ResLSTM" )
+            {
+                auto parameters = data.at("parameters").template get<ResRNNParameters>();
+                model = std::make_shared<ResRNN<LSTM>>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
+            }
+            else if( model_type == "TCN" )
+            {
+                auto parameters = data.at("parameters").template get<TCNParameters>();
+                model = std::make_shared<TCN>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.kernel_size, parameters.stack_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
+            }
+            else if( model_type == "WaveNet" )
+            {
+                auto parameters = data.at("parameters").template get<WaveNetParameters>();
+                model = std::make_shared<WaveNet>(parameters.input_size, parameters.num_channels, parameters.output_size, parameters.kernel_size, parameters.dilations, parameters.stack_size, parameters.gated, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
+            }
+            else { return; }
 
             model->loadStateDict( state_dict ); 
         }

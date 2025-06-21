@@ -19,10 +19,11 @@ class TCN( BaseModel ):
             x = block( x )
         return self.plain_sequential( x.transpose(1,2) ).transpose(1,2)
 
-    def generate_doc(self):
+    def generate_doc(self, meta_data={}):
+        meta_data['model_type'] = 'TCN'
         doc = {
             'config': {
-                'model_type': 'TCN',
+                'meta_data': meta_data,
                 'norm_mean': self.norm_mean.item(),
                 'norm_std': self.norm_std.item()
             },
@@ -60,10 +61,11 @@ class MicroTCN( BaseModel ):
             x = block( x )
         return self.plain_sequential( x.transpose(1,2) ).transpose(1,2)
     
-    def generate_doc(self):
+    def generate_doc(self, meta_data={}):
+        meta_data['model_type'] = 'MicroTCN'
         doc = {
             'config': {
-                'model_type': 'MicroTCN',
+                'meta_data': meta_data,
                 'norm_mean': self.norm_mean.item(),
                 'norm_std': self.norm_std.item()
             },

@@ -19,10 +19,11 @@ class ConvWaveshaper( BaseModel ):
     def forward(self, x):
         x = self.normalise( x )
         return self.stack( x )
-    def generate_doc(self):
+    def generate_doc(self, meta_data={}):
+        meta_data['model_type'] = 'ConvWaveshaper'
         doc = {
             'config': {
-                'model_type': 'ConvWaveshaper',
+                'meta_data': meta_data,
                 'norm_mean': self.norm_mean.item(),
                 'norm_std': self.norm_std.item()
             },

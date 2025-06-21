@@ -40,13 +40,10 @@ Which were in turn used to define the following models:
 
 The library uses [Eigen3](https://gitlab.com/libeigen/eigen.git) for fast matrix computation, and [nlohmann::json](https://github.com/nlohmann/json.git) for saving and loading models to file. Both are defined as Git submodules and built with the library.
 
-The easiest way to use the library is to add it as a Git submodule to your project and register the subdirectory with CMake. For example:
+The easiest way to use the library is to add it as a Git submodule to your project and register its `include` directory. For example in CMake:
 
 ```
-add_subdirectory(${CMAKE_SOURCE_DIR}/nanoflare)
-
-add_executable(mymodel)
-target_link_libraries(mymodel PRIVATE nanoflare)
+include_directories(${CMAKE_SOURCE_DIR}/nanoflare/nanoflare/include)
 ```
 
 To get the inference to run at optimal speed, do not forget to set optimisation tags to the compiler e.g. -march=native in OSX
