@@ -38,32 +38,32 @@ namespace Nanoflare
             std::string model_type;
             config.meta_data["model_type"].get_to(model_type);
 
-            if( model_type == "ConvWaveshaper")
+            if( model_type.compare("ConvWaveshaper") == 0 )
             {
                 auto parameters = data.at("parameters").template get<ConvWaveshaperParameters>();
                 model = std::make_shared<ConvWaveshaper>(parameters.kernel_size, parameters.depth_size, parameters.num_channels, config.norm_mean, config.norm_std);
             }
-            else if( model_type == "MicroTCN" )
+            else if( model_type.compare("MicroTCN") == 0 )
             {
                 auto parameters = data.at("parameters").template get<MicroTCNParameters>();
                 model = std::make_shared<MicroTCN>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.kernel_size, parameters.stack_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
             }
-            else if( model_type == "ResGRU" )
+            else if( model_type.compare("ResGRU") == 0 )
             {
                 auto parameters = data.at("parameters").template get<ResRNNParameters>();
                 model = std::make_shared<ResRNN<GRU>>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
             }
-            else if( model_type == "ResLSTM" )
+            else if( model_type.compare("ResLSTM") == 0 )
             {
                 auto parameters = data.at("parameters").template get<ResRNNParameters>();
                 model = std::make_shared<ResRNN<LSTM>>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
             }
-            else if( model_type == "TCN" )
+            else if( model_type.compare("TCN") == 0 )
             {
                 auto parameters = data.at("parameters").template get<TCNParameters>();
                 model = std::make_shared<TCN>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.kernel_size, parameters.stack_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
             }
-            else if( model_type == "WaveNet" )
+            else if( model_type.compare("WaveNet") == 0 )
             {
                 auto parameters = data.at("parameters").template get<WaveNetParameters>();
                 model = std::make_shared<WaveNet>(parameters.input_size, parameters.num_channels, parameters.output_size, parameters.kernel_size, parameters.dilations, parameters.stack_size, parameters.gated, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
