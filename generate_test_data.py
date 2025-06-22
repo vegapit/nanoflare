@@ -1,11 +1,11 @@
 import torch
 import json
 
-from pytorch.modules import PlainSequential, CausalDilatedConv1d, ResidualBlock, TCNBlock, MicroTCNBlock, ConvClipper
-from pytorch.rnn import ResGRU, ResLSTM
-from pytorch.convwaveshaper import ConvWaveshaper
-from pytorch.tcn import TCN, MicroTCN
-from pytorch.wavenet import WaveNet
+from pynanoflare.modules import PlainSequential, CausalDilatedConv1d, ResidualBlock, TCNBlock, MicroTCNBlock, ConvClipper
+from pynanoflare.rnn import ResGRU, ResLSTM
+from pynanoflare.convwaveshaper import ConvWaveshaper
+from pynanoflare.tcn import TCN, MicroTCN
+from pynanoflare.wavenet import WaveNet
 
 layers = {
     # Layers
