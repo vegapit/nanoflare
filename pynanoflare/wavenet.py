@@ -27,13 +27,13 @@ class WaveNet( BaseModel ):
         return self.plain_sequential( self.relu(skip_sum).transpose(1,2) ).transpose(1,2)
 
     def generate_doc(self, meta_data={}):
-        meta_data['model_type'] = 'WaveNet'
         doc = {
             'config': {
-                'meta_data': meta_data,
+                'model_type': 'WaveNet',
                 'norm_mean': self.norm_mean.item(),
                 'norm_std': self.norm_std.item()
             },
+            'meta_data': meta_data,
             'parameters': {
                 'input_size': self.input_size,
                 'output_size': self.output_size,

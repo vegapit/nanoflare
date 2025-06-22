@@ -15,13 +15,13 @@ class ResLSTM( BaseModel ):
         y, _ = self.rnn( norm_x.transpose(1,2), hc )
         return norm_x + self.plain_sequential( y ).transpose(1,2)
     def generate_doc(self, meta_data={}):
-        meta_data['model_type'] = 'ResLSTM'
         doc = {
             'config': {
-                'meta_data': meta_data,
+                'model_type': 'ResLSTM',
                 'norm_mean': self.norm_mean.item(),
                 'norm_std': self.norm_std.item()
             },
+            'meta_data': meta_data,
             'parameters': {
                 'input_size': self.input_size,
                 'output_size': self.output_size,
@@ -67,13 +67,13 @@ class ResGRU( BaseModel ):
         y, _ = self.rnn( norm_x.transpose(1,2), h )
         return norm_x + self.plain_sequential( y ).transpose(1,2)
     def generate_doc(self, meta_data={}):
-        meta_data['model_type'] = 'ResGRU'
         doc = {
             'config': {
-                'meta_data': meta_data,
+                'model_type': 'ResGRU',
                 'norm_mean': self.norm_mean.item(),
                 'norm_std': self.norm_std.item()
             },
+            'meta_data': meta_data,
             'parameters': {
                 'input_size': self.input_size,
                 'output_size': self.output_size,

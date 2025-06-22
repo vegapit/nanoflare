@@ -20,13 +20,13 @@ class TCN( BaseModel ):
         return self.plain_sequential( x.transpose(1,2) ).transpose(1,2)
 
     def generate_doc(self, meta_data={}):
-        meta_data['model_type'] = 'TCN'
         doc = {
             'config': {
-                'meta_data': meta_data,
+                'model_type': 'TCN',
                 'norm_mean': self.norm_mean.item(),
                 'norm_std': self.norm_std.item()
             },
+            'meta_data': meta_data,
             'parameters': {
                 'input_size': self.input_size,
                 'hidden_size': self.hidden_size,
@@ -62,13 +62,13 @@ class MicroTCN( BaseModel ):
         return self.plain_sequential( x.transpose(1,2) ).transpose(1,2)
     
     def generate_doc(self, meta_data={}):
-        meta_data['model_type'] = 'MicroTCN'
         doc = {
             'config': {
-                'meta_data': meta_data,
+                'model_type': 'MicroTCN',
                 'norm_mean': self.norm_mean.item(),
                 'norm_std': self.norm_std.item()
             },
+            'meta_data': meta_data,
             'parameters': {
                 'input_size': self.input_size,
                 'hidden_size': self.hidden_size,
