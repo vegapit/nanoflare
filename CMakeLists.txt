@@ -14,8 +14,8 @@ project( nanoflare )
 option(NANOFLARE_TESTING "Build tests and benchmarks?" OFF)
 
 # Add 3rdParty dependencies
-add_subdirectory(${CMAKE_SOURCE_DIR}/libs/eigen)
-add_subdirectory(${CMAKE_SOURCE_DIR}/libs/json)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/eigen)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/json)
 
 add_library(nanoflare INTERFACE)
 target_link_libraries(
@@ -27,7 +27,7 @@ target_link_libraries(
 target_include_directories(
     nanoflare
     INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
