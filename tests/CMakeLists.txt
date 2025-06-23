@@ -4,6 +4,7 @@ find_package(Torch REQUIRED PATHS ${LIBTORCH_DIR})
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/catch2)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/fmt)
 
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG") # For GCC/Clang
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
 add_executable(layers_accuracy layers_accuracy.cpp)

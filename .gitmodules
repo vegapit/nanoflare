@@ -1,10 +1,10 @@
-[submodule "eigen"]
-	path = nanoflare/eigen
+[submodule "libs/eigen"]
+	path = libs/eigen
 	url = https://gitlab.com/libeigen/eigen.git
-[submodule "json"]
-	path = nanoflare/json
+[submodule "libs/json"]
+	path = libs/json
 	url = https://github.com/nlohmann/json.git
-[submodule "fmt"]
+[submodule "tests/fmt"]
 	path = tests/fmt
 	url = https://github.com/fmtlib/fmt.git
 [submodule "tests/Catch2"]
