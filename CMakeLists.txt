@@ -17,6 +17,13 @@ option(NANOFLARE_TESTING "Build tests and benchmarks?" OFF)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/eigen)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/json)
 
+set(NANOFLARE_INCLUDE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/libs/eigen
+    ${CMAKE_CURRENT_SOURCE_DIR}/libs/json/include
+    PARENT_SCOPE
+)
+
 add_library(nanoflare INTERFACE)
 target_link_libraries(
     nanoflare
