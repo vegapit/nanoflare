@@ -8,6 +8,7 @@
 
 #include "nanoflare/layers/ConvClipper.h"
 #include "nanoflare/layers/CausalDilatedConv1d.h"
+#include "nanoflare/layers/FiLM.h"
 #include "nanoflare/layers/GRU.h"
 #include "nanoflare/layers/LSTM.h"
 #include "nanoflare/layers/MicroTCNBlock.h"
@@ -85,6 +86,42 @@ TEST_CASE("ConvClipper Test", "[ConvClipper]")
     
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back(torch_data);
+
+    torch::NoGradGuard no_grad;
+    module.eval();
+
+    auto torch_res = module.forward( inputs ).toTensor();
+    auto target = torch_to_eigen( torch_res );
+
+    REQUIRE( (pred - target).norm() < 1e-5 );
+}
+
+TEST_CASE("FiLM Test", "[FiLM]")
+{
+    size_t featureDim = 7;
+    size_t controlDim = 3;
+    size_t batchSize = 5;
+
+    filesystem::path modelPath( PROJECT_SOURCE_DIR );
+    modelPath /= filesystem::path("tests/data/film.json");
+    filesystem::path tsPath( PROJECT_SOURCE_DIR );
+    tsPath /= filesystem::path("tests/data/film.torchscript");
+
+    FiLM obj(featureDim, controlDim);
+    std::ifstream model_file( modelPath.c_str() );
+    obj.loadStateDict( nlohmann::json::parse(model_file) );
+
+    auto torch_data = torch::randn({ long(batchSize), long(featureDim) });
+    auto eigen_data = torch_to_eigen( torch_data );
+    auto torch_data2 = torch::randn({ long(batchSize), long(controlDim) });
+    auto eigen_data2 = torch_to_eigen( torch_data2 );
+    auto pred = obj.forward( eigen_data, eigen_data2 );
+
+    torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
+    
+    std::vector<torch::jit::IValue> inputs;
+    inputs.push_back(torch_data);
+    inputs.push_back(torch_data2);
 
     torch::NoGradGuard no_grad;
     module.eval();

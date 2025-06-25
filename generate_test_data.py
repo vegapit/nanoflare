@@ -1,7 +1,7 @@
 import torch
 import json
 
-from pynanoflare.modules import PlainSequential, CausalDilatedConv1d, ResidualBlock, TCNBlock, MicroTCNBlock, ConvClipper
+from pynanoflare.modules import PlainSequential, CausalDilatedConv1d, ResidualBlock, TCNBlock, MicroTCNBlock, FiLM, ConvClipper
 from pynanoflare.rnn import ResGRU, ResLSTM
 from pynanoflare.convwaveshaper import ConvWaveshaper
 from pynanoflare.tcn import TCN, MicroTCN
@@ -15,6 +15,7 @@ layers = {
     'plainsequential': PlainSequential( 7, 11, 8, 3),
     'residualblock': ResidualBlock( 7, 3, 2, True),
     'tcnblock': TCNBlock( 7, 11, 3, 2),
+    'film': FiLM(7, 3)
 }
 
 mu, sigma = 0.1, 0.9

@@ -9,7 +9,158 @@ class BaseModel( nn.Module ):
     @torch.no_grad()
     def normalise(self, x: torch.Tensor) -> torch.Tensor:
         return (x - self.norm_mean) / self.norm_std
+    
+class CausalDilatedConv1d(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, dilation=1):
+        super().__init__()
+        self.padding = (kernel_size - 1) * dilation # Add required padding on both sides of the input
+        self.conv1d = nn.Conv1d(in_channels, out_channels, kernel_size, dilation=dilation, padding=self.padding)
 
+    def forward(self, x):
+        y = self.conv1d(x)
+        return y[ ..., :-self.padding] # Add remove padding on right-hande side of the output
+        
+    def generate_doc(self):
+        state_dict = self.state_dict()
+        doc = {
+            'weight': {
+                'shape': list(state_dict['conv1d.weight'].shape),
+                'values': state_dict['conv1d.weight'].flatten().cpu().numpy().tolist()
+            },
+            'bias': {
+                'shape': list(state_dict['conv1d.bias'].shape),
+                'values': state_dict['conv1d.bias'].flatten().cpu().numpy().tolist()
+            }
+        }
+        return doc
+
+class ConvClipper( nn.Module ):
+    def __init__(self, input_size, output_size, kernel_size, dilation):
+        super().__init__()
+        self.conv = CausalDilatedConv1d(input_size, output_size, kernel_size, dilation)
+        self.floor = nn.parameter.Parameter( torch.zeros(1), requires_grad=True )
+        self.ceiling = nn.parameter.Parameter( torch.zeros(1), requires_grad=True )
+        self.coef_softsign = nn.parameter.Parameter( torch.randn(1), requires_grad=True )
+        self.coef_tanh = nn.parameter.Parameter( torch.randn(1), requires_grad=True )
+    def forward(self, x):
+        y = self.conv( x )
+        y = y + nn.functional.softsign( self.coef_softsign  * y )
+        y = y + nn.functional.tanh( self.coef_tanh * y )
+        return torch.clip( y, min=-torch.sigmoid( 5.0 * self.floor ), max=torch.sigmoid( 5.0 * self.ceiling ) )
+    def generate_doc(self):
+        state_dict = self.state_dict()
+        doc = {
+            'conv': self.conv.generate_doc(),
+            'floor': {
+                'shape': list(state_dict['floor'].shape),
+                'values': state_dict['floor'].flatten().cpu().numpy().tolist()
+            },
+            'ceiling': {
+                'shape': list(state_dict['ceiling'].shape),
+                'values': state_dict['ceiling'].flatten().cpu().numpy().tolist()
+            },
+            'coef_softsign': {
+                'shape': list(state_dict['coef_softsign'].shape),
+                'values': state_dict['coef_softsign'].flatten().cpu().numpy().tolist()
+            },
+            'coef_tanh': {
+                'shape': list(state_dict['coef_tanh'].shape),
+                'values': state_dict['coef_tanh'].flatten().cpu().numpy().tolist()
+            }
+        }
+        return doc
+
+class FiLM( nn.Module ):
+    def __init__(self, feature_dim, control_dim):
+        super().__init__()
+        self.scale = nn.Linear(control_dim, feature_dim)
+        self.shift = nn.Linear(control_dim, feature_dim)
+    def forward(self, x, params):
+        return x * self.scale( params ) + self.shift( params )
+    def generate_doc(self):
+        state_dict = self.state_dict()
+        doc = {
+            'scale': {
+                'weight': {
+                    'shape': list(state_dict['scale.weight'].shape),
+                    'values': state_dict['scale.weight'].flatten().cpu().numpy().tolist()
+                },
+                'bias': {
+                    'shape': list(state_dict['scale.bias'].shape),
+                    'values': state_dict['scale.bias'].flatten().cpu().numpy().tolist()
+                }
+            },
+            'shift': {
+                'weight': {
+                    'shape': list(state_dict['shift.weight'].shape),
+                    'values': state_dict['shift.weight'].flatten().cpu().numpy().tolist()
+                },
+                'bias': {
+                    'shape': list(state_dict['shift.bias'].shape),
+                    'values': state_dict['shift.bias'].flatten().cpu().numpy().tolist()
+                }
+            }
+        }
+        return doc
+
+class MicroTCNBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, dilation):
+        super().__init__()
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.conv = nn.Conv1d(in_channels, out_channels, 1)
+        self.conv1 = CausalDilatedConv1d( in_channels, out_channels, kernel_size, dilation=dilation )
+        self.f1 = nn.PReLU( out_channels )
+        self.bn1 = nn.BatchNorm1d(out_channels)
+
+    def forward(self, x: torch.Tensor):
+        y = self.bn1(self.f1(self.conv1(x)))
+        if(self.in_channels == self.out_channels):
+            return x + y
+        else:
+            return self.conv(x) + y
+    
+    def generate_doc(self):
+        state_dict = self.state_dict()
+        doc = {
+            'conv': {
+                'weight': {
+                    'shape': list(state_dict['conv.weight'].shape),
+                    'values': state_dict['conv.weight'].flatten().cpu().numpy().tolist()
+                },
+                'bias': {
+                    'shape': list(state_dict['conv.bias'].shape),
+                    'values': state_dict['conv.bias'].flatten().cpu().numpy().tolist()
+                }
+            },
+            'conv1': self.conv1.generate_doc(),
+            'bn1': {
+                'weight': {
+                    'shape': list(state_dict['bn1.weight'].shape),
+                    'values': state_dict['bn1.weight'].flatten().cpu().numpy().tolist()
+                },
+                'bias': {
+                    'shape': list(state_dict['bn1.bias'].shape),
+                    'values': state_dict['bn1.bias'].flatten().cpu().numpy().tolist()
+                },
+                'running_mean': {
+                    'shape': list(state_dict['bn1.running_mean'].shape),
+                    'values': state_dict['bn1.running_mean'].flatten().cpu().numpy().tolist()
+                },
+                'running_var': {
+                    'shape': list(state_dict['bn1.running_var'].shape),
+                    'values': state_dict['bn1.running_var'].flatten().cpu().numpy().tolist()
+                }
+            },
+            'f1': {
+                'weight' : {
+                    'shape': list(state_dict['f1.weight'].shape),
+                    'values': state_dict['f1.weight'].flatten().cpu().numpy().tolist()
+                }
+            }
+        }
+        return doc
+        
 class PlainSequential( nn.Module ):
     def __init__(self, input_size, output_size, hidden_size, num_hidden_layers):
         super().__init__()
@@ -38,32 +189,32 @@ class PlainSequential( nn.Module ):
             'num_hidden_layers': self.num_hidden_layers,
             'direct_linear': {
                 'weight': {
-                    'shape': list(state_dict[f'direct_linear.weight'].shape),
-                    'values': state_dict[f'direct_linear.weight'].flatten().cpu().numpy().tolist()
+                    'shape': list(state_dict['direct_linear.weight'].shape),
+                    'values': state_dict['direct_linear.weight'].flatten().cpu().numpy().tolist()
                 },
                 'bias': {
-                    'shape': list(state_dict[f'direct_linear.bias'].shape),
-                    'values': state_dict[f'direct_linear.bias'].flatten().cpu().numpy().tolist()
+                    'shape': list(state_dict['direct_linear.bias'].shape),
+                    'values': state_dict['direct_linear.bias'].flatten().cpu().numpy().tolist()
                 }
             },
             'input_linear': {
                 'weight': {
-                    'shape': list(state_dict[f'input_linear.weight'].shape),
-                    'values': state_dict[f'input_linear.weight'].flatten().cpu().numpy().tolist()
+                    'shape': list(state_dict['input_linear.weight'].shape),
+                    'values': state_dict['input_linear.weight'].flatten().cpu().numpy().tolist()
                 },
                 'bias': {
-                    'shape': list(state_dict[f'input_linear.bias'].shape),
-                    'values': state_dict[f'input_linear.bias'].flatten().cpu().numpy().tolist()
+                    'shape': list(state_dict['input_linear.bias'].shape),
+                    'values': state_dict['input_linear.bias'].flatten().cpu().numpy().tolist()
                 }
             },
             'output_linear': {
                 'weight': {
-                    'shape': list(state_dict[f'output_linear.weight'].shape),
-                    'values': state_dict[f'output_linear.weight'].flatten().cpu().numpy().tolist()
+                    'shape': list(state_dict['output_linear.weight'].shape),
+                    'values': state_dict['output_linear.weight'].flatten().cpu().numpy().tolist()
                 },
                 'bias': {
-                    'shape': list(state_dict[f'output_linear.bias'].shape),
-                    'values': state_dict[f'output_linear.bias'].flatten().cpu().numpy().tolist()
+                    'shape': list(state_dict['output_linear.bias'].shape),
+                    'values': state_dict['output_linear.bias'].flatten().cpu().numpy().tolist()
                 }
             }
         }
@@ -79,31 +230,7 @@ class PlainSequential( nn.Module ):
                 }
             }
         return doc
-    
-class CausalDilatedConv1d(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, dilation=1):
-        super().__init__()
-        self.padding = (kernel_size - 1) * dilation # Add required padding on both sides of the input
-        self.conv1d = nn.Conv1d(in_channels, out_channels, kernel_size, dilation=dilation, padding=self.padding)
 
-    def forward(self, x):
-        y = self.conv1d(x)
-        return y[ ..., :-self.padding] # Add remove padding on right-hande side of the output
-        
-    def generate_doc(self):
-        state_dict = self.state_dict()
-        doc = {
-            'weight': {
-                'shape': list(state_dict[f'conv1d.weight'].shape),
-                'values': state_dict[f'conv1d.weight'].flatten().cpu().numpy().tolist()
-            },
-            'bias': {
-                'shape': list(state_dict[f'conv1d.bias'].shape),
-                'values': state_dict[f'conv1d.bias'].flatten().cpu().numpy().tolist()
-            }
-        }
-        return doc
-    
 class ResidualBlock(nn.Module):
     def __init__(self, num_channels, kernel_size, dilation, gated):
         super().__init__()
@@ -129,12 +256,12 @@ class ResidualBlock(nn.Module):
             'input_conv': self.input_conv.generate_doc(),
             'output_conv': {
                 'weight': {
-                    'shape': list(state_dict[f'output_conv.weight'].shape),
-                    'values': state_dict[f'output_conv.weight'].flatten().cpu().numpy().tolist()
+                    'shape': list(state_dict['output_conv.weight'].shape),
+                    'values': state_dict['output_conv.weight'].flatten().cpu().numpy().tolist()
                 },
                 'bias': {
-                    'shape': list(state_dict[f'output_conv.bias'].shape),
-                    'values': state_dict[f'output_conv.bias'].flatten().cpu().numpy().tolist()
+                    'shape': list(state_dict['output_conv.bias'].shape),
+                    'values': state_dict['output_conv.bias'].flatten().cpu().numpy().tolist()
                 }
             }
         }
@@ -166,166 +293,63 @@ class TCNBlock(nn.Module):
         doc = {
             'conv': {
                 'weight': {
-                    'shape': list(state_dict[f'conv.weight'].shape),
-                    'values': state_dict[f'conv.weight'].flatten().cpu().numpy().tolist()
+                    'shape': list(state_dict['conv.weight'].shape),
+                    'values': state_dict['conv.weight'].flatten().cpu().numpy().tolist()
                 },
                 'bias': {
-                    'shape': list(state_dict[f'conv.bias'].shape),
-                    'values': state_dict[f'conv.bias'].flatten().cpu().numpy().tolist()
+                    'shape': list(state_dict['conv.bias'].shape),
+                    'values': state_dict['conv.bias'].flatten().cpu().numpy().tolist()
                 }
             },
             'conv1': self.conv1.generate_doc(),
             'conv2': self.conv2.generate_doc(),
             'bn1': {
                 'weight': {
-                    'shape': list(state_dict[f'bn1.weight'].shape),
-                    'values': state_dict[f'bn1.weight'].flatten().cpu().numpy().tolist()
+                    'shape': list(state_dict['bn1.weight'].shape),
+                    'values': state_dict['bn1.weight'].flatten().cpu().numpy().tolist()
                 },
                 'bias': {
-                    'shape': list(state_dict[f'bn1.bias'].shape),
-                    'values': state_dict[f'bn1.bias'].flatten().cpu().numpy().tolist()
+                    'shape': list(state_dict['bn1.bias'].shape),
+                    'values': state_dict['bn1.bias'].flatten().cpu().numpy().tolist()
                 },
                 'running_mean': {
-                    'shape': list(state_dict[f'bn1.running_mean'].shape),
-                    'values': state_dict[f'bn1.running_mean'].flatten().cpu().numpy().tolist()
+                    'shape': list(state_dict['bn1.running_mean'].shape),
+                    'values': state_dict['bn1.running_mean'].flatten().cpu().numpy().tolist()
                 },
                 'running_var': {
-                    'shape': list(state_dict[f'bn1.running_var'].shape),
-                    'values': state_dict[f'bn1.running_var'].flatten().cpu().numpy().tolist()
+                    'shape': list(state_dict['bn1.running_var'].shape),
+                    'values': state_dict['bn1.running_var'].flatten().cpu().numpy().tolist()
                 }
             },
             'bn2': {
                 'weight': {
-                    'shape': list(state_dict[f'bn2.weight'].shape),
-                    'values': state_dict[f'bn2.weight'].flatten().cpu().numpy().tolist()
+                    'shape': list(state_dict['bn2.weight'].shape),
+                    'values': state_dict['bn2.weight'].flatten().cpu().numpy().tolist()
                 },
                 'bias': {
-                    'shape': list(state_dict[f'bn2.bias'].shape),
-                    'values': state_dict[f'bn2.bias'].flatten().cpu().numpy().tolist()
+                    'shape': list(state_dict['bn2.bias'].shape),
+                    'values': state_dict['bn2.bias'].flatten().cpu().numpy().tolist()
                 },
                 'running_mean': {
-                    'shape': list(state_dict[f'bn2.running_mean'].shape),
-                    'values': state_dict[f'bn2.running_mean'].flatten().cpu().numpy().tolist()
+                    'shape': list(state_dict['bn2.running_mean'].shape),
+                    'values': state_dict['bn2.running_mean'].flatten().cpu().numpy().tolist()
                 },
                 'running_var': {
-                    'shape': list(state_dict[f'bn2.running_var'].shape),
-                    'values': state_dict[f'bn2.running_var'].flatten().cpu().numpy().tolist()
+                    'shape': list(state_dict['bn2.running_var'].shape),
+                    'values': state_dict['bn2.running_var'].flatten().cpu().numpy().tolist()
                 }
             },
             'f1': {
                 'weight' : {
-                    'shape': list(state_dict[f'f1.weight'].shape),
-                    'values': state_dict[f'f1.weight'].flatten().cpu().numpy().tolist()
+                    'shape': list(state_dict['f1.weight'].shape),
+                    'values': state_dict['f1.weight'].flatten().cpu().numpy().tolist()
                 }
             },
             'f2': {
                 'weight' : {
-                    'shape': list(state_dict[f'f2.weight'].shape),
-                    'values': state_dict[f'f2.weight'].flatten().cpu().numpy().tolist()
+                    'shape': list(state_dict['f2.weight'].shape),
+                    'values': state_dict['f2.weight'].flatten().cpu().numpy().tolist()
                 }
             }
         }
         return doc
-
-class MicroTCNBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, dilation):
-        super().__init__()
-        self.in_channels = in_channels
-        self.out_channels = out_channels
-        self.conv = nn.Conv1d(in_channels, out_channels, 1)
-        self.conv1 = CausalDilatedConv1d( in_channels, out_channels, kernel_size, dilation=dilation )
-        self.f1 = nn.PReLU( out_channels )
-        self.bn1 = nn.BatchNorm1d(out_channels)
-
-    def forward(self, x: torch.Tensor):
-        y = self.bn1(self.f1(self.conv1(x)))
-        if(self.in_channels == self.out_channels):
-            return x + y
-        else:
-            return self.conv(x) + y
-    
-    def generate_doc(self):
-        state_dict = self.state_dict()
-        doc = {
-            'conv': {
-                'weight': {
-                    'shape': list(state_dict[f'conv.weight'].shape),
-                    'values': state_dict[f'conv.weight'].flatten().cpu().numpy().tolist()
-                },
-                'bias': {
-                    'shape': list(state_dict[f'conv.bias'].shape),
-                    'values': state_dict[f'conv.bias'].flatten().cpu().numpy().tolist()
-                }
-            },
-            'conv1': self.conv1.generate_doc(),
-            'bn1': {
-                'weight': {
-                    'shape': list(state_dict[f'bn1.weight'].shape),
-                    'values': state_dict[f'bn1.weight'].flatten().cpu().numpy().tolist()
-                },
-                'bias': {
-                    'shape': list(state_dict[f'bn1.bias'].shape),
-                    'values': state_dict[f'bn1.bias'].flatten().cpu().numpy().tolist()
-                },
-                'running_mean': {
-                    'shape': list(state_dict[f'bn1.running_mean'].shape),
-                    'values': state_dict[f'bn1.running_mean'].flatten().cpu().numpy().tolist()
-                },
-                'running_var': {
-                    'shape': list(state_dict[f'bn1.running_var'].shape),
-                    'values': state_dict[f'bn1.running_var'].flatten().cpu().numpy().tolist()
-                }
-            },
-            'f1': {
-                'weight' : {
-                    'shape': list(state_dict[f'f1.weight'].shape),
-                    'values': state_dict[f'f1.weight'].flatten().cpu().numpy().tolist()
-                }
-            }
-        }
-        return doc
-
-class ConvClipper( nn.Module ):
-    def __init__(self, input_size, output_size, kernel_size, dilation):
-        super().__init__()
-        self.conv = CausalDilatedConv1d(input_size, output_size, kernel_size, dilation)
-        self.floor = nn.parameter.Parameter( torch.zeros(1), requires_grad=True )
-        self.ceiling = nn.parameter.Parameter( torch.zeros(1), requires_grad=True )
-        self.coef_softsign = nn.parameter.Parameter( torch.randn(1), requires_grad=True )
-        self.coef_tanh = nn.parameter.Parameter( torch.randn(1), requires_grad=True )
-    def forward(self, x):
-        y = self.conv( x )
-        y = y + nn.functional.softsign( self.coef_softsign  * y )
-        y = y + nn.functional.tanh( self.coef_tanh * y )
-        return torch.clip( y, min=-torch.sigmoid( 5.0 * self.floor ), max=torch.sigmoid( 5.0 * self.ceiling ) )
-    def generate_doc(self):
-        state_dict = self.state_dict()
-        doc = {
-            'conv': self.conv.generate_doc(),
-            'floor': {
-                'shape': list(state_dict[f'floor'].shape),
-                'values': state_dict[f'floor'].flatten().cpu().numpy().tolist()
-            },
-            'ceiling': {
-                'shape': list(state_dict[f'ceiling'].shape),
-                'values': state_dict[f'ceiling'].flatten().cpu().numpy().tolist()
-            },
-            'coef_softsign': {
-                'shape': list(state_dict[f'coef_softsign'].shape),
-                'values': state_dict[f'coef_softsign'].flatten().cpu().numpy().tolist()
-            },
-            'coef_tanh': {
-                'shape': list(state_dict[f'coef_tanh'].shape),
-                'values': state_dict[f'coef_tanh'].flatten().cpu().numpy().tolist()
-            }
-        }
-        return doc
-
-def dc_loss(y, y_pred):
-    """
-    DC offset loss
-    """
-    return (y - y_pred).mean()**2.0 / y.pow(2).mean()
-
-def snr_loss(y, y_pred):
-    return (y - y_pred).var()

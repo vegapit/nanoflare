@@ -63,7 +63,6 @@ namespace Nanoflare
                 o_inner += m_bih.tail(m_hiddenSize) + m_bhh.tail(m_hiddenSize);
             }
 
-            // 4. Perform the element-wise operations (no change needed, but good to keep)
             c.array() = f_inner.array().logistic() * c.array() + i_inner.array().logistic() * g_inner.array().tanh();
             h.array() = o_inner.array().logistic() * c.array().tanh();
         }
