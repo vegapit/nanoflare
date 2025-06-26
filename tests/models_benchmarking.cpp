@@ -13,14 +13,27 @@ using namespace Nanoflare;
 
 constexpr int num_samples = 512;
 
-TEST_CASE("ConvWaveShaper") {
+void register_models()
+{
+    registerModel<ConvWaveshaper>("ConvWaveshaper");
+    registerModel<MicroTCN>("MicroTCN");
+    registerModel<ResRNN<GRU>>("ResGRU");
+    registerModel<ResRNN<LSTM>>("ResLSTM");
+    registerModel<TCN>("TCN");
+    registerModel<WaveNet>("WaveNet");
+}
+
+TEST_CASE("ConvWaveShaper")
+{
+    register_models();
+
     std::shared_ptr<BaseModel> obj;
     filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= filesystem::path("tests/data/convwaveshaper.json");
 
     std::ifstream fstream( modelPath.c_str() );
     nlohmann::json data = nlohmann::json::parse(fstream);
-    ModelBuilder::fromJson(data, obj);
+    ModelBuilder::getInstance().buildModel(data, obj );
 
     RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
 
@@ -29,7 +42,8 @@ TEST_CASE("ConvWaveShaper") {
     };
 }
 
-TEST_CASE("ConvWaveShaper TorchScript") {
+TEST_CASE("ConvWaveShaper TorchScript")
+{
     filesystem::path tsPath( PROJECT_SOURCE_DIR );
     tsPath /= filesystem::path( "tests/data/convwaveshaper.torchscript" );
 
@@ -50,13 +64,15 @@ TEST_CASE("ConvWaveShaper TorchScript") {
 }
 
 TEST_CASE("MicroTCN") {
+    register_models();
+
     std::shared_ptr<BaseModel> obj;
     filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= filesystem::path("tests/data/microtcn.json");
 
     std::ifstream fstream( modelPath.c_str() );
     nlohmann::json data = nlohmann::json::parse(fstream);
-    ModelBuilder::fromJson(data, obj);
+    ModelBuilder::getInstance().buildModel(data, obj );
     
     RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
     BENCHMARK("MicroTCN") {
@@ -64,7 +80,8 @@ TEST_CASE("MicroTCN") {
     };
 }
 
-TEST_CASE("MicroTCN TorchScript") {
+TEST_CASE("MicroTCN TorchScript")
+{
     filesystem::path tsPath( PROJECT_SOURCE_DIR );
     tsPath /= filesystem::path( "tests/data/microtcn.torchscript" );
 
@@ -84,14 +101,15 @@ TEST_CASE("MicroTCN TorchScript") {
     };
 }
 
-TEST_CASE("ResGRU") {
+TEST_CASE("ResGRU")
+{
     std::shared_ptr<BaseModel> obj;
     filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= filesystem::path("tests/data/resgru.json");
 
     std::ifstream fstream( modelPath.c_str() );
     nlohmann::json data = nlohmann::json::parse(fstream);
-    ModelBuilder::fromJson(data, obj);
+    ModelBuilder::getInstance().buildModel(data, obj );
 
     RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
     BENCHMARK("ResGRU") {
@@ -99,7 +117,8 @@ TEST_CASE("ResGRU") {
     };
 }
 
-TEST_CASE("ResGRU TorchScript") {
+TEST_CASE("ResGRU TorchScript")
+{
     filesystem::path tsPath( PROJECT_SOURCE_DIR );
     tsPath /= filesystem::path( "tests/data/resgru.torchscript" );
 
@@ -120,14 +139,17 @@ TEST_CASE("ResGRU TorchScript") {
     };
 }
 
-TEST_CASE("ResLSTM") {
+TEST_CASE("ResLSTM")
+{
+    register_models();
+
     std::shared_ptr<BaseModel> obj;
     filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= filesystem::path("tests/data/reslstm.json");
 
     std::ifstream fstream( modelPath.c_str() );
     nlohmann::json data = nlohmann::json::parse(fstream);
-    ModelBuilder::fromJson(data, obj);
+    ModelBuilder::getInstance().buildModel(data, obj );
 
     RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
     BENCHMARK("ResLSTM") {
@@ -135,7 +157,8 @@ TEST_CASE("ResLSTM") {
     };
 }
 
-TEST_CASE("ResLSTM TorchScript") {
+TEST_CASE("ResLSTM TorchScript")
+{
     filesystem::path tsPath( PROJECT_SOURCE_DIR );
     tsPath /= filesystem::path( "tests/data/reslstm.torchscript" );
 
@@ -159,13 +182,15 @@ TEST_CASE("ResLSTM TorchScript") {
 }
 
 TEST_CASE("TCN") {
+    register_models();
+
     std::shared_ptr<BaseModel> obj;
     filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= filesystem::path("tests/data/tcn.json");
 
     std::ifstream fstream( modelPath.c_str() );
     nlohmann::json data = nlohmann::json::parse(fstream);
-    ModelBuilder::fromJson(data, obj);
+    ModelBuilder::getInstance().buildModel(data, obj );
     
     RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
     BENCHMARK("TCN") {
@@ -193,14 +218,17 @@ TEST_CASE("TCN TorchScript") {
     };
 }
 
-TEST_CASE("WaveNet") {
+TEST_CASE("WaveNet")
+{
+    register_models();
+
     std::shared_ptr<BaseModel> obj;
     filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= filesystem::path("tests/data/wavenet.json");
 
     std::ifstream fstream( modelPath.c_str() );
     nlohmann::json data = nlohmann::json::parse(fstream);
-    ModelBuilder::fromJson(data, obj);
+    ModelBuilder::getInstance().buildModel(data, obj );
 
     RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
     BENCHMARK("WaveNet") {
@@ -208,7 +236,8 @@ TEST_CASE("WaveNet") {
     };
 }
 
-TEST_CASE("WaveNet TorchScript") {
+TEST_CASE("WaveNet TorchScript")
+{
     filesystem::path tsPath( PROJECT_SOURCE_DIR );
     tsPath /= filesystem::path( "tests/data/wavenet.torchscript" );
 

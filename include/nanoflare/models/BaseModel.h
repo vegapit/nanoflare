@@ -8,6 +8,18 @@
 
 namespace Nanoflare
 {
+    struct ModelConfig
+    {
+        std::string model_type;
+        float norm_mean, norm_std;
+    };
+
+    inline void from_json(const nlohmann::json& j, ModelConfig& obj)
+    {
+        j.at("model_type").get_to(obj.model_type);
+        j.at("norm_mean").get_to(obj.norm_mean);
+        j.at("norm_std").get_to(obj.norm_std);
+    }
 
     class BaseModel
     {

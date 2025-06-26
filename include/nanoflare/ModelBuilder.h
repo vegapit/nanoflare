@@ -13,62 +13,45 @@
 namespace Nanoflare
 {
 
-    struct ModelConfig
+    class ModelBuilder
     {
-        std::string model_type;
-        float norm_mean, norm_std;
-    };
+    public:
+        // Define a type for the builder function
+        using BuildFn = std::function<void(const nlohmann::json&, std::shared_ptr<BaseModel>&)>;
 
-    inline void from_json(const nlohmann::json& j, ModelConfig& obj)
-    {
-        j.at("model_type").get_to(obj.model_type);
-        j.at("norm_mean").get_to(obj.norm_mean);
-        j.at("norm_std").get_to(obj.norm_std);
-    }
-
-    struct ModelBuilder
-    {
-        static void fromJson(const nlohmann::json& data, std::shared_ptr<BaseModel>& model)
-        {
-            auto doc = data.get<std::map<std::string, nlohmann::json>>();
-
-            auto config = data.at("config").template get<ModelConfig>();
-            auto state_dict = data.at("state_dict").get<std::map<std::string, nlohmann::json>>();
-
-            if( config.model_type.compare("ConvWaveshaper") == 0 )
-            {
-                auto parameters = data.at("parameters").template get<ConvWaveshaperParameters>();
-                model = std::make_shared<ConvWaveshaper>(parameters.kernel_size, parameters.depth_size, parameters.num_channels, config.norm_mean, config.norm_std);
-            }
-            else if( config.model_type.compare("MicroTCN") == 0 )
-            {
-                auto parameters = data.at("parameters").template get<MicroTCNParameters>();
-                model = std::make_shared<MicroTCN>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.kernel_size, parameters.stack_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
-            }
-            else if( config.model_type.compare("ResGRU") == 0 )
-            {
-                auto parameters = data.at("parameters").template get<ResRNNParameters>();
-                model = std::make_shared<ResRNN<GRU>>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
-            }
-            else if( config.model_type.compare("ResLSTM") == 0 )
-            {
-                auto parameters = data.at("parameters").template get<ResRNNParameters>();
-                model = std::make_shared<ResRNN<LSTM>>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
-            }
-            else if( config.model_type.compare("TCN") == 0 )
-            {
-                auto parameters = data.at("parameters").template get<TCNParameters>();
-                model = std::make_shared<TCN>(parameters.input_size, parameters.hidden_size, parameters.output_size, parameters.kernel_size, parameters.stack_size, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
-            }
-            else if( config.model_type.compare("WaveNet") == 0 )
-            {
-                auto parameters = data.at("parameters").template get<WaveNetParameters>();
-                model = std::make_shared<WaveNet>(parameters.input_size, parameters.num_channels, parameters.output_size, parameters.kernel_size, parameters.dilations, parameters.stack_size, parameters.gated, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
-            }
-            else { return; }
-
-            model->loadStateDict( state_dict ); 
+        // Get the singleton instance
+        static ModelBuilder& getInstance() {
+            static ModelBuilder instance; // Guaranteed to be destroyed correctly
+            return instance;
         }
+
+        // Register a builder function for a given shape name
+        bool registerBuilder(const std::string& name, BuildFn builder) {
+            // Return false if a builder for this name already exists
+            return m_builders.insert({name, builder}).second;
+        }
+
+        // Create a mdoel by its string name
+        void buildModel(const nlohmann::json& data, std::shared_ptr<BaseModel>& obj) {
+            auto doc = data.get<std::map<std::string, nlohmann::json>>();
+            auto config = data.at("config").template get<ModelConfig>();
+            auto it = m_builders.find( config.model_type );
+            if (it != m_builders.end())
+                it->second( data, obj ); // Call the registered builder function
+        }
+
+    private:
+        ModelBuilder() = default; // Private constructor for singleton
+        ~ModelBuilder() = default;
+        ModelBuilder(const ModelBuilder&) = delete; // Delete copy constructor
+        ModelBuilder& operator=(const ModelBuilder&) = delete; // Delete assignment operator
+
+        std::map<std::string, BuildFn> m_builders;
     };
+
+    template<typename T>
+    inline void registerModel(const std::string& name) {
+        ModelBuilder::getInstance().registerBuilder(name, &T::build);
+    }
 
 }

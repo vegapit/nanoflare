@@ -4,7 +4,25 @@ Nanoflare is a header-only C++17 library designed to be a fast and lightweight a
 
 ## Usage
 
-At this time, Pytorch models can not be directly imported. Instead, the workflow consists in defining a neural network architecture in Python using the Pytorch wrapper class provided, calibrate it, serialise it as JSON and load it from file as a C++ object using the `ModelBuilder` factory function.
+There are currently 2 ways of using Nanoflare
+
+### Using built-in neural network architectures
+
+The Nanoflare workflow that covers using models provided with the library consists in:
+* Calibrate the model in *Python* using the `pynanoflare` modules
+* Serialise to *JSON* using the `generate_doc` method
+* Build its corresponding *C++* object by loading the *JSON* document into the `Nanoflare::ModelBuilder` class
+
+### Using custom architectures
+
+If you would like to build your own neural network architecture, you would just:
+* Write the *Python* module using the `pynanoflare` module
+* Add a `generate_doc` function that handles *JSON* serialisation
+* Write a *C++* equivalent version that derives from the `Nanoflare::BaseModel` virtual abstract class.
+
+Examining the code of built-in models and `Nanoflare::ModelBuilder` should get you started very quickly.
+
+Models can be registered in the `Nanoflare::ModelBuilder` at runtime, so new models can be defined in their own *Python* and *C++* modules while still being managed by this class.
 
 ## Layers & Models
 
@@ -23,6 +41,7 @@ They were used to define the following custom block types:
 
 * CausalDilatedConv1d
 * ConvClipper
+* FiLM
 * MicroTCNBlock
 * PlainSequential
 * ResidualBlock
@@ -54,10 +73,10 @@ To get the inference to run at optimal speed, do not forget to set optimisation 
 
 The tests are handled by the [Catch2](https://github.com/catchorg/Catch2.git) testing framework also defined as a Git submodule and use Libtorch as reference.
 
-When configuring the tests, pass the path to the Libtorch directory to CMake as a `LIBTORCH_DIR` variable:
+When configuring the tests, pass the path to the Libtorch directory to CMake as a `LIBTORCH_DIR` variable and define the `NANOFLARE_TESTING` variable:
 
 ```
-cmake -B build -DCMAKE_BUILD_TYPE=Release -DLIBTORCH_DIR=<path/to/libtorch>
+cmake -B build -DNANOFLARE_TESTING=ON -DLIBTORCH_DIR=<path/to/libtorch>
 ```
 
 Launch the build and run accuracy tests:
@@ -78,4 +97,4 @@ Libtorch can be quite slow for the first few runs post-load so to make it fairer
 
 ## Python  modules
 
-The `pytorch` folder contains the Python modules implementing the Pytorch models that can be replicated with Nanoflare. The `generate_test_data.py` scripts generates a new set of data used in the accuracy testing.
+The `pynanoflare` folder contains the Python modules implementing the Pytorch modules that can be replicated with this library. The `generate_test_data.py` scripts generates a new set of data used in the accuracy testing.

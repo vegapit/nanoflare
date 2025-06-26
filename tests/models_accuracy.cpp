@@ -21,8 +21,20 @@ inline RowMatrixXf torch_to_eigen(const torch::Tensor& t)
 
 constexpr int num_samples = 2048;
 
-TEST_CASE("ConvWaveshaper Test", "[ConvWaveshaper]")
+void register_models()
 {
+    registerModel<ConvWaveshaper>("ConvWaveshaper");
+    registerModel<MicroTCN>("MicroTCN");
+    registerModel<ResRNN<GRU>>("ResGRU");
+    registerModel<ResRNN<LSTM>>("ResLSTM");
+    registerModel<TCN>("TCN");
+    registerModel<WaveNet>("WaveNet");
+}
+
+TEST_CASE("ConvWaveshaper Test", "[ConvWaveshaper]")
+{   
+    register_models();
+
     filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= filesystem::path("tests/data/convwaveshaper.json");
     filesystem::path tsPath( PROJECT_SOURCE_DIR );
@@ -30,7 +42,7 @@ TEST_CASE("ConvWaveshaper Test", "[ConvWaveshaper]")
 
     std::shared_ptr<BaseModel> obj;
     std::ifstream model_file( modelPath.c_str() );
-    ModelBuilder::fromJson( nlohmann::json::parse(model_file), obj );
+    ModelBuilder::getInstance().buildModel(nlohmann::json::parse(model_file), obj );
 
     auto torch_data = torch::randn({1, num_samples});
     auto eigen_data = torch_to_eigen( torch_data );
@@ -59,7 +71,7 @@ TEST_CASE("MicroTCN Test", "[MicroTCN]")
 
     std::shared_ptr<BaseModel> obj;
     std::ifstream model_file( modelPath.c_str() );
-    ModelBuilder::fromJson( nlohmann::json::parse(model_file), obj );
+    ModelBuilder::getInstance().buildModel(nlohmann::json::parse(model_file), obj );
 
     auto torch_data = torch::randn({1, num_samples});
     auto eigen_data = torch_to_eigen( torch_data );
@@ -81,6 +93,8 @@ TEST_CASE("MicroTCN Test", "[MicroTCN]")
 
 TEST_CASE("ResGRU Test", "[ResGRU]")
 {
+    register_models();
+
     filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= filesystem::path("tests/data/resgru.json");
     filesystem::path tsPath( PROJECT_SOURCE_DIR );
@@ -88,7 +102,7 @@ TEST_CASE("ResGRU Test", "[ResGRU]")
 
     std::shared_ptr<BaseModel> obj;
     std::ifstream model_file( modelPath.c_str() );
-    ModelBuilder::fromJson( nlohmann::json::parse(model_file), obj );
+    ModelBuilder::getInstance().buildModel(nlohmann::json::parse(model_file), obj );
 
     auto torch_data = torch::randn({1, num_samples});
     auto eigen_data = torch_to_eigen( torch_data );
@@ -118,7 +132,7 @@ TEST_CASE("ResLSTM Test", "[ResLSTM]")
 
     std::shared_ptr<BaseModel> obj;
     std::ifstream model_file( modelPath.c_str() );
-    ModelBuilder::fromJson( nlohmann::json::parse(model_file), obj );
+    ModelBuilder::getInstance().buildModel(nlohmann::json::parse(model_file), obj );
 
     auto torch_data = torch::randn({1, num_samples});
     auto eigen_data = torch_to_eigen( torch_data );
@@ -143,6 +157,8 @@ TEST_CASE("ResLSTM Test", "[ResLSTM]")
 
 TEST_CASE("TCN Test", "[TCN]")
 {
+    register_models();
+
     filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= filesystem::path("tests/data/tcn.json");
     filesystem::path tsPath( PROJECT_SOURCE_DIR );
@@ -150,7 +166,7 @@ TEST_CASE("TCN Test", "[TCN]")
 
     std::shared_ptr<BaseModel> obj;
     std::ifstream model_file( modelPath.c_str() );
-    ModelBuilder::fromJson( nlohmann::json::parse(model_file), obj );
+    ModelBuilder::getInstance().buildModel(nlohmann::json::parse(model_file), obj );
 
     auto torch_data = torch::randn({1, num_samples});
     auto eigen_data = torch_to_eigen( torch_data );
@@ -172,6 +188,8 @@ TEST_CASE("TCN Test", "[TCN]")
 
 TEST_CASE("WaveNet Test", "[WaveNet]")
 {
+    register_models();
+
     filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= filesystem::path("tests/data/wavenet.json");
     filesystem::path tsPath( PROJECT_SOURCE_DIR );
@@ -179,7 +197,7 @@ TEST_CASE("WaveNet Test", "[WaveNet]")
 
     std::shared_ptr<BaseModel> obj;
     std::ifstream model_file( modelPath.c_str() );
-    ModelBuilder::fromJson( nlohmann::json::parse(model_file), obj );
+    ModelBuilder::getInstance().buildModel(nlohmann::json::parse(model_file), obj );
 
     auto torch_data = torch::randn({1, num_samples});
     auto eigen_data = torch_to_eigen( torch_data );

@@ -10,6 +10,24 @@
 
 namespace Nanoflare
 {
+    struct WaveNetParameters
+    {
+        size_t input_size, num_channels, output_size, kernel_size, stack_size, ps_hidden_size, ps_num_hidden_layers;
+        bool gated;
+        std::vector<size_t> dilations;
+    };
+
+    inline void from_json(const nlohmann::json& j, WaveNetParameters& obj) {
+        j.at("input_size").get_to(obj.input_size);
+        j.at("num_channels").get_to(obj.num_channels);
+        j.at("output_size").get_to(obj.output_size);
+        j.at("kernel_size").get_to(obj.kernel_size);
+        j.at("dilations").get_to(obj.dilations);
+        j.at("stack_size").get_to(obj.stack_size);
+        j.at("gated").get_to(obj.gated);
+        j.at("ps_hidden_size").get_to(obj.ps_hidden_size);
+        j.at("ps_num_hidden_layers").get_to(obj.ps_num_hidden_layers);
+    }
 
     class WaveNet : public BaseModel
     {
@@ -61,6 +79,17 @@ namespace Nanoflare
             m_plainSequential.loadStateDict( ps_state_dict );
         }
 
+        static void build(const nlohmann::json& data, std::shared_ptr<BaseModel>& model)
+        {
+            auto doc = data.get<std::map<std::string, nlohmann::json>>();
+
+            auto config = data.at("config").template get<ModelConfig>();
+            auto state_dict = data.at("state_dict").get<std::map<std::string, nlohmann::json>>();
+            auto parameters = data.at("parameters").template get<WaveNetParameters>();
+            model = std::make_shared<WaveNet>(parameters.input_size, parameters.num_channels, parameters.output_size, parameters.kernel_size, parameters.dilations, parameters.stack_size, parameters.gated, parameters.ps_hidden_size, parameters.ps_num_hidden_layers, config.norm_mean, config.norm_std);
+            model->loadStateDict( state_dict ); 
+        }
+
     private:
         size_t m_numChannels, m_stackSize;
         bool m_gated;
@@ -70,22 +99,4 @@ namespace Nanoflare
         PlainSequential m_plainSequential;
     };
 
-    struct WaveNetParameters
-    {
-        size_t input_size, num_channels, output_size, kernel_size, stack_size, ps_hidden_size, ps_num_hidden_layers;
-        bool gated;
-        std::vector<size_t> dilations;
-    };
-
-    inline void from_json(const nlohmann::json& j, WaveNetParameters& obj) {
-        j.at("input_size").get_to(obj.input_size);
-        j.at("num_channels").get_to(obj.num_channels);
-        j.at("output_size").get_to(obj.output_size);
-        j.at("kernel_size").get_to(obj.kernel_size);
-        j.at("dilations").get_to(obj.dilations);
-        j.at("stack_size").get_to(obj.stack_size);
-        j.at("gated").get_to(obj.gated);
-        j.at("ps_hidden_size").get_to(obj.ps_hidden_size);
-        j.at("ps_num_hidden_layers").get_to(obj.ps_num_hidden_layers);
-    }
 }
