@@ -31,16 +31,15 @@ namespace Nanoflare
         {}
         ~ResRNN() = default;
 
-        inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept override final
+        inline RowMatrixXf forward( const Eigen::Ref<const RowMatrixXf>& x ) noexcept override final
         {
             RowMatrixXf norm_x( x );
             normalise( norm_x );
-            RowMatrixXf t_norm = norm_x.transpose();
-            RowMatrixXf y = m_rnn.forward( t_norm );
+            RowMatrixXf y = m_rnn.forward( norm_x.transpose() );
             return norm_x + m_plainSequential.forward( y ).transpose();
         }
 
-        void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override
+        void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override final
         {
             auto lstm_state_dict = state_dict[std::string("rnn")].get<std::map<std::string, nlohmann::json>>();
             m_rnn.loadStateDict( lstm_state_dict );

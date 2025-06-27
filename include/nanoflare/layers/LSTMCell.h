@@ -10,6 +10,8 @@ namespace Nanoflare
     class LSTMCell
     {
     public:
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
         LSTMCell(size_t input_size, size_t hidden_size, bool bias) : m_hiddenSize(hidden_size), m_inputSize(input_size), m_bias(bias),
             m_wih(RowMatrixXf::Zero(4*hidden_size,input_size)),
             m_whh(RowMatrixXf::Zero(4*hidden_size,hidden_size)),

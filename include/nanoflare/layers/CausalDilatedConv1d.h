@@ -9,6 +9,8 @@ namespace Nanoflare
     class CausalDilatedConv1d
     {
     public:
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+        
         CausalDilatedConv1d(size_t in_channels, size_t out_channels, size_t kernel_size, bool bias, size_t dilation) : m_inChannels(in_channels), m_outChannels(out_channels), 
             m_kernelSize(kernel_size), m_bias(bias), m_dilation(dilation), 
             m_w(std::vector<RowMatrixXf>(out_channels)), m_b(Eigen::RowVectorXf::Zero(out_channels))
@@ -18,19 +20,26 @@ namespace Nanoflare
         }
         ~CausalDilatedConv1d() = default;
 
-        inline size_t getOutputLength( size_t in_length ) const { return in_length; }
-
-        inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const noexcept
+        inline RowMatrixXf forward( const Eigen::Ref<const RowMatrixXf>& x ) const noexcept
         {   
-            RowMatrixXf y = RowMatrixXf::Zero(m_outChannels, x.cols());
+            if (m_y.rows() != m_outChannels || m_y.cols() != x.cols())
+                m_y.resize(m_outChannels, x.cols());
+            
+            if (m_out.size() != m_y.cols())
+                m_out.resize( m_y.cols() );
+
+            m_y.setZero();
             for(auto i = 0; i < m_outChannels; i++)
             {
                 for(auto j = 0; j < m_inChannels; j++)
-                    y.row(i) += dilatedcausalconvolve1d( x.row(j), m_w[i].row(j), m_dilation );
+                {
+                    dilatedcausalconvolve1d( x.row(j), m_w[i].row(j), m_dilation, m_out );
+                    m_y.row(i) += m_out;
+                }
                 if( m_bias )
-                    y.row(i).array() += m_b(i);
+                    m_y.row(i).array() += m_b(i);
             }
-            return y;
+            return m_y;
         }
 
         size_t getInChannels() const { return m_inChannels; }
@@ -68,6 +77,8 @@ namespace Nanoflare
 
         std::vector<RowMatrixXf> m_w; // W = [Outs, Ins, Kernel]
         Eigen::RowVectorXf m_b; // B = [Outs]
+        mutable RowMatrixXf m_y;
+        mutable Eigen::RowVectorXf m_out;
     };
 
 }

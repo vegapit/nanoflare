@@ -28,7 +28,7 @@ namespace Nanoflare
         BaseModel(float norm_mean, float norm_std): m_normMean(norm_mean), m_normStd(norm_std) { assert( norm_std > 0.f); }
         virtual ~BaseModel() = default;
 
-        virtual inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept = 0;
+        virtual inline RowMatrixXf forward( const Eigen::Ref<const RowMatrixXf>& x ) noexcept = 0;
         virtual void loadStateDict(std::map<std::string, nlohmann::json> state_dict) = 0;
 
         inline void normalise( Eigen::Ref<RowMatrixXf> x ) noexcept

@@ -7,6 +7,14 @@
 #include <vector>
 
 #include "nanoflare/ModelBuilder.h"
+#include <nanoflare/models/BaseModel.h>
+#include "nanoflare/models/MicroTCN.h"
+#include "nanoflare/models/ResRNN.h"
+#include "nanoflare/models/ConvWaveshaper.h"
+#include "nanoflare/models/TCN.h"
+#include "nanoflare/models/WaveNet.h"
+#include "nanoflare/layers/LSTM.h"
+#include "nanoflare/layers/GRU.h"
 #include "filesystem.h"
 
 using namespace Nanoflare;

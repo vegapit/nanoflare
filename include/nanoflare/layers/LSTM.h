@@ -9,6 +9,8 @@ namespace Nanoflare
     class LSTM
     {
     public:
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
         LSTM(size_t input_size, size_t hidden_size, bool bias) : m_cell(input_size, hidden_size, bias), m_h(Eigen::VectorXf::Zero(hidden_size)), m_c(Eigen::VectorXf::Zero(hidden_size)) {}
         ~LSTM() = default;
 
@@ -18,15 +20,17 @@ namespace Nanoflare
             m_c.setZero();
         }
 
-        inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept
+        inline RowMatrixXf forward( const Eigen::Ref<const RowMatrixXf>& x ) noexcept
         {
-            RowMatrixXf y( x.rows(), m_cell.getHiddenSize() );
+            if (m_y.rows() != x.rows() || m_y.cols() != m_cell.getHiddenSize())
+                m_y.resize(x.rows(), m_cell.getHiddenSize());
+
             for(auto i = 0; i < x.rows(); i++)
             {
                 m_cell.forward( x.row(i), m_h, m_c );
-                y.row(i) = m_h; // Assign h to output
+                m_y.row(i) = m_h; // Assign h to output
             }
-            return y;
+            return m_y;
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)
@@ -47,6 +51,7 @@ namespace Nanoflare
         
     private:
         Eigen::VectorXf m_h, m_c;
+        RowMatrixXf m_y;
         LSTMCell m_cell;
     };
 

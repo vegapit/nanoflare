@@ -280,7 +280,9 @@ TEST_CASE("convolve1d Test", "[convolve1d]")
     Eigen::RowVectorXf w(3);
     w << 1.f, 0.5f, -1.f;
 
-    auto pred = convolve1d(x, w);
+    Eigen::RowVectorXf pred = Eigen::RowVectorXf::Zero(3);
+
+    convolve1d(x, w, pred);
 
     Eigen::RowVectorXf target(3);
     target << -1.5f, -1.f, -0.5f;
@@ -296,23 +298,12 @@ TEST_CASE("dilatedcausalconvolve1d Test", "[dilatedcausalconvolve1d]")
     Eigen::RowVectorXf w(3);
     w << 1.f, 0.5f, -1.f;
 
-    auto pred = dilatedcausalconvolve1d(x, w, 2);
+    Eigen::RowVectorXf pred = Eigen::RowVectorXf::Zero(5);
+
+    dilatedcausalconvolve1d(x, w, 2, pred);
 
     Eigen::RowVectorXf target(5);
     target << 0.f, -1.f, -2.f, -2.5f, -3.0f;
-
-    REQUIRE((pred - target).norm() < 1e-5);
-}
-
-TEST_CASE("dilate Test", "[dilate]")
-{
-    Eigen::RowVectorXf x(3);
-    x << 1.f, 2.f, 3.f;
-
-    auto pred = dilate(x, 2);
-
-    Eigen::RowVectorXf target(5);
-    target << 1.f, 0.f, 2.f, 0.f, 3.f;
 
     REQUIRE((pred - target).norm() < 1e-5);
 }

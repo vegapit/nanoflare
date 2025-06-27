@@ -10,6 +10,8 @@ namespace Nanoflare
     class GRUCell
     {
     public:
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
         GRUCell(size_t input_size, size_t hidden_size, bool bias) : m_hiddenSize(hidden_size), m_inputSize(input_size), m_bias(bias),
             m_wih(RowMatrixXf::Zero(3*hidden_size,input_size)),
             m_whh(RowMatrixXf::Zero(3*hidden_size,hidden_size)),

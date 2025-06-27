@@ -16,19 +16,23 @@ namespace Nanoflare
             m_outputConv(num_channels, num_channels, 1, true) {}
         ~ResidualBlock() = default;
 
-        inline std::pair<RowMatrixXf,RowMatrixXf> forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept
+        inline std::pair<RowMatrixXf,RowMatrixXf> forward( const Eigen::Ref<const RowMatrixXf>& x ) const noexcept
         {
-            auto y_inner = m_inputConv.forward( x );
-            
-            RowMatrixXf y(m_numChannels, x.cols());
+            if (m_y.rows() != m_numChannels || m_y.cols() != x.cols())
+                m_y.resize(m_numChannels, x.cols());
+
+            if (m_y_inner.rows() != m_numChannels || m_y_inner.cols() != x.cols())
+                m_y_inner.resize(m_numChannels, x.cols());
+
+            m_y_inner = m_inputConv.forward( x );
             if(m_gated)
-                y.array() = y_inner.topRows(m_numChannels).array().tanh() * y_inner.bottomRows(m_numChannels).array().logistic();
+                m_y.array() = m_y_inner.topRows(m_numChannels).array().tanh() * m_y_inner.bottomRows(m_numChannels).array().logistic();
             else
-                y.array() = y_inner.array().tanh();
+                m_y.array() = m_y_inner.array().tanh();
 
-            y = m_outputConv.forward( y );
+            m_y = m_outputConv.forward( m_y );
 
-            return std::make_pair(y + x, y); // (Res,Skip)
+            return std::make_pair(m_y + x, m_y); // (Res,Skip)
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)
@@ -44,5 +48,6 @@ namespace Nanoflare
         Conv1d m_outputConv;
         bool m_gated;
         size_t m_numChannels, m_kernelSize;
+        mutable RowMatrixXf m_y, m_y_inner;
     };
 }

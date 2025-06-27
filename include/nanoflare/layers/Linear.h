@@ -9,6 +9,8 @@ namespace Nanoflare
     class Linear
     {
     public:
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
         Linear(size_t in_channels, size_t out_channels, bool bias) : m_inChannels(in_channels), m_outChannels(out_channels), m_bias(bias),
             m_w(RowMatrixXf::Zero(out_channels,in_channels)),
             m_transW(RowMatrixXf::Zero(in_channels,out_channels)),
@@ -16,12 +18,15 @@ namespace Nanoflare
         {}
         ~Linear() = default;
         
-        inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) const noexcept
+        inline RowMatrixXf forward( const Eigen::Ref<const RowMatrixXf>& x ) const noexcept
         {
-            RowMatrixXf y = x * m_transW;
+            if (m_y.rows() != x.rows() || m_y.cols() != m_transW.cols())
+                m_y.resize(x.rows(), m_transW.cols());
+            
+            m_y = x * m_transW;
             if( m_bias )
-                y.rowwise() += m_b;
-            return y;
+                m_y.rowwise() += m_b;
+            return m_y;
         }
 
         size_t getInChannels() const { return m_inChannels; }
@@ -55,6 +60,7 @@ namespace Nanoflare
             m_b = v;
         }
 
+        mutable RowMatrixXf m_y;
         RowMatrixXf m_w, m_transW;
         Eigen::RowVectorXf m_b;
 

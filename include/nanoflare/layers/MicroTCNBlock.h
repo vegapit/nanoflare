@@ -20,15 +20,19 @@ namespace Nanoflare
         {}
         ~MicroTCNBlock() = default;
 
-        inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept
+        inline RowMatrixXf forward( const Eigen::Ref<const RowMatrixXf>& x ) noexcept
         {
-            auto y = m_conv1.forward( x );
-            m_f1.apply( y );
-            m_bn1.apply( y );
+            if (m_y.rows() != m_outChannels || m_y.cols() != x.cols())
+                m_y.resize( m_outChannels, x.cols());
+
+            m_y = m_conv1.forward( x );
+            m_f1.apply( m_y );
+            m_bn1.apply( m_y );
+
             if(m_inChannels == m_outChannels)
-                return x + y;
+                return x + m_y;
             else 
-                return m_conv.forward( x ) + y;
+                return m_conv.forward( x ) + m_y;
         }
         
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)
@@ -49,5 +53,6 @@ namespace Nanoflare
         PReLU m_f1;
         Conv1d m_conv;
         size_t m_inChannels, m_outChannels; 
+        RowMatrixXf m_y;
     };
 }

@@ -93,7 +93,9 @@ The benchmarks comparing the processing speed of the library with Libtorch is ru
 ./tests/models_benchmarking
 ```
 
-Libtorch can be quite slow for the first few runs post-load so to make it fairer, a few preliminary warm-up runs are performed before measuring its performance. When that is done, Libtorch inference runtime is close to Nanoflare's on the testing machine.
+Libtorch can be quite slow for the first few runs post-load so to make it fairer, a few preliminary warm-up runs are performed before measuring its performance.
+
+>> On the testing machine, Nanoflare is about **25-30% faster** than Libtorch across all the neural network architectures available.
 
 ## Python  modules
 

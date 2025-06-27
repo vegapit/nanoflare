@@ -43,25 +43,29 @@ namespace Nanoflare
         }
         ~WaveNet() = default;
 
-        inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept override final
+        inline RowMatrixXf forward( const Eigen::Ref<const RowMatrixXf>& x ) noexcept override final
         {
             auto dilations_size = m_dilations.size();
 
             RowMatrixXf norm_x( x );
             normalise( norm_x );
-            RowMatrixXf y = m_inputConv.forward( norm_x );
 
-            RowMatrixXf skip_sum = RowMatrixXf::Zero( m_numChannels, x.cols() );
-            RowMatrixXf skip_y( m_numChannels, x.cols() );
+            if (m_y.rows() != x.rows() || m_y.cols() != m_numChannels)
+                m_y.resize(x.rows(), m_numChannels);
+            if (m_skip_sum.rows() != m_numChannels || m_skip_sum.cols() != x.cols())
+                m_skip_sum.resize(m_numChannels, x.cols());
+            if (m_skip_y.rows() != m_numChannels || m_skip_y.cols() != x.cols())
+                m_skip_y.resize(m_numChannels, x.cols());
+
+            m_y = m_inputConv.forward( norm_x );
+            m_skip_sum.setZero();
             for(auto k = 0; k < m_stackSize; k++)
                 for(auto i = 0; i < dilations_size; i++)
                 {
-                    std::tie( y, skip_y ) = m_blockStack[k * dilations_size + i].forward( y );
-                    skip_sum += skip_y;
+                    std::tie( m_y, m_skip_y ) = m_blockStack[k * dilations_size + i].forward( m_y );
+                    m_skip_sum += m_skip_y;
                 }
-
-            RowMatrixXf res = skip_sum.cwiseMax(0.f).transpose();
-            return m_plainSequential.forward( res ).transpose();
+            return m_plainSequential.forward( m_skip_sum.cwiseMax( 0.f ).transpose() ).transpose();
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override final
@@ -97,6 +101,7 @@ namespace Nanoflare
         CausalDilatedConv1d m_inputConv;
         std::vector<ResidualBlock> m_blockStack;
         PlainSequential m_plainSequential;
+        RowMatrixXf m_y, m_skip_y, m_skip_sum;
     };
 
 }

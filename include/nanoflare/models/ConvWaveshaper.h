@@ -32,7 +32,7 @@ namespace Nanoflare
         }
         ~ConvWaveshaper() = default;
         
-        inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept override final
+        inline RowMatrixXf forward( const Eigen::Ref<const RowMatrixXf>& x ) noexcept override final
         {
             RowMatrixXf norm_x( x );
             normalise( norm_x );

@@ -36,14 +36,13 @@ namespace Nanoflare
         }
         ~MicroTCN() = default;
         
-        inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept override final
+        inline RowMatrixXf forward( const Eigen::Ref<const RowMatrixXf>& x ) noexcept override final
         {
             RowMatrixXf norm_x( x );
             normalise( norm_x );
             for(auto& block: m_blockStack )
                 norm_x = block.forward( norm_x );
-            norm_x.transposeInPlace();
-            return m_plainSequential.forward( norm_x ).transpose();
+            return m_plainSequential.forward( norm_x.transpose() ).transpose();
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override final

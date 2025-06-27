@@ -9,6 +9,8 @@ namespace Nanoflare
     class BatchNorm1d
     {
     public:
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+        
         BatchNorm1d(size_t num_channels) : 
             m_numChannels(num_channels), m_w(Eigen::RowVectorXf::Ones(num_channels)), m_b(Eigen::RowVectorXf::Zero(num_channels)),
             m_runningMean(Eigen::RowVectorXf::Zero(num_channels)), m_runningVar(Eigen::RowVectorXf::Ones(num_channels)),

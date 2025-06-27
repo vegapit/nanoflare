@@ -8,6 +8,8 @@ namespace Nanoflare
     class PReLU
     {
     public:
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
         PReLU(size_t num_channels) : m_numChannels(num_channels), m_w(Eigen::RowVectorXf::Zero(num_channels)) {}
         ~PReLU() = default;
 

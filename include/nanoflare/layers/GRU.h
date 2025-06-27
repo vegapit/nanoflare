@@ -9,20 +9,24 @@ namespace Nanoflare
     class GRU
     {
     public:
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+        
         GRU(size_t input_size, size_t hidden_size, bool bias) : m_cell(input_size, hidden_size, bias), m_h(Eigen::VectorXf::Zero(hidden_size)) {}
         ~GRU() = default;
 
         void resetState() { m_h.setZero(); }
 
-        inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept
+        inline RowMatrixXf forward( const Eigen::Ref<const RowMatrixXf>& x ) noexcept
         {
-            RowMatrixXf y( x.rows(), m_cell.getHiddenSize() );
+            if (m_y.rows() != x.rows() || m_y.cols() != m_cell.getHiddenSize())
+                m_y.resize(x.rows(), m_cell.getHiddenSize());
+
             for(auto i = 0; i < x.rows(); i++)
             {
                 m_cell.forward( x.row(i), m_h );
-                y.row(i) = m_h; // Assign h to output
+                m_y.row(i) = m_h; // Assign h to output
             }
-            return y;
+            return m_y;
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)
@@ -43,6 +47,7 @@ namespace Nanoflare
         
     private:
         Eigen::VectorXf m_h;
+        RowMatrixXf m_y;
         GRUCell m_cell;
     };
 

@@ -13,7 +13,7 @@ namespace Nanoflare
         ConvClipper(size_t input_size, size_t output_size, size_t kernel_size, size_t dilation) : m_conv( input_size, output_size, kernel_size, true, dilation ) {}
         ~ConvClipper() = default;
 
-        inline RowMatrixXf forward( const Eigen::Ref<RowMatrixXf>& x ) noexcept
+        inline RowMatrixXf forward( const Eigen::Ref<const RowMatrixXf>& x ) noexcept
         {
             auto y = m_conv.forward( x );
             y.array() += (m_coefSoftsign * y).array() / (1.f + (m_coefSoftsign * y).array().abs());
