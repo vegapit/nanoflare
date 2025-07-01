@@ -1,10 +1,10 @@
 # Nanoflare
 
-Nanoflare is a header-only C++17 extensible library designed to be a fast and lightweight alternative to Libtorch for real-time inference of Pytorch models. It was originally developed to use Pytorch calibrated models in audio plugins.
+Nanoflare is a header-only C++17 extensible library designed to be a fast and lightweight alternative to Libtorch for real-time inference of Pytorch models. It was originally developed for using calibrated Pytorch models in audio plugins.
 
 ## Usage
 
-Nanoflare consist of a Python library located in the `pynanoflare` folder which acts as a wrapper for various Pytorch modules, and an equivalent header-only C++ library located in the `include` folder.
+Nanoflare consists of a Python library located in the `pynanoflare` folder which acts as a wrapper for various Pytorch modules, and a corresponding header-only C++ library located in the `include` folder.
 
 **Calibrating and exporting a Nanoflare compatible Pytorch model to C++** is easy and involves the following steps:
 
@@ -14,7 +14,7 @@ Nanoflare consist of a Python library located in the `pynanoflare` folder which 
 
 **If you would like to use your own neural network architecture,** you would just:
 * Define its *Python* class using the `pynanoflare` module
-* Adding a `generate_doc` function that handles its *JSON* serialisation
+* Add a `generate_doc` function that handles its *JSON* serialisation
 * Write a *C++* equivalent version that derives from the `Nanoflare::BaseModel` virtual abstract class.
 
 New models can be trained and exported as any other built-in network architectures. Examining the Python and C++ code for the models provided and `Nanoflare::ModelBuilder` are great ressources for understanding how the code is structured.
@@ -90,6 +90,6 @@ The benchmarks comparing the processing speed of the library with Libtorch is ru
 
 Libtorch can be quite slow for the first few runs post-load so to make it fairer, a few preliminary warm-up runs are performed before measuring its performance.
 
-> On the testing machine, Nanoflare is about **25-30% faster** than Libtorch across all the neural network architectures available.
+> On the testing machine, Nanoflare is about **25-30% faster** than Libtorch/TorchscriptJIT across all neural network architectures available.
 
 The `generate_test_data.py` scripts generates a new set of data used in the accuracy testing.
