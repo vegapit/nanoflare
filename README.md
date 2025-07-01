@@ -4,25 +4,20 @@ Nanoflare is a header-only C++17 library designed to be a fast and lightweight a
 
 ## Usage
 
-There are currently 2 ways of using Nanoflare
+**Calibrating and exporting a Nanoflare model to C++** is easy and involves the following steps:
 
-### Using built-in neural network architectures
+* Calibrating the model in *Python* using the `pynanoflare` modules
+* Serialising it to *JSON* with the `generate_doc` method
+* Loading its *C++* instance using the `Nanoflare::ModelBuilder` class
 
-The Nanoflare workflow that covers using models provided with the library consists in:
-* Calibrate the model in *Python* using the `pynanoflare` modules
-* Serialise to *JSON* using the `generate_doc` method
-* Build its corresponding *C++* object by loading the *JSON* document into the `Nanoflare::ModelBuilder` class
+**If you would like to use your own neural network architecture,** you would just:
+* Defining its *Python* class using the `pynanoflare` module
+* Add a `generate_doc` function that handles its *JSON* serialisation
+* Writing a *C++* equivalent version that derives from the `Nanoflare::BaseModel` virtual abstract class.
 
-### Using custom architectures
+New models can be trained and exported as any other built-in network architectures. Examining the code for the models provided and `Nanoflare::ModelBuilder` should help greatly in this task.
 
-If you would like to build your own neural network architecture, you would just:
-* Write the *Python* module using the `pynanoflare` module
-* Add a `generate_doc` function that handles *JSON* serialisation
-* Write a *C++* equivalent version that derives from the `Nanoflare::BaseModel` virtual abstract class.
-
-Examining the code of built-in models and `Nanoflare::ModelBuilder` should get you started very quickly.
-
-Models can be registered in the `Nanoflare::ModelBuilder` at runtime, so new models can be defined in their own *Python* and *C++* modules while still being managed by this class.
+Models are registered to `Nanoflare::ModelBuilder` at runtime, so new models can be defined in their own *Python* and *C++* modules while still being managed by this class.
 
 ## Layers & Models
 
@@ -95,7 +90,7 @@ The benchmarks comparing the processing speed of the library with Libtorch is ru
 
 Libtorch can be quite slow for the first few runs post-load so to make it fairer, a few preliminary warm-up runs are performed before measuring its performance.
 
->> On the testing machine, Nanoflare is about **25-30% faster** than Libtorch across all the neural network architectures available.
+> On the testing machine, Nanoflare is about **25-30% faster** than Libtorch across all the neural network architectures available.
 
 ## Python  modules
 
