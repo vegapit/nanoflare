@@ -1,12 +1,16 @@
 [submodule "libs/eigen"]
 	path = libs/eigen
 	url = https://gitlab.com/libeigen/eigen.git
+	branch = master
 [submodule "libs/json"]
 	path = libs/json
 	url = https://github.com/nlohmann/json.git
+	branch = master
 [submodule "tests/fmt"]
 	path = tests/fmt
 	url = https://github.com/fmtlib/fmt.git
+	branch = master
 [submodule "tests/Catch2"]
 	path = tests/Catch2
 	url = https://github.com/catchorg/Catch2.git
+	branch = devel
