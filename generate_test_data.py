@@ -1,16 +1,15 @@
 import torch
 import json
 
-from pynanoflare.modules import PlainSequential, CausalDilatedConv1d, ResidualBlock, TCNBlock, MicroTCNBlock, FiLM, ConvClipper
+from pynanoflare.modules import PlainSequential, CausalDilatedConv1d, ResidualBlock, TCNBlock, MicroTCNBlock, FiLM
 from pynanoflare.rnn import ResGRU, ResLSTM
-from pynanoflare.convwaveshaper import ConvWaveshaper
+from pynanoflare.hammersteinweiner import HammersteinWeiner
 from pynanoflare.tcn import TCN, MicroTCN
 from pynanoflare.wavenet import WaveNet
 
 layers = {
     # Layers
     'causaldilatedconv1d': CausalDilatedConv1d(7, 11, 3, 2),
-    'convclipper': ConvClipper( 1, 1, 12, 4 ),
     'microtcnblock': MicroTCNBlock( 7, 11, 3, 2),
     'plainsequential': PlainSequential( 7, 11, 8, 3),
     'residualblock': ResidualBlock( 7, 3, 2, True),
@@ -21,7 +20,7 @@ layers = {
 mu, sigma = 0.1, 0.9
 
 models = {
-    'convwaveshaper': ConvWaveshaper( 4, 6, 12, mu, sigma ),
+    'hammersteinweiner': HammersteinWeiner( 1, 32, 1, mu, sigma ),
     'microtcn': MicroTCN(1, 8, 1, 3, 8, 16, 3, mu, sigma),
     'resgru': ResGRU(1, 64, 1, 8, 3, mu, sigma),
     'reslstm': ResLSTM(1, 64, 1, 8, 3, mu, sigma),

@@ -1,9 +1,9 @@
-#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_all.hpp>
 #include "nanoflare/ModelBuilder.h"
 #include <nanoflare/models/BaseModel.h>
 #include "nanoflare/models/MicroTCN.h"
 #include "nanoflare/models/ResRNN.h"
-#include "nanoflare/models/ConvWaveshaper.h"
+#include "nanoflare/models/HammersteinWeiner.h"
 #include "nanoflare/models/TCN.h"
 #include "nanoflare/models/WaveNet.h"
 #include "nanoflare/layers/LSTM.h"
@@ -16,6 +16,7 @@
 #include "filesystem.h"
 
 using namespace Nanoflare;
+using Catch::Approx;
 
 inline RowMatrixXf torch_to_eigen(const torch::Tensor& t)
 {
@@ -31,7 +32,7 @@ constexpr int num_samples = 2048;
 
 void register_models()
 {
-    registerModel<ConvWaveshaper>("ConvWaveshaper");
+    registerModel<HammersteinWeiner>("HammersteinWeiner");
     registerModel<MicroTCN>("MicroTCN");
     registerModel<ResRNN<GRU>>("ResGRU");
     registerModel<ResRNN<LSTM>>("ResLSTM");
@@ -39,14 +40,14 @@ void register_models()
     registerModel<WaveNet>("WaveNet");
 }
 
-TEST_CASE("ConvWaveshaper Test", "[ConvWaveshaper]")
+TEST_CASE("HammersteinWeiner Test", "[HammersteinWeiner]")
 {   
     register_models();
 
     filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= filesystem::path("tests/data/convwaveshaper.json");
+    modelPath /= filesystem::path("tests/data/hammersteinweiner.json");
     filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= filesystem::path("tests/data/convwaveshaper.torchscript");
+    tsPath /= filesystem::path("tests/data/hammersteinweiner.torchscript");
 
     std::shared_ptr<BaseModel> obj;
     std::ifstream model_file( modelPath.c_str() );
@@ -58,8 +59,11 @@ TEST_CASE("ConvWaveshaper Test", "[ConvWaveshaper]")
 
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
     
+    std::tuple<torch::jit::IValue, torch::jit::IValue> hc { torch::zeros({1, 1, 64}) , torch::zeros({1, 1, 64}) };
+
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back( torch_data.unsqueeze(0) );
+    inputs.push_back( hc );
 
     torch::NoGradGuard no_grad;
     module.eval();
@@ -67,7 +71,7 @@ TEST_CASE("ConvWaveshaper Test", "[ConvWaveshaper]")
     auto torch_res = module.forward( inputs ).toTensor();
     auto target = torch_to_eigen( torch_res.squeeze(0) );
 
-    REQUIRE( (pred - target).norm() < 1e-4 );
+    REQUIRE( (pred - target).norm() == Approx(0.0).margin(1e-4) );
 }
 
 TEST_CASE("MicroTCN Test", "[MicroTCN]")
@@ -96,7 +100,7 @@ TEST_CASE("MicroTCN Test", "[MicroTCN]")
     auto torch_res = module.forward( inputs ).toTensor();
     auto target = torch_to_eigen( torch_res.squeeze(0) );
 
-    REQUIRE( (pred - target).norm() < 1e-4 );
+    REQUIRE( (pred - target).norm() == Approx(0.0).margin(1e-4) );
 }
 
 TEST_CASE("ResGRU Test", "[ResGRU]")
@@ -128,7 +132,7 @@ TEST_CASE("ResGRU Test", "[ResGRU]")
     auto torch_res = module.forward( inputs ).toTensor();
     auto target = torch_to_eigen( torch_res.squeeze(0) );
 
-    REQUIRE( (pred - target).norm() < 1e-4 );
+    REQUIRE( (pred - target).norm() == Approx(0.0).margin(1e-4) );
 }
 
 TEST_CASE("ResLSTM Test", "[ResLSTM]")
@@ -160,7 +164,7 @@ TEST_CASE("ResLSTM Test", "[ResLSTM]")
     auto torch_res = module.forward( inputs ).toTensor();
     auto target = torch_to_eigen( torch_res.squeeze(0) );
 
-    REQUIRE( (pred - target).norm() < 1e-4 );
+    REQUIRE( (pred - target).norm() == Approx(0.0).margin(1e-4) );
 }
 
 TEST_CASE("TCN Test", "[TCN]")
@@ -191,7 +195,7 @@ TEST_CASE("TCN Test", "[TCN]")
     auto torch_res = module.forward( inputs ).toTensor();
     auto target = torch_to_eigen( torch_res.squeeze(0) );
 
-    REQUIRE( (pred - target).norm() < 1e-4 );
+    REQUIRE( (pred - target).norm() == Approx(0.0).margin(1e-4) );
 }
 
 TEST_CASE("WaveNet Test", "[WaveNet]")
@@ -222,5 +226,5 @@ TEST_CASE("WaveNet Test", "[WaveNet]")
     auto torch_res = module.forward( inputs ).toTensor();
     auto target = torch_to_eigen( torch_res.squeeze(0) );
     
-    REQUIRE( (pred - target).norm() < 1e-4 );
+    REQUIRE( (pred - target).norm() == Approx(0.0).margin(1e-4) );
 }

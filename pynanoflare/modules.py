@@ -34,42 +34,6 @@ class CausalDilatedConv1d(nn.Module):
         }
         return doc
 
-class ConvClipper( nn.Module ):
-    def __init__(self, input_size, output_size, kernel_size, dilation):
-        super().__init__()
-        self.conv = CausalDilatedConv1d(input_size, output_size, kernel_size, dilation)
-        self.floor = nn.parameter.Parameter( torch.zeros(1), requires_grad=True )
-        self.ceiling = nn.parameter.Parameter( torch.zeros(1), requires_grad=True )
-        self.coef_softsign = nn.parameter.Parameter( torch.randn(1), requires_grad=True )
-        self.coef_tanh = nn.parameter.Parameter( torch.randn(1), requires_grad=True )
-    def forward(self, x):
-        y = self.conv( x )
-        y = y + nn.functional.softsign( self.coef_softsign  * y )
-        y = y + nn.functional.tanh( self.coef_tanh * y )
-        return torch.clip( y, min=-torch.sigmoid( 5.0 * self.floor ), max=torch.sigmoid( 5.0 * self.ceiling ) )
-    def generate_doc(self):
-        state_dict = self.state_dict()
-        doc = {
-            'conv': self.conv.generate_doc(),
-            'floor': {
-                'shape': list(state_dict['floor'].shape),
-                'values': state_dict['floor'].flatten().cpu().numpy().tolist()
-            },
-            'ceiling': {
-                'shape': list(state_dict['ceiling'].shape),
-                'values': state_dict['ceiling'].flatten().cpu().numpy().tolist()
-            },
-            'coef_softsign': {
-                'shape': list(state_dict['coef_softsign'].shape),
-                'values': state_dict['coef_softsign'].flatten().cpu().numpy().tolist()
-            },
-            'coef_tanh': {
-                'shape': list(state_dict['coef_tanh'].shape),
-                'values': state_dict['coef_tanh'].flatten().cpu().numpy().tolist()
-            }
-        }
-        return doc
-
 class FiLM( nn.Module ):
     def __init__(self, feature_dim, control_dim):
         super().__init__()

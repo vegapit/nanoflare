@@ -1,0 +1,94 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "Configure",
+			"command": "cmake",
+			"osx": {
+				"args": [
+					"-B", "build",
+                    "-D", "NANOFLARE_TESTING=True"
+				]
+			},
+			"group": "build",
+			"problemMatcher": [],
+			"detail": "CMake build"
+		},
+		{
+			"type": "shell",
+			"label": "Configure XCode",
+			"command": "cmake",
+			"osx": {
+				"args": [
+					"-B", "xcode",
+					"-G", "Xcode",
+                    "-D", "NANOFLARE_TESTING=True"
+				]
+			},
+			"group": "build",
+			"problemMatcher": [],
+			"detail": "CMake build Xcode"
+		},
+		{
+			"type": "shell",
+			"label": "Compile",
+			"osx": {
+				"command": "cmake",
+				"args" : [
+					"--build", "build"
+				]
+			},
+			"group": "build",
+			"problemMatcher": "$msCompile", // Use MSVC problem matcher which works for Clang/Xcode output
+			"detail": "Compiling"
+		},
+        {
+			"type": "shell",
+			"label": "Layers Accuracy Test",
+			"osx": {
+				"command": "${workspaceFolder}/build/tests/layers_accuracy",
+			},
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			},
+			"presentation": {
+				"reveal": "always"
+			},
+			"problemMatcher": []
+		},
+		{
+			"type": "shell",
+			"label": "Models Accuracy Test",
+			"osx": {
+				"command": "${workspaceFolder}/build/tests/models_accuracy",
+				//"args": ["-s"]
+			},
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			},
+			"presentation": {
+				"reveal": "always"
+			},
+			"problemMatcher": []
+		},
+		{
+			"type": "shell",
+			"label": "Models Benchmarking",
+			"osx": {
+				"command": "${workspaceFolder}/build/tests/models_benchmarking",
+				//"args": ["-s"]
+			},
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			},
+			"presentation": {
+				"reveal": "always"
+			},
+			"problemMatcher": []
+		}
+	]
+}

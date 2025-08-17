@@ -10,7 +10,7 @@
 #include <nanoflare/models/BaseModel.h>
 #include "nanoflare/models/MicroTCN.h"
 #include "nanoflare/models/ResRNN.h"
-#include "nanoflare/models/ConvWaveshaper.h"
+#include "nanoflare/models/HammersteinWeiner.h"
 #include "nanoflare/models/TCN.h"
 #include "nanoflare/models/WaveNet.h"
 #include "nanoflare/layers/LSTM.h"
@@ -23,7 +23,7 @@ constexpr int num_samples = 512;
 
 void register_models()
 {
-    registerModel<ConvWaveshaper>("ConvWaveshaper");
+    registerModel<HammersteinWeiner>("HammersteinWeiner");
     registerModel<MicroTCN>("MicroTCN");
     registerModel<ResRNN<GRU>>("ResGRU");
     registerModel<ResRNN<LSTM>>("ResLSTM");
@@ -31,13 +31,13 @@ void register_models()
     registerModel<WaveNet>("WaveNet");
 }
 
-TEST_CASE("ConvWaveShaper")
+TEST_CASE("HammersteinWeiner")
 {
     register_models();
 
     std::shared_ptr<BaseModel> obj;
     filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= filesystem::path("tests/data/convwaveshaper.json");
+    modelPath /= filesystem::path("tests/data/hammersteinweiner.json");
 
     std::ifstream fstream( modelPath.c_str() );
     nlohmann::json data = nlohmann::json::parse(fstream);
@@ -45,28 +45,31 @@ TEST_CASE("ConvWaveShaper")
 
     RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
 
-    BENCHMARK("ConvWaveShaper") {
+    BENCHMARK("HammersteinWeiner") {
         return obj->forward(x);
     };
 }
 
-TEST_CASE("ConvWaveShaper TorchScript")
+TEST_CASE("HammersteinWeiner TorchScript")
 {
     filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= filesystem::path( "tests/data/convwaveshaper.torchscript" );
+    tsPath /= filesystem::path( "tests/data/hammersteinweiner.torchscript" );
 
     torch::set_num_threads(1);
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
     module.eval();
-
+    
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back(torch::rand({1, 1, num_samples}));
+
+    std::tuple<torch::jit::IValue, torch::jit::IValue> hc { torch::zeros({1, 1, 32}) , torch::zeros({1, 1, 32}) };
+    inputs.push_back( hc );
 
     // Warm-up
     for(auto i = 0; i < 10; ++i)
         module.forward(inputs);
     
-    BENCHMARK("ConvWaveShaper TorchScript") {
+    BENCHMARK("HammersteinWeiner TorchScript") {
         return module.forward(inputs);
     };
 }

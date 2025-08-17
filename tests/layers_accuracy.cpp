@@ -6,7 +6,6 @@
 #include <torch/torch.h>
 #include "filesystem.h"
 
-#include "nanoflare/layers/ConvClipper.h"
 #include "nanoflare/layers/CausalDilatedConv1d.h"
 #include "nanoflare/layers/FiLM.h"
 #include "nanoflare/layers/GRU.h"
@@ -46,39 +45,6 @@ TEST_CASE("CausalDilatedConv1d Test", "[CausalDilatedConv1d]")
     obj.loadStateDict( nlohmann::json::parse(model_file) );
 
     auto torch_data = torch::randn({ long(inChannels), long(seqLength) });
-    auto eigen_data = torch_to_eigen( torch_data );
-    auto pred = obj.forward( eigen_data );
-
-    torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
-    
-    std::vector<torch::jit::IValue> inputs;
-    inputs.push_back(torch_data);
-
-    torch::NoGradGuard no_grad;
-    module.eval();
-
-    auto torch_res = module.forward( inputs ).toTensor();
-    auto target = torch_to_eigen( torch_res );
-
-    REQUIRE( (pred - target).norm() < 1e-5 );
-}
-
-TEST_CASE("ConvClipper Test", "[ConvClipper]")
-{
-    size_t kernelSize = 12;
-    size_t dilation = 4;
-    size_t seqLength = 64;
-
-    filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= filesystem::path("tests/data/convclipper.json");
-    filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= filesystem::path("tests/data/convclipper.torchscript");
-
-    ConvClipper obj(1, 1, kernelSize, dilation);
-    std::ifstream model_file( modelPath.c_str() );
-    obj.loadStateDict( nlohmann::json::parse(model_file) );
-
-    auto torch_data = torch::randn({ 1, long(seqLength) });
     auto eigen_data = torch_to_eigen( torch_data );
     auto pred = obj.forward( eigen_data );
 
