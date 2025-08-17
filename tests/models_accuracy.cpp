@@ -59,7 +59,7 @@ TEST_CASE("HammersteinWeiner Test", "[HammersteinWeiner]")
 
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
     
-    std::tuple<torch::jit::IValue, torch::jit::IValue> hc { torch::zeros({1, 1, 64}) , torch::zeros({1, 1, 64}) };
+    std::tuple<torch::jit::IValue, torch::jit::IValue> hc { torch::zeros({1, 1, 32}) , torch::zeros({1, 1, 32}) };
 
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back( torch_data.unsqueeze(0) );

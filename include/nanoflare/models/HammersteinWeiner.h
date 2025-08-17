@@ -24,10 +24,10 @@ namespace Nanoflare
     {
     public:
         HammersteinWeiner(size_t input_size, size_t hidden_size, size_t output_size, float norm_mean, float norm_std) : BaseModel(norm_mean, norm_std), 
-            m_inputLinear(input_size, hidden_size, true), 
+            m_inputLinear(input_size, hidden_size, true),
+            m_linearLayer(hidden_size, hidden_size, true),
             m_hiddenLinear(hidden_size, hidden_size, true), 
-            m_outputLinear(hidden_size, output_size, true), 
-            m_linearLayer(input_size, hidden_size, true)
+            m_outputLinear(hidden_size, output_size, true)
         {}
         ~HammersteinWeiner() = default;
 
@@ -45,12 +45,12 @@ namespace Nanoflare
         {
             auto input_linear_state_dict = state_dict[std::string("input_linear")].get<std::map<std::string, nlohmann::json>>();
             m_inputLinear.loadStateDict( input_linear_state_dict );
+            auto linear_layer_state_dict = state_dict[std::string("linear_layer")].get<std::map<std::string, nlohmann::json>>();
+            m_linearLayer.loadStateDict( linear_layer_state_dict );
             auto hidden_linear_state_dict = state_dict[std::string("hidden_linear")].get<std::map<std::string, nlohmann::json>>();
             m_hiddenLinear.loadStateDict( hidden_linear_state_dict );
             auto output_linear_state_dict = state_dict[std::string("output_linear")].get<std::map<std::string, nlohmann::json>>();
             m_outputLinear.loadStateDict( output_linear_state_dict );
-            auto linear_layer_state_dict = state_dict[std::string("linear_layer")].get<std::map<std::string, nlohmann::json>>();
-            m_linearLayer.loadStateDict( linear_layer_state_dict );
         }
 
         void resetState() { m_linearLayer.resetState(); }

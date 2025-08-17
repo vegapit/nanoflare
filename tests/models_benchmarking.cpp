@@ -74,7 +74,8 @@ TEST_CASE("HammersteinWeiner TorchScript")
     };
 }
 
-TEST_CASE("MicroTCN") {
+TEST_CASE("MicroTCN")
+{
     register_models();
 
     std::shared_ptr<BaseModel> obj;
@@ -192,7 +193,8 @@ TEST_CASE("ResLSTM TorchScript")
     };
 }
 
-TEST_CASE("TCN") {
+TEST_CASE("TCN")
+{
     register_models();
 
     std::shared_ptr<BaseModel> obj;
@@ -209,7 +211,8 @@ TEST_CASE("TCN") {
     };
 }
 
-TEST_CASE("TCN TorchScript") {
+TEST_CASE("TCN TorchScript")
+{
     filesystem::path tsPath( PROJECT_SOURCE_DIR );
     tsPath /= filesystem::path( "tests/data/tcn.torchscript" );
 
