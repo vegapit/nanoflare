@@ -3,20 +3,22 @@ import torch.nn as nn
 from .modules import BaseModel, PlainSequential
 
 class HammersteinWeiner( BaseModel ):
-    def __init__(self, input_size, hidden_size, output_size, norm_mean = 0.0, norm_std = 1.0):
+    def __init__(self, input_size, linear_input_size, linear_output_size, hidden_size, output_size, norm_mean = 0.0, norm_std = 1.0):
         super().__init__(norm_mean, norm_std)
         self.input_size = input_size
+        self.linear_input_size = linear_input_size
+        self.linear_output_size = linear_output_size
         self.hidden_size = hidden_size
         self.output_size = output_size
         self.f = nn.Tanh()
-        self.input_linear = nn.Linear(input_size, hidden_size)
+        self.input_linear = nn.Linear(input_size, linear_input_size)
         self.linear_layer = nn.LSTM(
-            input_size=hidden_size,
-            hidden_size=hidden_size,
+            input_size=linear_input_size,
+            hidden_size=linear_output_size,
             num_layers=1,
             batch_first=True
         )
-        self.hidden_linear = nn.Linear(hidden_size, hidden_size)
+        self.hidden_linear = nn.Linear(linear_output_size, hidden_size)
         self.output_linear = nn.Linear(hidden_size, output_size)
 
     def forward(self, x: torch.Tensor, hc: tuple[torch.Tensor, torch.Tensor]) -> torch.Tensor:
@@ -41,8 +43,10 @@ class HammersteinWeiner( BaseModel ):
             'meta_data': meta_data,
             'parameters': {
                 'input_size': self.input_size,
-                'output_size': self.output_size,
-                'hidden_size': self.hidden_size
+                'linear_input_size': self.linear_input_size,
+                'linear_output_size': self.linear_output_size,
+                'hidden_size': self.hidden_size,
+                'output_size': self.output_size
             }
         }
         state_dict = self.state_dict()
