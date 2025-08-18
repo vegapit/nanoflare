@@ -3,7 +3,7 @@
 #include <nanoflare/models/BaseModel.h>
 #include "nanoflare/models/MicroTCN.h"
 #include "nanoflare/models/ResRNN.h"
-#include "nanoflare/models/HammersteinWeiner.h"
+#include "nanoflare/models/HammersteinWiener.h"
 #include "nanoflare/models/TCN.h"
 #include "nanoflare/models/WaveNet.h"
 #include "nanoflare/layers/LSTM.h"
@@ -32,7 +32,7 @@ constexpr int num_samples = 2048;
 
 void register_models()
 {
-    registerModel<HammersteinWeiner>("HammersteinWeiner");
+    registerModel<HammersteinWiener>("HammersteinWiener");
     registerModel<MicroTCN>("MicroTCN");
     registerModel<ResRNN<GRU>>("ResGRU");
     registerModel<ResRNN<LSTM>>("ResLSTM");
@@ -40,14 +40,14 @@ void register_models()
     registerModel<WaveNet>("WaveNet");
 }
 
-TEST_CASE("HammersteinWeiner Test", "[HammersteinWeiner]")
+TEST_CASE("HammersteinWiener Test", "[HammersteinWiener]")
 {   
     register_models();
 
     filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= filesystem::path("tests/data/hammersteinweiner.json");
+    modelPath /= filesystem::path("tests/data/hammersteinwiener.json");
     filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= filesystem::path("tests/data/hammersteinweiner.torchscript");
+    tsPath /= filesystem::path("tests/data/hammersteinwiener.torchscript");
 
     std::shared_ptr<BaseModel> obj;
     std::ifstream model_file( modelPath.c_str() );

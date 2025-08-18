@@ -10,7 +10,7 @@
 #include <nanoflare/models/BaseModel.h>
 #include "nanoflare/models/MicroTCN.h"
 #include "nanoflare/models/ResRNN.h"
-#include "nanoflare/models/HammersteinWeiner.h"
+#include "nanoflare/models/HammersteinWiener.h"
 #include "nanoflare/models/TCN.h"
 #include "nanoflare/models/WaveNet.h"
 #include "nanoflare/layers/LSTM.h"
@@ -23,7 +23,7 @@ constexpr int num_samples = 512;
 
 void register_models()
 {
-    registerModel<HammersteinWeiner>("HammersteinWeiner");
+    registerModel<HammersteinWiener>("HammersteinWiener");
     registerModel<MicroTCN>("MicroTCN");
     registerModel<ResRNN<GRU>>("ResGRU");
     registerModel<ResRNN<LSTM>>("ResLSTM");
@@ -31,13 +31,13 @@ void register_models()
     registerModel<WaveNet>("WaveNet");
 }
 
-TEST_CASE("HammersteinWeiner")
+TEST_CASE("HammersteinWiener")
 {
     register_models();
 
     std::shared_ptr<BaseModel> obj;
     filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= filesystem::path("tests/data/hammersteinweiner.json");
+    modelPath /= filesystem::path("tests/data/hammersteinwiener.json");
 
     std::ifstream fstream( modelPath.c_str() );
     nlohmann::json data = nlohmann::json::parse(fstream);
@@ -45,15 +45,15 @@ TEST_CASE("HammersteinWeiner")
 
     RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
 
-    BENCHMARK("HammersteinWeiner") {
+    BENCHMARK("HammersteinWiener") {
         return obj->forward(x);
     };
 }
 
-TEST_CASE("HammersteinWeiner TorchScript")
+TEST_CASE("HammersteinWiener TorchScript")
 {
     filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= filesystem::path( "tests/data/hammersteinweiner.torchscript" );
+    tsPath /= filesystem::path( "tests/data/hammersteinwiener.torchscript" );
 
     torch::set_num_threads(1);
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
@@ -69,7 +69,7 @@ TEST_CASE("HammersteinWeiner TorchScript")
     for(auto i = 0; i < 10; ++i)
         module.forward(inputs);
     
-    BENCHMARK("HammersteinWeiner TorchScript") {
+    BENCHMARK("HammersteinWiener TorchScript") {
         return module.forward(inputs);
     };
 }

@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from .modules import BaseModel, PlainSequential
 
-class HammersteinWeiner( BaseModel ):
+class HammersteinWiener( BaseModel ):
     def __init__(self, input_size, linear_input_size, linear_output_size, hidden_size, output_size, norm_mean = 0.0, norm_std = 1.0):
         super().__init__(norm_mean, norm_std)
         self.input_size = input_size
@@ -36,7 +36,7 @@ class HammersteinWeiner( BaseModel ):
     def generate_doc(self, meta_data={}):
         doc = {
             'config': {
-                'model_type': 'HammersteinWeiner',
+                'model_type': 'HammersteinWiener',
                 'norm_mean': self.norm_mean.item(),
                 'norm_std': self.norm_std.item()
             },

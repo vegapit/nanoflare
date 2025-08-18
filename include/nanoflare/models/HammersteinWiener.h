@@ -9,12 +9,12 @@
 
 namespace Nanoflare
 {
-    struct HammersteinWeinerParameters
+    struct HammersteinWienerParameters
     {
         size_t input_size, linear_input_size, linear_output_size, hidden_size, output_size;
     };
 
-    inline void from_json(const nlohmann::json& j, HammersteinWeinerParameters& obj) {
+    inline void from_json(const nlohmann::json& j, HammersteinWienerParameters& obj) {
         j.at("input_size").get_to(obj.input_size);
         j.at("linear_input_size").get_to(obj.linear_input_size);
         j.at("linear_output_size").get_to(obj.linear_output_size);
@@ -22,16 +22,16 @@ namespace Nanoflare
         j.at("output_size").get_to(obj.output_size);
     }
 
-    class HammersteinWeiner : public BaseModel
+    class HammersteinWiener : public BaseModel
     {
     public:
-        HammersteinWeiner(size_t input_size, size_t linear_input_size, size_t linear_output_size, size_t hidden_size, size_t output_size, float norm_mean, float norm_std) : BaseModel(norm_mean, norm_std), 
+        HammersteinWiener(size_t input_size, size_t linear_input_size, size_t linear_output_size, size_t hidden_size, size_t output_size, float norm_mean, float norm_std) : BaseModel(norm_mean, norm_std), 
             m_inputLinear(input_size, linear_input_size, true),
             m_linearLayer(linear_input_size, linear_output_size, true),
             m_hiddenLinear(linear_output_size, hidden_size, true), 
             m_outputLinear(hidden_size, output_size, true)
         {}
-        ~HammersteinWeiner() = default;
+        ~HammersteinWiener() = default;
 
         inline RowMatrixXf forward( const Eigen::Ref<const RowMatrixXf>& x ) noexcept override final
         {
@@ -63,8 +63,8 @@ namespace Nanoflare
 
             auto config = data.at("config").template get<ModelConfig>();
             auto state_dict = data.at("state_dict").get<std::map<std::string, nlohmann::json>>();
-            auto parameters = data.at("parameters").template get<HammersteinWeinerParameters>();
-            model = std::make_shared<HammersteinWeiner>(parameters.input_size, parameters.linear_input_size, parameters.linear_output_size, parameters.hidden_size, parameters.output_size, config.norm_mean, config.norm_std);
+            auto parameters = data.at("parameters").template get<HammersteinWienerParameters>();
+            model = std::make_shared<HammersteinWiener>(parameters.input_size, parameters.linear_input_size, parameters.linear_output_size, parameters.hidden_size, parameters.output_size, config.norm_mean, config.norm_std);
             model->loadStateDict( state_dict );
         }
 
