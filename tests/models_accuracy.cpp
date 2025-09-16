@@ -13,7 +13,7 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 #include <vector>
-#include "filesystem.h"
+#include <filesystem>
 
 using namespace Nanoflare;
 using Catch::Approx;
@@ -44,10 +44,10 @@ TEST_CASE("HammersteinWiener Test", "[HammersteinWiener]")
 {   
     register_models();
 
-    filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= filesystem::path("tests/data/hammersteinwiener.json");
-    filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= filesystem::path("tests/data/hammersteinwiener.torchscript");
+    std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
+    modelPath /= std::filesystem::path("tests/data/hammersteinwiener.json");
+    std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
+    tsPath /= std::filesystem::path("tests/data/hammersteinwiener.torchscript");
 
     std::shared_ptr<BaseModel> obj;
     std::ifstream model_file( modelPath.c_str() );
@@ -76,10 +76,10 @@ TEST_CASE("HammersteinWiener Test", "[HammersteinWiener]")
 
 TEST_CASE("MicroTCN Test", "[MicroTCN]")
 {
-    filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= filesystem::path("tests/data/microtcn.json");
-    filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= filesystem::path("tests/data/microtcn.torchscript");
+    std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
+    modelPath /= std::filesystem::path("tests/data/microtcn.json");
+    std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
+    tsPath /= std::filesystem::path("tests/data/microtcn.torchscript");
 
     std::shared_ptr<BaseModel> obj;
     std::ifstream model_file( modelPath.c_str() );
@@ -107,10 +107,10 @@ TEST_CASE("ResGRU Test", "[ResGRU]")
 {
     register_models();
 
-    filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= filesystem::path("tests/data/resgru.json");
-    filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= filesystem::path("tests/data/resgru.torchscript");
+    std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
+    modelPath /= std::filesystem::path("tests/data/resgru.json");
+    std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
+    tsPath /= std::filesystem::path("tests/data/resgru.torchscript");
 
     std::shared_ptr<BaseModel> obj;
     std::ifstream model_file( modelPath.c_str() );
@@ -137,10 +137,10 @@ TEST_CASE("ResGRU Test", "[ResGRU]")
 
 TEST_CASE("ResLSTM Test", "[ResLSTM]")
 {
-    filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= filesystem::path("tests/data/reslstm.json");
-    filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= filesystem::path("tests/data/reslstm.torchscript");
+    std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
+    modelPath /= std::filesystem::path("tests/data/reslstm.json");
+    std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
+    tsPath /= std::filesystem::path("tests/data/reslstm.torchscript");
 
     std::shared_ptr<BaseModel> obj;
     std::ifstream model_file( modelPath.c_str() );
@@ -171,10 +171,10 @@ TEST_CASE("TCN Test", "[TCN]")
 {
     register_models();
 
-    filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= filesystem::path("tests/data/tcn.json");
-    filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= filesystem::path("tests/data/tcn.torchscript");
+    std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
+    modelPath /= std::filesystem::path("tests/data/tcn.json");
+    std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
+    tsPath /= std::filesystem::path("tests/data/tcn.torchscript");
 
     std::shared_ptr<BaseModel> obj;
     std::ifstream model_file( modelPath.c_str() );
@@ -202,10 +202,10 @@ TEST_CASE("WaveNet Test", "[WaveNet]")
 {
     register_models();
 
-    filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= filesystem::path("tests/data/wavenet.json");
-    filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= filesystem::path("tests/data/wavenet.torchscript");
+    std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
+    modelPath /= std::filesystem::path("tests/data/wavenet.json");
+    std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
+    tsPath /= std::filesystem::path("tests/data/wavenet.torchscript");
 
     std::shared_ptr<BaseModel> obj;
     std::ifstream model_file( modelPath.c_str() );

@@ -37,7 +37,6 @@ The basic layer types currently available are:
 They were used to define the following custom block types:
 
 * CausalDilatedConv1d
-* ConvClipper
 * FiLM
 * MicroTCNBlock
 * PlainSequential
@@ -46,7 +45,7 @@ They were used to define the following custom block types:
 
 Which were in turn used to define the following models:
 
-* ConvWaveshaper
+* HammersteinWiener
 * MicroTCN
 * ResRNN e.g. ResGRU or ResLSTM
 * TCN
@@ -71,14 +70,14 @@ The tests are handled by the [Catch2](https://github.com/catchorg/Catch2.git) te
 When configuring the tests, pass the path to the Libtorch directory to CMake as a `LIBTORCH_DIR` variable and define the `NANOFLARE_TESTING` variable:
 
 ```shell
-cmake -B build -DNANOFLARE_TESTING=ON -DLIBTORCH_DIR=<path/to/libtorch>
+mkdir build && cd build
+cmake .. -DNANOFLARE_TESTING=ON -DLIBTORCH_DIR=<path/to/libtorch>
 ```
 
 Launch the build and run accuracy tests:
 
 ```shell
-cmake --build build
-cd build
+cmake --build .
 make test
 ```
 

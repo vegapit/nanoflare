@@ -4,7 +4,7 @@
 #include <fstream>
 #include <torch/script.h>
 #include <torch/torch.h>
-#include "filesystem.h"
+#include <filesystem>
 
 #include "nanoflare/layers/CausalDilatedConv1d.h"
 #include "nanoflare/layers/FiLM.h"
@@ -35,10 +35,10 @@ TEST_CASE("CausalDilatedConv1d Test", "[CausalDilatedConv1d]")
     size_t dilation = 2;
     size_t seqLength = 5;
 
-    filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= filesystem::path("tests/data/causaldilatedconv1d.json");
-    filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= filesystem::path("tests/data/causaldilatedconv1d.torchscript");
+    std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
+    modelPath /= std::filesystem::path("tests/data/causaldilatedconv1d.json");
+    std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
+    tsPath /= std::filesystem::path("tests/data/causaldilatedconv1d.torchscript");
 
     CausalDilatedConv1d obj(inChannels, outChannels, kernelSize, true, dilation);
     std::ifstream model_file( modelPath.c_str() );
@@ -68,10 +68,10 @@ TEST_CASE("FiLM Test", "[FiLM]")
     size_t controlDim = 3;
     size_t batchSize = 5;
 
-    filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= filesystem::path("tests/data/film.json");
-    filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= filesystem::path("tests/data/film.torchscript");
+    std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
+    modelPath /= std::filesystem::path("tests/data/film.json");
+    std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
+    tsPath /= std::filesystem::path("tests/data/film.torchscript");
 
     FiLM obj(featureDim, controlDim);
     std::ifstream model_file( modelPath.c_str() );
@@ -106,10 +106,10 @@ TEST_CASE("MicroTCNBlock Test", "[MicroTCNBlock]")
     size_t dilation = 2;
     size_t seqLength = 5;
 
-    filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= filesystem::path("tests/data/microtcnblock.json");
-    filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= filesystem::path("tests/data/microtcnblock.torchscript");
+    std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
+    modelPath /= std::filesystem::path("tests/data/microtcnblock.json");
+    std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
+    tsPath /= std::filesystem::path("tests/data/microtcnblock.torchscript");
 
     MicroTCNBlock obj(inChannels, outChannels, kernelSize, dilation);
     std::ifstream model_file( modelPath.c_str() );
@@ -141,10 +141,10 @@ TEST_CASE("PlainSequential Test", "[PlainSequential]")
     size_t numHiddenLayers = 3;
     size_t batchSize = 5;
 
-    filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= filesystem::path("tests/data/plainsequential.json");
-    filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= filesystem::path("tests/data/plainsequential.torchscript");
+    std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
+    modelPath /= std::filesystem::path("tests/data/plainsequential.json");
+    std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
+    tsPath /= std::filesystem::path("tests/data/plainsequential.torchscript");
 
     PlainSequential obj(inChannels, outChannels, hiddenChannels, numHiddenLayers);
     std::ifstream model_file( modelPath.c_str() );
@@ -176,10 +176,10 @@ TEST_CASE("ResidualBlock Test", "[ResidualBlock]")
     bool gated = true;
     size_t seqLength = 5;
 
-    filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= filesystem::path("tests/data/residualblock.json");
-    filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= filesystem::path("tests/data/residualblock.torchscript");
+    std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
+    modelPath /= std::filesystem::path("tests/data/residualblock.json");
+    std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
+    tsPath /= std::filesystem::path("tests/data/residualblock.torchscript");
 
     ResidualBlock obj(numChannels, kernelSize, dilation, gated);
     std::ifstream model_file( modelPath.c_str() );
@@ -211,10 +211,10 @@ TEST_CASE("TCNBlock Test", "[TCNBlock]")
     size_t dilation = 2;
     size_t seqLength = 5;
 
-    filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= filesystem::path("tests/data/tcnblock.json");
-    filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= filesystem::path("tests/data/tcnblock.torchscript");
+    std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
+    modelPath /= std::filesystem::path("tests/data/tcnblock.json");
+    std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
+    tsPath /= std::filesystem::path("tests/data/tcnblock.torchscript");
 
     TCNBlock obj(inChannels, outChannels, kernelSize, dilation);
     std::ifstream model_file( modelPath.c_str() );

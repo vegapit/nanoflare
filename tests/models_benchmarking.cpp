@@ -15,7 +15,7 @@
 #include "nanoflare/models/WaveNet.h"
 #include "nanoflare/layers/LSTM.h"
 #include "nanoflare/layers/GRU.h"
-#include "filesystem.h"
+#include <filesystem>
 
 using namespace Nanoflare;
 
@@ -36,8 +36,8 @@ TEST_CASE("HammersteinWiener")
     register_models();
 
     std::shared_ptr<BaseModel> obj;
-    filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= filesystem::path("tests/data/hammersteinwiener.json");
+    std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
+    modelPath /= std::filesystem::path("tests/data/hammersteinwiener.json");
 
     std::ifstream fstream( modelPath.c_str() );
     nlohmann::json data = nlohmann::json::parse(fstream);
@@ -52,8 +52,8 @@ TEST_CASE("HammersteinWiener")
 
 TEST_CASE("HammersteinWiener TorchScript")
 {
-    filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= filesystem::path( "tests/data/hammersteinwiener.torchscript" );
+    std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
+    tsPath /= std::filesystem::path( "tests/data/hammersteinwiener.torchscript" );
 
     torch::set_num_threads(1);
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
@@ -79,8 +79,8 @@ TEST_CASE("MicroTCN")
     register_models();
 
     std::shared_ptr<BaseModel> obj;
-    filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= filesystem::path("tests/data/microtcn.json");
+    std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
+    modelPath /= std::filesystem::path("tests/data/microtcn.json");
 
     std::ifstream fstream( modelPath.c_str() );
     nlohmann::json data = nlohmann::json::parse(fstream);
@@ -94,8 +94,8 @@ TEST_CASE("MicroTCN")
 
 TEST_CASE("MicroTCN TorchScript")
 {
-    filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= filesystem::path( "tests/data/microtcn.torchscript" );
+    std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
+    tsPath /= std::filesystem::path( "tests/data/microtcn.torchscript" );
 
     torch::set_num_threads(1);
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
@@ -116,8 +116,8 @@ TEST_CASE("MicroTCN TorchScript")
 TEST_CASE("ResGRU")
 {
     std::shared_ptr<BaseModel> obj;
-    filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= filesystem::path("tests/data/resgru.json");
+    std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
+    modelPath /= std::filesystem::path("tests/data/resgru.json");
 
     std::ifstream fstream( modelPath.c_str() );
     nlohmann::json data = nlohmann::json::parse(fstream);
@@ -131,8 +131,8 @@ TEST_CASE("ResGRU")
 
 TEST_CASE("ResGRU TorchScript")
 {
-    filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= filesystem::path( "tests/data/resgru.torchscript" );
+    std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
+    tsPath /= std::filesystem::path( "tests/data/resgru.torchscript" );
 
     torch::set_num_threads(1);
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
@@ -156,8 +156,8 @@ TEST_CASE("ResLSTM")
     register_models();
 
     std::shared_ptr<BaseModel> obj;
-    filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= filesystem::path("tests/data/reslstm.json");
+    std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
+    modelPath /= std::filesystem::path("tests/data/reslstm.json");
 
     std::ifstream fstream( modelPath.c_str() );
     nlohmann::json data = nlohmann::json::parse(fstream);
@@ -171,8 +171,8 @@ TEST_CASE("ResLSTM")
 
 TEST_CASE("ResLSTM TorchScript")
 {
-    filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= filesystem::path( "tests/data/reslstm.torchscript" );
+    std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
+    tsPath /= std::filesystem::path( "tests/data/reslstm.torchscript" );
 
     torch::set_num_threads(1);
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
@@ -198,8 +198,8 @@ TEST_CASE("TCN")
     register_models();
 
     std::shared_ptr<BaseModel> obj;
-    filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= filesystem::path("tests/data/tcn.json");
+    std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
+    modelPath /= std::filesystem::path("tests/data/tcn.json");
 
     std::ifstream fstream( modelPath.c_str() );
     nlohmann::json data = nlohmann::json::parse(fstream);
@@ -213,8 +213,8 @@ TEST_CASE("TCN")
 
 TEST_CASE("TCN TorchScript")
 {
-    filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= filesystem::path( "tests/data/tcn.torchscript" );
+    std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
+    tsPath /= std::filesystem::path( "tests/data/tcn.torchscript" );
 
     torch::set_num_threads(1);
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
@@ -237,8 +237,8 @@ TEST_CASE("WaveNet")
     register_models();
 
     std::shared_ptr<BaseModel> obj;
-    filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= filesystem::path("tests/data/wavenet.json");
+    std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
+    modelPath /= std::filesystem::path("tests/data/wavenet.json");
 
     std::ifstream fstream( modelPath.c_str() );
     nlohmann::json data = nlohmann::json::parse(fstream);
@@ -252,8 +252,8 @@ TEST_CASE("WaveNet")
 
 TEST_CASE("WaveNet TorchScript")
 {
-    filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= filesystem::path( "tests/data/wavenet.torchscript" );
+    std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
+    tsPath /= std::filesystem::path( "tests/data/wavenet.torchscript" );
 
     torch::set_num_threads(1);
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
