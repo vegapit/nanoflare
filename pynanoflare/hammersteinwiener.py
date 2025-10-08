@@ -13,7 +13,7 @@ class HammersteinWiener( BaseModel ):
         
         # Nonlinear input stage (Hammerstein)
         self.input_linear = nn.Linear(input_size, linear_input_size)
-        self.f_in = nn.Tanh()
+        self.f_in = nn.LeakyReLU(negative_slope=0.2)
         
         # Dynamic linear stage (memory)
         self.lstm = nn.LSTM(
@@ -25,7 +25,7 @@ class HammersteinWiener( BaseModel ):
 
         # Nonlinear output stage (Wiener)
         self.hidden_linear = nn.Linear(linear_output_size, hidden_size)
-        self.f_out = nn.Tanh()
+        self.f_out = nn.LeakyReLU(negative_slope=0.2)
         self.output_linear = nn.Linear(hidden_size, output_size)
 
         # Identity skip path

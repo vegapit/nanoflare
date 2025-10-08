@@ -38,9 +38,9 @@ namespace Nanoflare
         {
             m_norm_x = x;
             normalise( m_norm_x );
-            m_norm_x = m_inputLinear.forward( m_norm_x.transpose() ).array().tanh();
+            m_norm_x = m_inputLinear.forward( m_norm_x.transpose() ).array().unaryExpr(&leakyReLU);
             m_norm_x = m_lstm.forward( m_norm_x );
-            m_norm_x = m_hiddenLinear.forward( m_norm_x ).array().tanh();
+            m_norm_x = m_hiddenLinear.forward( m_norm_x ).array().unaryExpr(&leakyReLU);
             return m_skipLinear.forwardTranspose( x ) + m_outputLinear.forward( m_norm_x ).transpose();
         }
 
@@ -71,6 +71,8 @@ namespace Nanoflare
         }
 
     private:
+        static inline float leakyReLU(float x) { return x > 0.0f ? x : 0.2f * x; }
+
         Linear m_inputLinear, m_hiddenLinear, m_outputLinear, m_skipLinear;
         LSTM m_lstm;
         mutable RowMatrixXf m_norm_x;
