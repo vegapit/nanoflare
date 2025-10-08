@@ -13,6 +13,9 @@ project( nanoflare )
 # Option defining test builds
 option(NANOFLARE_TESTING "Build tests and benchmarks?" OFF)
 
+# Option defining pybind builds
+option(PYTHON_EXPORT "Compile Nanoflare as Python module?" OFF)
+
 # Add 3rdParty dependencies
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/eigen)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libs/json)
@@ -47,4 +50,11 @@ if(${NANOFLARE_TESTING})
     add_compile_definitions(PROJECT_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 
     add_subdirectory( tests )
+endif()
+
+if(${PYTHON_EXPORT})
+    # Add this path definition for test code
+    add_compile_definitions(PROJECT_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+
+    add_subdirectory( nanoflare_py )
 endif()

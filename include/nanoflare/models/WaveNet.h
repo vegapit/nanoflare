@@ -47,8 +47,8 @@ namespace Nanoflare
         {
             auto dilations_size = m_dilations.size();
 
-            RowMatrixXf norm_x( x );
-            normalise( norm_x );
+            m_norm_x = x;
+            normalise( m_norm_x );
 
             if (m_y.rows() != x.rows() || m_y.cols() != m_numChannels)
                 m_y.resize(x.rows(), m_numChannels);
@@ -57,7 +57,7 @@ namespace Nanoflare
             if (m_skip_y.rows() != m_numChannels || m_skip_y.cols() != x.cols())
                 m_skip_y.resize(m_numChannels, x.cols());
 
-            m_y = m_inputConv.forward( norm_x );
+            m_y = m_inputConv.forward( m_norm_x );
             m_skip_sum.setZero();
             for(auto k = 0; k < m_stackSize; k++)
                 for(auto i = 0; i < dilations_size; i++)
@@ -65,7 +65,9 @@ namespace Nanoflare
                     std::tie( m_y, m_skip_y ) = m_blockStack[k * dilations_size + i].forward( m_y );
                     m_skip_sum += m_skip_y;
                 }
-            return m_plainSequential.forward( m_skip_sum.cwiseMax( 0.f ).transpose() ).transpose();
+            RowMatrixXf out = m_plainSequential.forwardTranspose( m_skip_sum.cwiseMax( 0.f ) );
+            denormalise( out );
+            return out;
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override final
@@ -101,7 +103,7 @@ namespace Nanoflare
         CausalDilatedConv1d m_inputConv;
         std::vector<ResidualBlock> m_blockStack;
         PlainSequential m_plainSequential;
-        RowMatrixXf m_y, m_skip_y, m_skip_sum;
+        mutable RowMatrixXf m_y, m_skip_y, m_skip_sum, m_norm_x;
     };
 
 }

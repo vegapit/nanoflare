@@ -33,6 +33,20 @@ namespace Nanoflare
                 return m_directLinear.forward( x ) + m_outputLinear.forward( m_y );
         }
 
+        inline RowMatrixXf forwardTranspose( const Eigen::Ref<const RowMatrixXf>& x ) const noexcept
+        {
+            if (m_y.rows() != m_hiddenChannels || m_y.cols() != x.cols())
+                m_y.resize(m_hiddenChannels, x.cols());
+
+            m_y = m_inputLinear.forwardTranspose( x ).cwiseMax(0.f);
+            for(auto& linear: m_hiddenLinear)
+                m_y = linear.forwardTranspose( m_y ).cwiseMax(0.f);
+            if(m_inChannels == m_outChannels)
+                return x + m_outputLinear.forwardTranspose( m_y );
+            else
+                return m_directLinear.forwardTranspose( x ) + m_outputLinear.forwardTranspose( m_y );
+        }
+
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)
         {
             auto direct_linear_state_dict = state_dict[std::string("direct_linear")].get<std::map<std::string, nlohmann::json>>();

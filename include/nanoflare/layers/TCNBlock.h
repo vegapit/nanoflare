@@ -29,12 +29,13 @@ namespace Nanoflare
                 m_y.resize( m_outChannels, x.cols());
 
             m_y = m_conv1.forward( x );
-            m_f1.apply( m_y );
             m_bn1.apply( m_y );
+            m_f1.apply( m_y );
+            
             
             m_y = m_conv2.forward( m_y );
-            m_f2.apply( m_y );
             m_bn2.apply( m_y );
+            m_f2.apply( m_y );
             
             if(m_inChannels == m_outChannels)
                 return x + m_y;

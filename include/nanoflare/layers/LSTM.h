@@ -11,7 +11,9 @@ namespace Nanoflare
     public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-        LSTM(size_t input_size, size_t hidden_size, bool bias) : m_cell(input_size, hidden_size, bias), m_h(Eigen::VectorXf::Zero(hidden_size)), m_c(Eigen::VectorXf::Zero(hidden_size)) {}
+        LSTM(size_t input_size, size_t hidden_size, bool bias) : m_cell(input_size, hidden_size, bias), 
+            m_h(Eigen::VectorXf::Zero(hidden_size)), m_c(Eigen::VectorXf::Zero(hidden_size))
+        {}
         ~LSTM() = default;
 
         void resetState()

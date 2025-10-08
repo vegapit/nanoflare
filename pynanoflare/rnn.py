@@ -10,10 +10,11 @@ class ResLSTM( BaseModel ):
         self.output_size = output_size
         self.rnn = nn.LSTM(input_size, hidden_size, batch_first=True)
         self.plain_sequential = PlainSequential(hidden_size, output_size, ps_hidden_size, ps_num_hidden_layers)
-    def forward(self, x: torch.Tensor, hc: tuple[torch.Tensor, torch.Tensor]) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, hc: tuple[torch.Tensor, torch.Tensor]) -> tuple[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
         norm_x = self.normalise( x )
-        y, _ = self.rnn( norm_x.transpose(1,2), hc )
-        return norm_x + self.plain_sequential( y ).transpose(1,2)
+        y, hc = self.rnn( norm_x.transpose(1,2), hc )
+        y = self.plain_sequential( y ).transpose(1,2)
+        return x + y, hc
     def generate_doc(self, meta_data={}):
         doc = {
             'config': {
@@ -62,10 +63,11 @@ class ResGRU( BaseModel ):
         self.output_size = output_size
         self.rnn = nn.GRU(input_size, hidden_size, batch_first=True)
         self.plain_sequential = PlainSequential(hidden_size, output_size, ps_hidden_size, ps_num_hidden_layers)
-    def forward(self, x: torch.Tensor, h: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, h: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         norm_x = self.normalise( x )
-        y, _ = self.rnn( norm_x.transpose(1,2), h )
-        return norm_x + self.plain_sequential( y ).transpose(1,2)
+        y, h = self.rnn( norm_x.transpose(1,2), h )
+        y = self.plain_sequential( y ).transpose(1,2)
+        return x + y, h 
     def generate_doc(self, meta_data={}):
         doc = {
             'config': {

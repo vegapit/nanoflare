@@ -38,11 +38,11 @@ namespace Nanoflare
         
         inline RowMatrixXf forward( const Eigen::Ref<const RowMatrixXf>& x ) noexcept override final
         {
-            RowMatrixXf norm_x( x );
-            normalise( norm_x );
+            m_norm_x = x;
+            normalise( m_norm_x );
             for(auto& block: m_blockStack )
-                norm_x = block.forward( norm_x );
-            return m_plainSequential.forward( norm_x.transpose() ).transpose();
+                m_norm_x = block.forward( m_norm_x );
+            return m_plainSequential.forwardTranspose( m_norm_x );
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override final
@@ -71,6 +71,7 @@ namespace Nanoflare
         size_t m_hiddenSize, m_stackSize;
         std::vector<TCNBlock> m_blockStack;
         PlainSequential m_plainSequential;
+        mutable RowMatrixXf m_norm_x;
     };
 
 }

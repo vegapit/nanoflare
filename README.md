@@ -92,3 +92,17 @@ Libtorch can be quite slow for the first few runs post-load so to make it fairer
 > On the testing machine, Nanoflare is about **25-30% faster** than Libtorch/TorchscriptJIT across all neural network architectures available.
 
 The `generate_test_data.py` scripts generates a new set of data used in the accuracy testing.
+
+## Use Nanoflare Builder in Python
+
+It is possible to directly use Nanoflare in Python. Simply add the cmake option `-D PYTHON_EXPORT=ON` on. A python module called `nanoflare_py` would then be created. You could use it the following way:
+
+```python
+from nanoflare_py import NanoflareModel, register_models
+
+if __name__ == "__main__":
+    register_models()  # Ensure models are registered
+    # Load model from JSON
+    model = NanoflareModel("/path/to/nanoflareJSON.json")
+    output = model.infer(input) #input is a numpy array of shape [channels, time]
+```

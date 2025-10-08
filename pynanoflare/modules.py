@@ -9,6 +9,9 @@ class BaseModel( nn.Module ):
     @torch.no_grad()
     def normalise(self, x: torch.Tensor) -> torch.Tensor:
         return (x - self.norm_mean) / self.norm_std
+    @torch.no_grad()
+    def denormalise(self, x: torch.Tensor) -> torch.Tensor:
+        return x * self.norm_std + self.norm_mean
     
 class CausalDilatedConv1d(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, dilation=1):
@@ -16,7 +19,7 @@ class CausalDilatedConv1d(nn.Module):
         self.padding = (kernel_size - 1) * dilation # Add required padding on both sides of the input
         self.conv1d = nn.Conv1d(in_channels, out_channels, kernel_size, dilation=dilation, padding=self.padding)
 
-    def forward(self, x):
+    def forward(self, x : torch.Tensor) -> torch.Tensor:
         y = self.conv1d(x)
         return y[ ..., :-self.padding] # Add remove padding on right-hande side of the output
         
@@ -78,7 +81,7 @@ class MicroTCNBlock(nn.Module):
         self.bn1 = nn.BatchNorm1d(out_channels)
 
     def forward(self, x: torch.Tensor):
-        y = self.bn1(self.f1(self.conv1(x)))
+        y = self.f1(self.bn1(self.conv1(x)))
         if(self.in_channels == self.out_channels):
             return x + y
         else:
@@ -200,32 +203,52 @@ class ResidualBlock(nn.Module):
         super().__init__()
         self.num_channels = num_channels
         self.gated = gated
-        self.input_conv = CausalDilatedConv1d(num_channels, 2 * num_channels if gated else num_channels, kernel_size, dilation=dilation)
-        self.output_conv = nn.Conv1d(num_channels, num_channels, 1)
+        # Dilated causal conv expands features
+        conv_out_channels = num_channels * 2 if gated else num_channels
+        self.input_conv = CausalDilatedConv1d(num_channels, conv_out_channels, kernel_size, dilation=dilation)
+        # 1x1 convs for residual and skip projections
+        self.residual_conv = nn.Conv1d(num_channels, num_channels, 1)
+        self.skip_conv = nn.Conv1d(num_channels, num_channels, 1)
+        # Nonlinearities
         self.f = nn.Tanh()
-        self.g = nn.Sigmoid() # Gate activation function
+        self.g = nn.Sigmoid() 
         
-    def forward(self, x):
+    def forward(self, x : torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        # Dilated causal conv
+        conv_out = self.input_conv(x)
+        # Gated activation or plain Tanh
         if self.gated:
-            ys = torch.split( self.input_conv(x), self.num_channels, dim=1) # Separate Filter and Gate
-            y = self.f( ys[0] ) * self.g( ys[1] )
+            y_f, y_g = torch.split( conv_out, self.num_channels, dim=1) # Separate Filter and Gate
+            z = self.f( y_f ) * self.g( y_g )
         else:
-            y = self.f( self.input_conv(x) )
-        y = self.output_conv( y )
-        return y + x, y
+            z = self.f( conv_out )
+        # Project to residual and skip paths
+        residual = self.residual_conv( z ) + x
+        skip = self.skip_conv( z )
+        return residual, skip
     
     def generate_doc(self):
         state_dict = self.state_dict()
         doc = {
             'input_conv': self.input_conv.generate_doc(),
-            'output_conv': {
+            'residual_conv': {
                 'weight': {
-                    'shape': list(state_dict['output_conv.weight'].shape),
-                    'values': state_dict['output_conv.weight'].flatten().cpu().numpy().tolist()
+                    'shape': list(state_dict['residual_conv.weight'].shape),
+                    'values': state_dict['residual_conv.weight'].flatten().cpu().numpy().tolist()
                 },
                 'bias': {
-                    'shape': list(state_dict['output_conv.bias'].shape),
-                    'values': state_dict['output_conv.bias'].flatten().cpu().numpy().tolist()
+                    'shape': list(state_dict['residual_conv.bias'].shape),
+                    'values': state_dict['residual_conv.bias'].flatten().cpu().numpy().tolist()
+                }
+            },
+            'skip_conv': {
+                'weight': {
+                    'shape': list(state_dict['skip_conv.weight'].shape),
+                    'values': state_dict['skip_conv.weight'].flatten().cpu().numpy().tolist()
+                },
+                'bias': {
+                    'shape': list(state_dict['skip_conv.bias'].shape),
+                    'values': state_dict['skip_conv.bias'].flatten().cpu().numpy().tolist()
                 }
             }
         }
@@ -245,8 +268,8 @@ class TCNBlock(nn.Module):
         self.f2 = nn.PReLU( out_channels )
 
     def forward(self, x: torch.Tensor):
-        y = self.bn1(self.f1(self.conv1(x)))
-        y = self.bn2(self.f2(self.conv2(y)))
+        y = self.f1(self.bn1(self.conv1(x)))
+        y = self.f2(self.bn2(self.conv2(y)))
         if(self.in_channels == self.out_channels):
             return x + y
         else:

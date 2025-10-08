@@ -1,4 +1,4 @@
-find_package(Torch REQUIRED PATHS ${LIBTORCH_DIR})
+find_package(Torch REQUIRED)
 
 # Submodules
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/catch2)

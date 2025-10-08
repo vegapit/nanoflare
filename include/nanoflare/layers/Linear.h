@@ -23,9 +23,26 @@ namespace Nanoflare
             if (m_y.rows() != x.rows() || m_y.cols() != m_transW.cols())
                 m_y.resize(x.rows(), m_transW.cols());
             
-            m_y = x * m_transW;
+            // Matrix multiplication 
+            m_y.noalias() = x * m_transW;
+            
             if( m_bias )
                 m_y.rowwise() += m_b;
+            return m_y;
+        }
+
+        inline RowMatrixXf forwardTranspose(const Eigen::Ref<const RowMatrixXf>& x) const noexcept
+        {
+            // ensure scratch buffer
+            if (m_y.rows() != m_outChannels || m_y.cols() != x.cols())
+                m_y.resize(m_outChannels, x.cols());
+
+            // multiply directly: W * x
+            // m_w is [out, in], x is [in, time] if channels==in
+            m_y.noalias() = m_w * x;
+
+            if (m_bias)
+                m_y.colwise() += m_b.transpose(); // broadcast bias across time
             return m_y;
         }
 

@@ -68,7 +68,8 @@ TEST_CASE("HammersteinWiener Test", "[HammersteinWiener]")
     torch::NoGradGuard no_grad;
     module.eval();
 
-    auto torch_res = module.forward( inputs ).toTensor();
+    auto outputs = module.forward( inputs ).toTuple();
+    auto torch_res = outputs->elements()[0].toTensor();
     auto target = torch_to_eigen( torch_res.squeeze(0) );
 
     REQUIRE( (pred - target).norm() == Approx(0.0).margin(1e-4) );
@@ -129,7 +130,8 @@ TEST_CASE("ResGRU Test", "[ResGRU]")
     torch::NoGradGuard no_grad;
     module.eval();
 
-    auto torch_res = module.forward( inputs ).toTensor();
+    auto outputs = module.forward( inputs ).toTuple();
+    auto torch_res = outputs->elements()[0].toTensor();
     auto target = torch_to_eigen( torch_res.squeeze(0) );
 
     REQUIRE( (pred - target).norm() == Approx(0.0).margin(1e-4) );
@@ -161,7 +163,8 @@ TEST_CASE("ResLSTM Test", "[ResLSTM]")
     torch::NoGradGuard no_grad;
     module.eval();
 
-    auto torch_res = module.forward( inputs ).toTensor();
+    auto outputs = module.forward( inputs ).toTuple();
+    auto torch_res = outputs->elements()[0].toTensor();
     auto target = torch_to_eigen( torch_res.squeeze(0) );
 
     REQUIRE( (pred - target).norm() == Approx(0.0).margin(1e-4) );

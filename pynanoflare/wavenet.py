@@ -24,7 +24,9 @@ class WaveNet( BaseModel ):
         for block in self.block_stack:
             y, skip_y = block(y)
             skip_sum += skip_y
-        return self.plain_sequential( self.relu(skip_sum).transpose(1,2) ).transpose(1,2)
+        out = self.relu( skip_sum ).transpose(1,2)
+        out = self.plain_sequential( out ).transpose(1,2)
+        return self.denormalise(out)
 
     def generate_doc(self, meta_data={}):
         doc = {

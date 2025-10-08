@@ -8,7 +8,9 @@
 			"osx": {
 				"args": [
 					"-B", "build",
-                    "-D", "NANOFLARE_TESTING=True"
+                    "-D", "NANOFLARE_TESTING=ON",
+					"-D", "PYTHON_EXPORT=ON",
+					"-D", "CMAKE_PREFIX_PATH=${LIBTORCH_DIR}"
 				]
 			},
 			"group": "build",
@@ -23,7 +25,9 @@
 				"args": [
 					"-B", "xcode",
 					"-G", "Xcode",
-                    "-D", "NANOFLARE_TESTING=True"
+                    "-D", "NANOFLARE_TESTING=ON",
+					"-D", "PYTHON_EXPORT=ON",
+					"-D", "CMAKE_PREFIX_PATH=${LIBTORCH_DIR}"
 				]
 			},
 			"group": "build",

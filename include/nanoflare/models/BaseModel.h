@@ -39,6 +39,14 @@ namespace Nanoflare
                 x.array() /= m_normStd; // scale
         }
 
+        inline void denormalise( Eigen::Ref<RowMatrixXf> x ) noexcept
+        {
+            if(m_normStd != 1.f)
+                x.array() *= m_normStd; // scale
+            if(m_normMean != 0.f)
+                x.array() += m_normMean; // center
+        }
+
         float getNormMean() const { return m_normMean; }
         float getNormStd() const { return m_normStd; }
 
