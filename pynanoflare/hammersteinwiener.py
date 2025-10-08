@@ -30,7 +30,9 @@ class HammersteinWiener( BaseModel ):
 
         # Identity skip path
         self.skip_linear = nn.Linear(input_size, output_size, bias=False)
-        nn.init.eye_(self.skip_linear.weight)  # initialize as identity
+         # initialize as identity and scale down
+        nn.init.eye_(self.skip_linear.weight) 
+        self.skip_linear.weight *= 0.5
 
     def forward(self, x: torch.Tensor, hc: tuple[torch.Tensor, torch.Tensor]) -> tuple[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
         """

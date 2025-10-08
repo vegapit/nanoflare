@@ -33,7 +33,7 @@ class PyNanoflareModel
 public:
     PyNanoflareModel(const std::string& json_path)
     {
-        std::ifstream model_file(json_path);
+        std::ifstream model_file( json_path );
         if (!model_file.is_open())
             throw std::runtime_error("Could not open model file: " + json_path);
         nlohmann::json j = nlohmann::json::parse( model_file );
@@ -55,7 +55,15 @@ public:
 
         // Allocate a new py::array and copy
         py::array_t<float> result({out_mat.rows(), out_mat.cols()});
-        std::memcpy(result.mutable_data(), out_mat.data(), out_mat.size() * sizeof(float));
+
+        // Map the result buffer and copy using Eigen
+        Eigen::Map<Nanoflare::RowMatrixXf> result_map(
+            result.mutable_data(),
+            out_mat.rows(),
+            out_mat.cols()
+        );
+        result_map = out_mat;
+
         return result;
     }
 

@@ -77,6 +77,8 @@ TEST_CASE("HammersteinWiener Test", "[HammersteinWiener]")
 
 TEST_CASE("MicroTCN Test", "[MicroTCN]")
 {
+    register_models();
+    
     std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= std::filesystem::path("tests/data/microtcn.json");
     std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
@@ -139,6 +141,8 @@ TEST_CASE("ResGRU Test", "[ResGRU]")
 
 TEST_CASE("ResLSTM Test", "[ResLSTM]")
 {
+    register_models();
+
     std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= std::filesystem::path("tests/data/reslstm.json");
     std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
