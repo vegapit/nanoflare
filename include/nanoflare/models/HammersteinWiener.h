@@ -25,6 +25,8 @@ namespace Nanoflare
     class HammersteinWiener : public BaseModel
     {
     public:
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
         HammersteinWiener(size_t input_size, size_t linear_input_size, size_t linear_output_size, size_t hidden_size, size_t output_size, float norm_mean, float norm_std) : BaseModel(norm_mean, norm_std), 
             m_inputLinear(input_size, linear_input_size, true),
             m_lstm(linear_input_size, linear_output_size, true),
@@ -38,8 +40,8 @@ namespace Nanoflare
         {
             m_norm_x = x;
             normalise( m_norm_x );
-            m_norm_x = m_inputLinear.forward( m_norm_x.transpose() ).array().unaryExpr(&leakyReLU);
-            m_norm_x = m_lstm.forward( m_norm_x );
+            m_norm_x = m_inputLinear.forwardTranspose( m_norm_x ).array().unaryExpr(&leakyReLU);
+            m_norm_x = m_lstm.forward( m_norm_x.transpose() );
             m_norm_x = m_hiddenLinear.forward( m_norm_x ).array().unaryExpr(&leakyReLU);
             return m_skipLinear.forwardTranspose( x ) + m_outputLinear.forward( m_norm_x ).transpose();
         }

@@ -27,6 +27,8 @@ namespace Nanoflare
     class TCN : public BaseModel
     {
     public:
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
         TCN(size_t input_size, size_t hidden_size, size_t output_size, size_t kernel_size, size_t stack_size, size_t ps_hidden_size, size_t ps_num_hidden_layers, float norm_mean, float norm_std) : 
             BaseModel(norm_mean, norm_std), m_hiddenSize(hidden_size), m_stackSize(stack_size),
             m_plainSequential(hidden_size, output_size, ps_hidden_size, ps_num_hidden_layers)

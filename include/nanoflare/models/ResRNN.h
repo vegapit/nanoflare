@@ -25,6 +25,8 @@ namespace Nanoflare
     class ResRNN : public BaseModel
     {
     public:
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
         ResRNN(size_t input_size, size_t hidden_size, size_t output_size,  size_t ps_hidden_size, size_t ps_num_hidden_layers, float norm_mean, float norm_std) : BaseModel(norm_mean, norm_std), 
             m_rnn(input_size, hidden_size, true), 
             m_plainSequential( hidden_size, output_size, ps_hidden_size, ps_num_hidden_layers)

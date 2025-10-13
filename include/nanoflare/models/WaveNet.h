@@ -32,6 +32,8 @@ namespace Nanoflare
     class WaveNet : public BaseModel
     {
     public:
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+        
         WaveNet(size_t input_size, size_t num_channels, size_t output_size, size_t kernel_size, std::vector<size_t> dilations, size_t stack_size, bool gated, size_t ps_hidden_size, size_t ps_num_hidden_layers, float norm_mean, float norm_std) : 
             BaseModel(norm_mean, norm_std), m_numChannels(num_channels), m_dilations(dilations), m_stackSize(stack_size), m_gated(gated),
             m_inputConv(input_size, num_channels, kernel_size, true, 1),
