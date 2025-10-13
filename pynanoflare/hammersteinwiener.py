@@ -50,7 +50,8 @@ class HammersteinWiener( BaseModel ):
 
         y = self.f_out( self.hidden_linear( y ) )
         # Residual skip: dry passthrough + learned coloration
-        return self.skip_linear( x_t ) + self.output_linear( y )
+        y = self.skip_linear( x_t ) + self.output_linear( y )
+        return y.transpose(1,2)
 
     def generate_doc(self, meta_data={}):
         doc = {
