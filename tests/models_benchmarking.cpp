@@ -62,9 +62,6 @@ TEST_CASE("HammersteinWiener TorchScript")
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back(torch::rand({1, 1, num_samples}));
 
-    std::tuple<torch::jit::IValue, torch::jit::IValue> hc { torch::zeros({1, 1, 64}) , torch::zeros({1, 1, 64}) };
-    inputs.push_back( hc );
-
     // Warm-up
     for(auto i = 0; i < 10; ++i)
         module.forward(inputs);

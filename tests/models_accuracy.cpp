@@ -58,18 +58,14 @@ TEST_CASE("HammersteinWiener Test", "[HammersteinWiener]")
     auto pred = obj->forward( eigen_data );
 
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
-    
-    std::tuple<torch::jit::IValue, torch::jit::IValue> hc { torch::zeros({1, 1, 64}) , torch::zeros({1, 1, 64}) };
 
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back( torch_data.unsqueeze(0) );
-    inputs.push_back( hc );
 
     torch::NoGradGuard no_grad;
     module.eval();
 
-    auto outputs = module.forward( inputs ).toTuple();
-    auto torch_res = outputs->elements()[0].toTensor();
+    auto torch_res = module.forward( inputs ).toTensor();
     auto target = torch_to_eigen( torch_res.squeeze(0) );
 
     REQUIRE( (pred - target).norm() == Approx(0.0).margin(1e-4) );
