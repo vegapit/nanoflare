@@ -109,13 +109,14 @@ TEST_CASE("MicroTCNBlock Test", "[MicroTCNBlock]")
     size_t kernelSize = 3;
     size_t dilation = 2;
     size_t seqLength = 5;
+    bool useBatchNorm = true;
 
     std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= std::filesystem::path("tests/data/microtcnblock.json");
     std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
     tsPath /= std::filesystem::path("tests/data/microtcnblock.torchscript");
 
-    MicroTCNBlock obj(inChannels, outChannels, kernelSize, dilation);
+    MicroTCNBlock obj(inChannels, outChannels, kernelSize, dilation, useBatchNorm);
     std::ifstream model_file( modelPath.c_str() );
     obj.loadStateDict( nlohmann::json::parse(model_file) );
 
@@ -222,13 +223,14 @@ TEST_CASE("TCNBlock Test", "[TCNBlock]")
     size_t kernelSize = 3;
     size_t dilation = 2;
     size_t seqLength = 5;
+    bool useBatchNorm = true;
 
     std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= std::filesystem::path("tests/data/tcnblock.json");
     std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
     tsPath /= std::filesystem::path("tests/data/tcnblock.torchscript");
 
-    TCNBlock obj(inChannels, outChannels, kernelSize, dilation);
+    TCNBlock obj(inChannels, outChannels, kernelSize, dilation, useBatchNorm);
     std::ifstream model_file( modelPath.c_str() );
     obj.loadStateDict( nlohmann::json::parse(model_file) );
 

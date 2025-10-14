@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <assert.h>
+#include "nanoflare/Functional.h"
 #include "nanoflare/utils.h"
 
 namespace Nanoflare
@@ -68,10 +69,11 @@ namespace Nanoflare
 
         inline void forward(const Eigen::Ref<const Eigen::VectorXf>& x, 
                         Eigen::Ref<Eigen::VectorXf> h, 
-                        Eigen::Ref<Eigen::VectorXf> c) const noexcept 
+                        Eigen::Ref<Eigen::VectorXf> c) noexcept 
         {
             // Fuse weights once if not already done
-            if (!m_weights_fused) {
+            if (!m_weights_fused)
+            {
                 m_w_fused << m_wih, m_whh;
                 m_weights_fused = true;
             }
@@ -93,25 +95,20 @@ namespace Nanoflare
             auto o_gate = m_gates.tail(m_hiddenSize);
 
             // LSTM computations
-            c.array() = f_gate.array().logistic() * c.array() + 
-                        i_gate.array().logistic() * g_gate.array().tanh();
-            h.array() = o_gate.array().logistic() * c.array().tanh();
+            Functional::Sigmoid( i_gate );
+            Functional::Sigmoid( f_gate );
+            Functional::Tanh( g_gate );
+            Functional::Sigmoid( o_gate );
+            c.array() = f_gate.array() * c.array() + i_gate.array() * g_gate.array();
+            h.array() = o_gate.array() * c.array().tanh();
         }
 
     private:
         size_t m_inputSize, m_hiddenSize;
         bool m_bias;
-
-        // Weights
-        RowMatrixXf m_wih, m_whh;
-        Eigen::VectorXf m_bih, m_bhh;
-
-        // Pre-fused/cached data (mutable for lazy initialization in const forward())
-        mutable RowMatrixXf m_w_fused;
-        mutable Eigen::VectorXf m_xh_fused;       // Fused input vector
-        mutable Eigen::VectorXf m_gates;          // Pre-allocated gate buffer
-        mutable Eigen::VectorXf m_bias_fused;     // Pre-fused bias
-        mutable bool m_weights_fused;
+        RowMatrixXf m_wih, m_whh, m_w_fused;
+        Eigen::VectorXf m_bih, m_bhh, m_xh_fused, m_gates, m_bias_fused;
+        bool m_weights_fused;
     };
 
 }

@@ -16,7 +16,7 @@ namespace Nanoflare
 
         void resetState() { m_h.setZero(); }
 
-        inline void forward( const Eigen::Ref<const RowMatrixXf>& x, RowMatrixXf& y ) noexcept
+        inline void forward( const Eigen::Ref<const RowMatrixXf>& x, Eigen::Ref<RowMatrixXf> y ) noexcept
         {
             if (y.rows() != x.rows() || y.cols() != m_cell.getHiddenSize())
                 y.resize(x.rows(), m_cell.getHiddenSize());

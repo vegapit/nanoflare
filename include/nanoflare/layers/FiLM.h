@@ -13,7 +13,7 @@ namespace Nanoflare
             m_shift(control_dim, feature_dim, true) {}
         ~FiLM() = default;
 
-        inline void forward(const Eigen::Ref<RowMatrixXf>& x, const Eigen::Ref<RowMatrixXf>& params, RowMatrixXf& y ) const noexcept
+        inline void forward(const Eigen::Ref<RowMatrixXf>& x, const Eigen::Ref<RowMatrixXf>& params, Eigen::Ref<RowMatrixXf> y ) const noexcept
         {
             m_scale.forward( params, y );
             y = y.cwiseProduct( x );

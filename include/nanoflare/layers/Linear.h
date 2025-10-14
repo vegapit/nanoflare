@@ -18,7 +18,7 @@ namespace Nanoflare
         {}
         ~Linear() = default;
         
-        inline void forward( const Eigen::Ref<const RowMatrixXf>& x, RowMatrixXf& y ) const noexcept
+        inline void forward( const Eigen::Ref<const RowMatrixXf>& x, Eigen::Ref<RowMatrixXf> y ) const noexcept
         {
             if(x.data() == y.data())
             {
@@ -38,7 +38,7 @@ namespace Nanoflare
             }
         }
 
-        inline void forwardTranspose(const Eigen::Ref<const RowMatrixXf>& x, RowMatrixXf& y ) const noexcept
+        inline void forwardTranspose(const Eigen::Ref<const RowMatrixXf>& x, Eigen::Ref<RowMatrixXf> y ) const noexcept
         {
             if(x.data() == y.data())
             {
@@ -92,7 +92,6 @@ namespace Nanoflare
 
         RowMatrixXf m_w, m_transW;
         Eigen::RowVectorXf m_b;
-
         size_t m_inChannels, m_outChannels;
         bool m_bias;
     };

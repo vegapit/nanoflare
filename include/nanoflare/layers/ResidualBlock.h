@@ -2,6 +2,7 @@
 
 #include "nanoflare/layers/Conv1d.h"
 #include "nanoflare/layers/CausalDilatedConv1d.h"
+#include "nanoflare/Functional.h"
 #include "nanoflare/utils.h"
 
 namespace Nanoflare
@@ -20,7 +21,7 @@ namespace Nanoflare
         {}
         ~ResidualBlock() = default;
 
-        inline void forward( const Eigen::Ref<const RowMatrixXf>& x, RowMatrixXf& residual, RowMatrixXf& skip ) const noexcept
+        inline void forward( const Eigen::Ref<const RowMatrixXf>& x, Eigen::Ref<RowMatrixXf> residual, Eigen::Ref<RowMatrixXf> skip ) noexcept
         {
             if (m_z.rows() != m_numChannels || m_z.cols() != x.cols())
                 m_z.resize(m_numChannels, x.cols());
@@ -35,27 +36,34 @@ namespace Nanoflare
             {
                 auto y_f = m_y_inner.topRows(m_numChannels);
                 auto y_g = m_y_inner.bottomRows(m_numChannels);
-                m_z.array() = y_f.array().tanh() * y_g.array().logistic();
+                Functional::Tanh( y_f );
+                Functional::Sigmoid( y_g );
+                m_z.array() = y_f.array() * y_g.array();
             }
             else
-                m_z.array() = m_y_inner.array().tanh();
-
+            {
+                Functional::Tanh( m_y_inner );
+                m_z = m_y_inner;
+            }
             // skip connection
-            if (skip.rows() != x.rows() || skip.cols() != x.cols())
-                skip.resize(x.rows(), x.cols());
+            if (skip.rows() != m_numChannels || skip.cols() != x.cols())
+                skip.resize(m_numChannels, x.cols());
                 
             m_skipConv.forward(m_z, skip);
 
             // residual connection
             if(x.data() == residual.data())
             {
-                RowMatrixXf temp(x.rows(), x.cols());
-                m_residualConv.forward(m_z, temp);
-                temp += x;
-                residual = std::move(temp);
+                if (m_temp.rows() != m_numChannels || m_temp.cols() != x.cols())
+                    m_temp.resize(m_numChannels, x.cols());
+                m_residualConv.forward(m_z, m_temp);
+                m_temp += x;
+                residual = m_temp;
             }
             else
             {
+                if (residual.rows() != m_numChannels || residual.cols() != x.cols())
+                    residual.resize(m_numChannels, x.cols());
                 m_residualConv.forward(m_z, residual);
                 residual += x;
             }   
@@ -76,6 +84,6 @@ namespace Nanoflare
         Conv1d m_residualConv, m_skipConv;
         bool m_gated;
         size_t m_numChannels, m_kernelSize;
-        mutable RowMatrixXf m_z, m_y_inner;
+        RowMatrixXf m_z, m_y_inner, m_temp;
     };
 }

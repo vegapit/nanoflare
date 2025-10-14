@@ -23,7 +23,8 @@ class HammersteinWiener( BaseModel ):
                 linear_input_size if i == 0 else linear_output_size,
                 linear_output_size,
                 kernel_size,
-                2**i) # Dilation
+                2**i, # Dilation
+                False) 
             for i in range(stack_size)
         ])
 

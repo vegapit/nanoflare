@@ -35,7 +35,7 @@ namespace Nanoflare
             m_plainSequential(hidden_size, output_size, ps_hidden_size, ps_num_hidden_layers)
         {
             for(auto k = 0; k < stack_size; k++)
-                m_blockStack.push_back( MicroTCNBlock((k == 0) ? input_size : hidden_size, hidden_size, kernel_size, std::pow(2, k)) );
+                m_blockStack.push_back( MicroTCNBlock((k == 0) ? input_size : hidden_size, hidden_size, kernel_size, std::pow(2, k), false) );
         }
         ~MicroTCN() = default;
         
@@ -43,12 +43,24 @@ namespace Nanoflare
         {
             m_norm_x = x;
             normalise( m_norm_x );
-            for(auto& block: m_blockStack )
-                block.forward( m_norm_x, m_norm_x );
 
-            RowMatrixXf y = RowMatrixXf::Zero( x.rows(), x.cols() );
-            m_plainSequential.forwardTranspose( m_norm_x, y );
-            return y;
+            // Micro TCN Block: input (C_in, time) output (C_hidden, time)
+            if (m_temp.rows() != m_plainSequential.getInChannels() || m_temp.cols() != x.cols())
+                m_temp.resize( m_plainSequential.getInChannels(), x.cols() );
+            for(auto i = 0; i < m_blockStack.size(); ++i)
+            {
+                if(i == 0)
+                    m_blockStack[i].forward( m_norm_x, m_temp );
+                else
+                    m_blockStack[i].forward( m_temp, m_temp );
+            }
+
+            // PlainSequential(FwdTranspose): input(C_hidden, time) output(C_out, time)
+            if (m_y.rows() != m_plainSequential.getOutChannels() || m_temp.cols() != x.cols())
+                m_y.resize( m_plainSequential.getOutChannels(), x.cols() );
+            m_plainSequential.forwardTranspose( m_temp, m_y );
+
+            return m_y;
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override final
@@ -77,7 +89,7 @@ namespace Nanoflare
         size_t m_hiddenSize, m_stackSize;
         std::vector<MicroTCNBlock> m_blockStack;
         PlainSequential m_plainSequential;
-        mutable RowMatrixXf m_norm_x;
+        RowMatrixXf m_norm_x, m_temp, m_y;
     };
 
 }

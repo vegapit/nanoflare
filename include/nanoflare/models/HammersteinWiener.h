@@ -5,6 +5,7 @@
 #include "nanoflare/models/BaseModel.h"
 #include "nanoflare/layers/Linear.h"
 #include "nanoflare/layers/TCNBlock.h"
+#include "nanoflare/Functional.h"
 #include "nanoflare/utils.h"
 
 namespace Nanoflare
@@ -33,13 +34,13 @@ namespace Nanoflare
             m_inputLinear(input_size, linear_input_size, true),
             m_hiddenLinear(linear_output_size, hidden_size, true), 
             m_outputLinear(hidden_size, output_size, true),
-            m_skipLinear(hidden_size, output_size, false),
+            m_skipLinear(input_size, output_size, false),
             m_kernelSize(kernel_size), 
             m_stackSize(stack_size), 
             m_hiddenSize(hidden_size)
         {
             for(auto k = 0; k < stack_size; k++)
-                m_blockStack.push_back( TCNBlock((k == 0) ? linear_input_size : linear_output_size, linear_output_size, kernel_size, std::pow(2, k)) );
+                m_blockStack.push_back( TCNBlock((k == 0) ? linear_input_size : linear_output_size, linear_output_size, kernel_size, std::pow(2, k), false) );
         }
         ~HammersteinWiener() = default;
 
@@ -47,17 +48,41 @@ namespace Nanoflare
         {
             m_norm_x = x;
             normalise( m_norm_x );
-            m_inputLinear.forwardTranspose( m_norm_x, m_norm_x );
-            m_norm_x = m_norm_x.array().unaryExpr(&leakyReLU);
-            for(auto& block: m_blockStack )
-                block.forward( m_norm_x, m_norm_x );
-            m_hiddenLinear.forward( m_norm_x.transpose(), m_norm_x );
-            m_norm_x = m_norm_x.array().unaryExpr(&leakyReLU);
 
-            RowMatrixXf y = RowMatrixXf::Zero( x.rows(), x.cols() );
-            m_skipLinear.forwardTranspose( x, y );
-            m_outputLinear.forward( m_norm_x, m_norm_x );
-            return y + m_norm_x.transpose();
+            // Linear(FwdTranspose): input(C_in, time) output(c_block_in, time)
+            if (m_temp.rows() != m_blockStack[0].getInChannels() || m_temp.cols() != x.cols())
+                m_temp.resize( m_blockStack[0].getInChannels(), x.cols() );
+            m_inputLinear.forwardTranspose( m_norm_x, m_temp );
+            Functional::LeakyReLU( m_temp, 0.2f );
+
+            // TCN Block: input (C_block_in, time) output (C_block_out, time)
+            if (m_block_temp.rows() != m_blockStack[0].getOutChannels() || m_block_temp.cols() != x.cols())
+                m_block_temp.resize( m_blockStack[0].getOutChannels(), x.cols() );
+            for(auto i = 0; i < m_blockStack.size(); ++i)
+            {
+                if(i == 0)
+                    m_blockStack[i].forward( m_temp, m_block_temp );
+                else
+                    m_blockStack[i].forward( m_block_temp, m_block_temp );
+            }
+            
+            // Linear(FwdTranspose): input(C_block_out, time) output(C_hidden, time)
+            if (m_hidden_temp.rows() != m_hiddenLinear.getOutChannels() || m_hidden_temp.cols() != x.cols())
+                m_hidden_temp.resize( m_hiddenLinear.getOutChannels(), x.cols() );
+            m_hiddenLinear.forwardTranspose( m_block_temp, m_hidden_temp );
+            Functional::LeakyReLU( m_hidden_temp, 0.2f );
+
+            // Linear(FwdTranspose): input(C_in, time) output(C_out, time)
+            if (m_skip_temp.rows() != m_outputLinear.getOutChannels() || m_skip_temp.cols() != x.cols())
+                m_skip_temp.resize( m_outputLinear.getOutChannels(), x.cols() );
+            m_skipLinear.forwardTranspose( x, m_skip_temp );
+
+            // Linear(FwdTranspose): input(C_hidden, time) output(C_out, time)
+            if (m_y.rows() != m_outputLinear.getOutChannels() || m_y.cols() != x.cols())
+                m_y.resize( m_outputLinear.getOutChannels(), x.cols() );
+            m_outputLinear.forwardTranspose( m_hidden_temp, m_y );
+
+            return m_y + m_skip_temp;
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override final
@@ -88,12 +113,11 @@ namespace Nanoflare
         }
 
     private:
-        static inline float leakyReLU(float x) { return x > 0.0f ? x : 0.2f * x; }
 
         size_t m_kernelSize, m_stackSize, m_hiddenSize;
         Linear m_inputLinear, m_hiddenLinear, m_outputLinear, m_skipLinear;
         std::vector<TCNBlock> m_blockStack;
-        RowMatrixXf m_norm_x;
+        RowMatrixXf m_norm_x, m_temp, m_block_temp, m_hidden_temp, m_skip_temp, m_y;
     };
 
 }

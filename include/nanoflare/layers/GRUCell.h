@@ -3,6 +3,7 @@
 #include <Eigen/Dense>
 #include <assert.h>
 #include <functional>
+#include "nanoflare/Functional.h"
 #include "nanoflare/utils.h"
 
 namespace Nanoflare
@@ -67,17 +68,16 @@ namespace Nanoflare
                 nh_inner += m_bhh.tail(m_hiddenSize);
             }
             
-            auto n_inner = nx_inner.array() + r_inner.array().logistic() * nh_inner.array();
-            auto z = z_inner.array().logistic();
-
-            h.array() = (1.f - z.array()) * n_inner.array().tanh() + z.array() * h.array();
+            Functional::Sigmoid( r_inner );
+            Functional::Sigmoid( z_inner );
+            auto n_inner = nx_inner.array() + r_inner.array() * nh_inner.array();
+            h.array() = (1.f - z_inner.array()) * n_inner.array().tanh() + z_inner.array() * h.array();
         }
 
     private:
 
         size_t m_inputSize, m_hiddenSize;
         bool m_bias;
-
         RowMatrixXf m_wih, m_whh;
         Eigen::VectorXf m_bih, m_bhh;
     };

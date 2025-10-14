@@ -10,7 +10,15 @@ class TCN( BaseModel ):
         self.output_size = output_size
         self.kernel_size = kernel_size
         self.stack_size = stack_size
-        self.block_stack = nn.ModuleList([TCNBlock(input_size if i == 0 else hidden_size, hidden_size, kernel_size, 2**i) for i in range(stack_size)])
+        self.block_stack = nn.ModuleList([
+            TCNBlock(
+                input_size if i == 0 else hidden_size,
+                hidden_size,
+                kernel_size,
+                2**i,
+                False)
+            for i in range(stack_size)
+        ])
         self.plain_sequential = PlainSequential( hidden_size, output_size, ps_hidden_size, ps_num_hidden_layers )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -52,7 +60,15 @@ class MicroTCN( BaseModel ):
         self.output_size = output_size
         self.kernel_size = kernel_size
         self.stack_size = stack_size
-        self.block_stack = nn.ModuleList([MicroTCNBlock(input_size if i == 0 else hidden_size, hidden_size, kernel_size, 2**i) for i in range(stack_size)])
+        self.block_stack = nn.ModuleList([
+            MicroTCNBlock(
+                input_size if i == 0 else hidden_size,
+                hidden_size,
+                kernel_size,
+                2**i,
+                False)
+            for i in range(stack_size)
+        ])
         self.plain_sequential = PlainSequential( hidden_size, output_size, ps_hidden_size, ps_num_hidden_layers )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -85,15 +101,3 @@ class MicroTCN( BaseModel ):
         for i, block in enumerate(self.block_stack):
             doc['state_dict'][f'block_stack.{i}'] = block.generate_doc()
         return doc
-    
-if __name__ == "__main__":
-    model = TCN(1, 1, 5, 5)
-
-    model.eval()
-
-    x = torch.randn((1, 1, 1024)).to(torch.float32)
-    y = model( x )
-    print( f"input: {x.shape}")
-    print( f"output: {y.shape}" )
-
-    print( model.generate_doc() )

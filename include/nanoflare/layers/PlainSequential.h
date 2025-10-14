@@ -1,5 +1,6 @@
 #pragma once
 
+#include "nanoflare/Functional.h"
 #include "nanoflare/layers/Linear.h"
 
 namespace Nanoflare
@@ -19,62 +20,66 @@ namespace Nanoflare
         }
         ~PlainSequential() = default;
 
-        inline void forward( const Eigen::Ref<const RowMatrixXf>& x, RowMatrixXf& y ) noexcept
+        inline void forward( const Eigen::Ref<const RowMatrixXf>& x, Eigen::Ref<RowMatrixXf> y ) noexcept
         {
-            if (y.rows() != x.rows() || y.cols() != m_outChannels)
-                y.resize(x.rows(), m_outChannels);
-            
             if (m_temp.rows() != x.rows() || m_temp.cols() != m_hiddenChannels)
                 m_temp.resize(x.rows(), m_hiddenChannels);
 
             m_inputLinear.forward( x, m_temp );
-            m_temp = m_temp.cwiseMax(0.f);
+            Functional::ReLU( m_temp );
             for(auto& linear: m_hiddenLinear)
             {
                 linear.forward( m_temp, m_temp );
-                m_temp = m_temp.cwiseMax(0.f);
+                Functional::ReLU( m_temp );
             }
-            
-            m_outputLinear.forward( m_temp, y );
+
+            if(m_y.rows() != x.rows() || m_y.cols() != m_outChannels)
+                m_y.resize(x.rows(), m_outChannels);
+        
+            m_outputLinear.forward( m_temp, m_y );
 
             if(m_inChannels == m_outChannels)
-                y += x;
+                m_y += x;
             else
             {
                 if (m_temp.rows() != x.rows() || m_temp.cols() != m_outChannels)
                     m_temp.resize(x.rows(), m_outChannels);
                 m_directLinear.forward( x, m_temp );
-                y += m_temp;
+                m_y += m_temp;
             }
+
+            y = m_y;
         }
 
-        inline void forwardTranspose( const Eigen::Ref<const RowMatrixXf>& x, RowMatrixXf& y ) noexcept
+        inline void forwardTranspose( const Eigen::Ref<const RowMatrixXf>& x, Eigen::Ref<RowMatrixXf> y ) noexcept
         {
-            if (y.rows() != m_outChannels || y.cols() != x.cols())
-                y.resize(m_outChannels, x.cols());
-
             if (m_temp.rows() != m_hiddenChannels || m_temp.cols() != x.cols())
                 m_temp.resize(m_hiddenChannels, x.cols());
 
             m_inputLinear.forwardTranspose( x, m_temp );
-            m_temp = m_temp.cwiseMax(0.f);
+            Functional::ReLU( m_temp );
             for(auto& linear: m_hiddenLinear)
             {
                 linear.forwardTranspose( m_temp, m_temp );
-                m_temp = m_temp.cwiseMax( 0.f );
+                Functional::ReLU( m_temp );
             }
 
-            m_outputLinear.forwardTranspose( m_temp, y );
+            if(m_y.rows() != m_outChannels || m_y.cols() != x.cols())
+                m_y.resize(m_outChannels, x.cols());
+
+            m_outputLinear.forwardTranspose( m_temp, m_y );
 
             if(m_inChannels == m_outChannels)
-                y += x;
+                m_y += x;
             else
             {
                 if (m_temp.rows() != m_outChannels || m_temp.cols() != x.cols())
                     m_temp.resize(m_outChannels, x.cols());
                 m_directLinear.forwardTranspose( x, m_temp );
-                y += m_temp;
+                m_y += m_temp;
             }
+
+            y = m_y;
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)
@@ -92,10 +97,13 @@ namespace Nanoflare
             }
         }
 
+        size_t getInChannels() { return m_inChannels; }
+        size_t getOutChannels() { return m_outChannels; }
+        
     private:
         Linear m_directLinear, m_inputLinear, m_outputLinear;
         std::vector<Linear> m_hiddenLinear;
         size_t m_inChannels, m_outChannels, m_hiddenChannels;
-        RowMatrixXf m_temp;
+        RowMatrixXf m_temp, m_y;
     };
 }

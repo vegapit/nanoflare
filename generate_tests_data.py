@@ -10,10 +10,10 @@ from pynanoflare.wavenet import WaveNet
 layers = {
     # Layers
     'causaldilatedconv1d': CausalDilatedConv1d(7, 11, 3, 2),
-    'microtcnblock': MicroTCNBlock( 7, 11, 3, 2),
-    'plainsequential': PlainSequential( 7, 11, 8, 3),
+    'microtcnblock': MicroTCNBlock( 7, 11, 3, 2, True),
+    'plainsequential': PlainSequential( 7, 11, 8, 3 ),
     'residualblock': ResidualBlock( 7, 3, 2, True),
-    'tcnblock': TCNBlock( 7, 11, 3, 2),
+    'tcnblock': TCNBlock( 7, 11, 3, 2, True),
     'film': FiLM(7, 3)
 }
 
@@ -25,7 +25,7 @@ models = {
     'resgru': ResGRU(1, 64, 1, 8, 3, mu, sigma),
     'reslstm': ResLSTM(1, 64, 1, 8, 3, mu, sigma),
     'tcn': TCN(1, 7, 1, 4, 8, 8, 3, mu, sigma),
-    'wavenet': WaveNet(1, 7, 1, 4, [1, 2, 4, 8, 16, 32], 1, True, 8, 3, mu, sigma)
+    'wavenet': WaveNet(1, 7, 1, 4, [1, 2, 4, 8, 16, 32], 1, False, 8, mu, sigma)
 }
 
 if __name__ == "__main__":

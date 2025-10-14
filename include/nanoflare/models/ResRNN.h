@@ -37,10 +37,22 @@ namespace Nanoflare
         {
             m_norm_x = x;
             normalise( m_norm_x );
-            RowMatrixXf y = RowMatrixXf::Zero( x.rows(), x.cols() );
-            m_rnn.forward( m_norm_x.transpose(), y );
-            m_plainSequential.forward( y, y );
-            return x + y.transpose();
+
+            // RNN: input (time, C_in), output (time, C_hidden)
+            if (m_temp.rows() != x.cols() || m_temp.cols() != m_plainSequential.getInChannels())
+                m_temp.resize( x.cols(), m_plainSequential.getInChannels() );
+            m_rnn.forward(m_norm_x.transpose(), m_temp);
+
+            // PlainSequential: input (time, C_hidden), output (time, C_out)
+            if (m_y.rows() != x.cols() || m_y.cols() != m_plainSequential.getOutChannels())
+                m_y.resize( x.cols(), m_plainSequential.getOutChannels() );
+            m_plainSequential.forward(m_temp, m_y);
+
+            // Residual only if shapes match
+            if(x.rows() == m_y.cols())
+                return x + m_y.transpose();
+            else
+                return m_y.transpose();
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override final
@@ -67,7 +79,7 @@ namespace Nanoflare
     private:
         T m_rnn;
         PlainSequential m_plainSequential;
-        mutable RowMatrixXf m_norm_x;
+        RowMatrixXf m_norm_x, m_temp, m_y;
     };
 
 }

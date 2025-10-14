@@ -14,7 +14,7 @@ class BaseModel( nn.Module ):
         return x * self.norm_std + self.norm_mean
     
 class CausalDilatedConv1d(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, dilation=1):
+    def __init__(self, in_channels, out_channels, kernel_size, dilation):
         super().__init__()
         self.padding = (kernel_size - 1) * dilation # Add required padding on both sides of the input
         self.conv1d = nn.Conv1d(in_channels, out_channels, kernel_size, dilation=dilation, padding=self.padding)
@@ -71,17 +71,21 @@ class FiLM( nn.Module ):
         return doc
 
 class MicroTCNBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, dilation):
+    def __init__(self, in_channels, out_channels, kernel_size, dilation, use_batchnorm):
         super().__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
+        self.use_batchnorm = use_batchnorm
         self.conv = nn.Conv1d(in_channels, out_channels, 1)
         self.conv1 = CausalDilatedConv1d( in_channels, out_channels, kernel_size, dilation=dilation )
-        self.f1 = nn.PReLU( out_channels )
         self.bn1 = nn.BatchNorm1d(out_channels)
+        self.f1 = nn.LeakyReLU( 0.2, inplace=True )
 
     def forward(self, x: torch.Tensor):
-        y = self.f1(self.bn1(self.conv1(x)))
+        y = self.conv1( x )
+        if(self.use_batchnorm):
+            y = self.bn1( y )
+        self.f1( y )
         if(self.in_channels == self.out_channels):
             return x + y
         else:
@@ -117,12 +121,6 @@ class MicroTCNBlock(nn.Module):
                 'running_var': {
                     'shape': list(state_dict['bn1.running_var'].shape),
                     'values': state_dict['bn1.running_var'].flatten().cpu().numpy().tolist()
-                }
-            },
-            'f1': {
-                'weight' : {
-                    'shape': list(state_dict['f1.weight'].shape),
-                    'values': state_dict['f1.weight'].flatten().cpu().numpy().tolist()
                 }
             }
         }
@@ -201,7 +199,7 @@ class ResidualBlock(nn.Module):
         self.gated = gated
         # Dilated causal conv expands features
         conv_out_channels = num_channels * 2 if gated else num_channels
-        self.input_conv = CausalDilatedConv1d(num_channels, conv_out_channels, kernel_size, dilation=dilation)
+        self.input_conv = CausalDilatedConv1d(num_channels, conv_out_channels, kernel_size, dilation)
         # 1x1 convs for residual and skip projections
         self.residual_conv = nn.Conv1d(num_channels, num_channels, 1)
         self.skip_conv = nn.Conv1d(num_channels, num_channels, 1)
@@ -214,14 +212,11 @@ class ResidualBlock(nn.Module):
         conv_out = self.input_conv(x)
         # Gated activation or plain Tanh
         if self.gated:
-            y_f, y_g = torch.split( conv_out, self.num_channels, dim=1) # Separate Filter and Gate
+            y_f, y_g = conv_out.chunk(2, dim=1) # Separate Filter and Gate
             z = self.f( y_f ) * self.g( y_g )
         else:
             z = self.f( conv_out )
-        # Project to residual and skip paths
-        residual = self.residual_conv( z ) + x
-        skip = self.skip_conv( z )
-        return residual, skip
+        return x + self.residual_conv( z ), self.skip_conv( z )
     
     def generate_doc(self):
         state_dict = self.state_dict()
@@ -251,21 +246,35 @@ class ResidualBlock(nn.Module):
         return doc
 
 class TCNBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, dilation):
+    def __init__(self, in_channels, out_channels, kernel_size, dilation, use_batchnorm):
         super().__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
+        self.use_batchnorm = use_batchnorm
+        # Residual connection if in_channels != out_channels
         self.conv = nn.Conv1d(in_channels, out_channels, 1)
+        # Two layers of dilated causal convolution
         self.conv1 = CausalDilatedConv1d( in_channels, out_channels, kernel_size, dilation=dilation )
-        self.f1 = nn.PReLU( out_channels )
-        self.bn1 = nn.BatchNorm1d(out_channels)
         self.conv2 = CausalDilatedConv1d( out_channels, out_channels, kernel_size, dilation=1 )
+        # Normalization (optional)
+        self.bn1 = nn.BatchNorm1d(out_channels)
         self.bn2 = nn.BatchNorm1d(out_channels)
-        self.f2 = nn.PReLU( out_channels )
+        # Activations
+        self.f1 = nn.LeakyReLU( 0.2 )
+        self.f2 = nn.LeakyReLU( 0.2 )
 
     def forward(self, x: torch.Tensor):
-        y = self.f1(self.bn1(self.conv1(x)))
-        y = self.f2(self.bn2(self.conv2(y)))
+        
+        y = self.conv1( x )
+        if(self.use_batchnorm):
+            y = self.bn1( y )
+        y = self.f1( y )
+
+        y = self.conv2( y )
+        if(self.use_batchnorm):
+            y = self.bn2( y )
+        y = self.f2( y )
+
         if(self.in_channels == self.out_channels):
             return x + y
         else:
@@ -320,18 +329,6 @@ class TCNBlock(nn.Module):
                 'running_var': {
                     'shape': list(state_dict['bn2.running_var'].shape),
                     'values': state_dict['bn2.running_var'].flatten().cpu().numpy().tolist()
-                }
-            },
-            'f1': {
-                'weight' : {
-                    'shape': list(state_dict['f1.weight'].shape),
-                    'values': state_dict['f1.weight'].flatten().cpu().numpy().tolist()
-                }
-            },
-            'f2': {
-                'weight' : {
-                    'shape': list(state_dict['f2.weight'].shape),
-                    'values': state_dict['f2.weight'].flatten().cpu().numpy().tolist()
                 }
             }
         }

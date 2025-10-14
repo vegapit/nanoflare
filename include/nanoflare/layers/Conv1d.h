@@ -22,13 +22,13 @@ namespace Nanoflare
 
         inline size_t getOutputLength( size_t in_length ) const { return in_length - (m_kernelSize - 1); }
 
-        inline void forward( const Eigen::Ref<const RowMatrixXf>& x, RowMatrixXf& y ) const noexcept
+        inline void forward( const Eigen::Ref<const RowMatrixXf>& x, Eigen::Ref<RowMatrixXf> y ) noexcept
         {
             if(x.data() == y.data())
             {
-                RowMatrixXf temp = RowMatrixXf::Zero(m_outChannels, getOutputLength( x.cols() ));
+                RowMatrixXf temp = RowMatrixXf::Zero( m_outChannels, getOutputLength(x.cols()));
                 process( x, temp );
-                y = std::move(temp);
+                y = std::move( temp );
             }
             else
             {
@@ -55,7 +55,7 @@ namespace Nanoflare
 
     private:
 
-        inline void process( const Eigen::Ref<const RowMatrixXf>& x, RowMatrixXf& mat ) const noexcept
+        inline void process( const Eigen::Ref<const RowMatrixXf>& x, Eigen::Ref<RowMatrixXf> mat ) noexcept
         {
             if (m_out.size() != mat.cols())
                 m_out.resize( mat.cols() );
@@ -89,9 +89,7 @@ namespace Nanoflare
         bool m_bias;
 
         std::vector<RowMatrixXf> m_w; // W = [Outs, Ins, Kernel]
-        Eigen::RowVectorXf m_b; // B = [Outs]
-        mutable RowMatrixXf m_y;
-        mutable Eigen::RowVectorXf m_out;
+        Eigen::RowVectorXf m_b, m_out; // B = [Outs]
     };
 
 }
