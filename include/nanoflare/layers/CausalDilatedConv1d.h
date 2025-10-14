@@ -24,39 +24,16 @@ namespace Nanoflare
         {   
             if(x.data() == y.data())
             {
-                RowMatrixXf temp(m_outChannels, x.cols());
-                if (m_out.size() != temp.cols())
-                    m_out.resize( temp.cols() );
-                temp.setZero();
-                for(auto i = 0; i < m_outChannels; i++)
-                {
-                    for(auto j = 0; j < m_inChannels; j++)
-                    {
-                        dilatedcausalconvolve1d( x.row(j), m_w[i].row(j), m_dilation, m_out );
-                        temp.row(i) += m_out;
-                    }
-                    if( m_bias )
-                        temp.row(i).array() += m_b(i);
-                }
+                RowMatrixXf temp = RowMatrixXf::Zero(m_outChannels, x.cols());
+                process( x, temp );
                 y = std::move(temp);
             }
             else
             {
                 if (y.rows() != m_outChannels || y.cols() != x.cols())
                     y.resize(m_outChannels, x.cols());
-                if (m_out.size() != y.cols())
-                    m_out.resize( y.cols() );
                 y.setZero();
-                for(auto i = 0; i < m_outChannels; i++)
-                {
-                    for(auto j = 0; j < m_inChannels; j++)
-                    {
-                        dilatedcausalconvolve1d( x.row(j), m_w[i].row(j), m_dilation, m_out );
-                        y.row(i) += m_out;
-                    }
-                    if( m_bias )
-                        y.row(i).array() += m_b(i);
-                }
+                process( x, y );
             }
         }
 
@@ -76,6 +53,22 @@ namespace Nanoflare
         }
 
     private:
+
+        inline void process( const Eigen::Ref<const RowMatrixXf>& x, RowMatrixXf& mat ) const noexcept
+        {
+            if (m_out.size() != mat.cols())
+                m_out.resize( mat.cols() );
+            for(auto i = 0; i < m_outChannels; i++)
+            {
+                for(auto j = 0; j < m_inChannels; j++)
+                {
+                    dilatedcausalconvolve1d( x.row(j), m_w[i].row(j), m_dilation, m_out );
+                    mat.row(i) += m_out;
+                }
+                if( m_bias )
+                    mat.row(i).array() += m_b(i);
+            }
+        }
 
         void setWeight(size_t channel, const Eigen::Ref<RowMatrixXf>& m)
         {

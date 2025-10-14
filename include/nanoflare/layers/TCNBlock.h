@@ -28,42 +28,14 @@ namespace Nanoflare
             if(x.data() == y.data())
             {
                 RowMatrixXf temp(m_outChannels, x.cols());
-                m_conv1.forward( x, temp );
-                m_bn1.apply( temp );
-                m_f1.apply( temp );
-                m_conv2.forward( temp, temp );
-                m_bn2.apply( temp );
-                m_f2.apply( temp );
-                if(m_inChannels == m_outChannels)
-                    temp += x;
-                else
-                {
-                    if (m_temp.rows() != m_outChannels || m_temp.cols() != x.cols())
-                        m_temp.resize(m_outChannels, x.cols());
-                    m_conv.forward( x, m_temp );
-                    temp += m_temp;
-                }
+                process( x, temp );
                 y = std::move(temp);
             }
             else
             {
                 if (y.rows() != m_outChannels || y.cols() != x.cols())
                     y.resize( m_outChannels, x.cols());
-                m_conv1.forward( x, y );
-                m_bn1.apply( y );
-                m_f1.apply( y );
-                m_conv2.forward( y, y );
-                m_bn2.apply( y );
-                m_f2.apply( y );
-                if(m_inChannels == m_outChannels)
-                    y += x;
-                else
-                {
-                    if (m_temp.rows() != m_outChannels || m_temp.cols() != x.cols())
-                        m_temp.resize(m_outChannels, x.cols());
-                    m_conv.forward( x, m_temp );
-                    y += m_temp;
-                }
+                process( x, y );
             }
         }
         
@@ -86,6 +58,26 @@ namespace Nanoflare
         }
 
     private:
+        
+        inline void process( const Eigen::Ref<const RowMatrixXf>& x, RowMatrixXf& mat ) noexcept
+        {
+            m_conv1.forward( x, mat );
+            m_bn1.apply( mat );
+            m_f1.apply( mat );
+            m_conv2.forward( mat, mat );
+            m_bn2.apply( mat );
+            m_f2.apply( mat );
+            if(m_inChannels == m_outChannels)
+                mat += x;
+            else
+            {
+                if (m_temp.rows() != m_outChannels || m_temp.cols() != x.cols())
+                    m_temp.resize(m_outChannels, x.cols());
+                m_conv.forward( x, m_temp );
+                mat += m_temp;
+            }
+        }
+
         CausalDilatedConv1d m_conv1, m_conv2;
         BatchNorm1d m_bn1, m_bn2;
         PReLU m_f1, m_f2;
