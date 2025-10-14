@@ -135,7 +135,7 @@ class PlainSequential( nn.Module ):
         self.output_size = output_size
         self.hidden_size = hidden_size
         self.num_hidden_layers = num_hidden_layers
-        self.direct_linear = nn.Linear( input_size, output_size )
+        self.direct_linear = nn.Linear( input_size, output_size, False )
         self.input_linear = nn.Linear( input_size, hidden_size )
         self.hidden_linear = nn.ModuleList( [ nn.Linear(hidden_size, hidden_size) for _ in range(num_hidden_layers) ] )
         self.output_linear = nn.Linear(hidden_size, output_size)
@@ -158,10 +158,6 @@ class PlainSequential( nn.Module ):
                 'weight': {
                     'shape': list(state_dict['direct_linear.weight'].shape),
                     'values': state_dict['direct_linear.weight'].flatten().cpu().numpy().tolist()
-                },
-                'bias': {
-                    'shape': list(state_dict['direct_linear.bias'].shape),
-                    'values': state_dict['direct_linear.bias'].flatten().cpu().numpy().tolist()
                 }
             },
             'input_linear': {

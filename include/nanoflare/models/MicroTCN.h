@@ -27,6 +27,7 @@ namespace Nanoflare
     class MicroTCN : public BaseModel
     {
     public:
+        
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
         MicroTCN(size_t input_size, size_t hidden_size, size_t output_size, size_t kernel_size, size_t stack_size, size_t ps_hidden_size, size_t ps_num_hidden_layers, float norm_mean, float norm_std) : 
@@ -43,8 +44,11 @@ namespace Nanoflare
             m_norm_x = x;
             normalise( m_norm_x );
             for(auto& block: m_blockStack )
-                m_norm_x = block.forward( m_norm_x );
-            return m_plainSequential.forwardTranspose( m_norm_x );
+                block.forward( m_norm_x, m_norm_x );
+
+            RowMatrixXf y = RowMatrixXf::Zero( x.rows(), x.cols() );
+            m_plainSequential.forwardTranspose( m_norm_x, y );
+            return y;
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override final

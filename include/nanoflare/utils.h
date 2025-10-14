@@ -53,7 +53,7 @@ namespace Nanoflare
         assert(out.size() == out_size);
 
         for (size_t i = 0; i < out_size; ++i)
-            out(i) = in.segment(i, weights_size).cwiseProduct(weights).sum();
+            out(i) = in.segment(i, weights_size).dot(weights);
     }
 
     inline void dilatedcausalconvolve1d(const Eigen::Ref<const Eigen::RowVectorXf>& in, const Eigen::Ref<const Eigen::RowVectorXf>& weights, size_t dilation, Eigen::Ref<Eigen::RowVectorXf> out) noexcept

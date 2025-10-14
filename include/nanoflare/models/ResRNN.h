@@ -37,8 +37,10 @@ namespace Nanoflare
         {
             m_norm_x = x;
             normalise( m_norm_x );
-            RowMatrixXf y = m_rnn.forward( m_norm_x.transpose() );
-            return x + m_plainSequential.forward( y ).transpose();
+            RowMatrixXf y = RowMatrixXf::Zero( x.rows(), x.cols() );
+            m_rnn.forward( m_norm_x.transpose(), y );
+            m_plainSequential.forward( y, y );
+            return x + y.transpose();
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override final

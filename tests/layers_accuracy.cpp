@@ -46,7 +46,9 @@ TEST_CASE("CausalDilatedConv1d Test", "[CausalDilatedConv1d]")
 
     auto torch_data = torch::randn({ long(inChannels), long(seqLength) });
     auto eigen_data = torch_to_eigen( torch_data );
-    auto pred = obj.forward( eigen_data );
+    auto torch_pred = torch::zeros({ long(outChannels), long(seqLength) });
+    auto eigen_pred = torch_to_eigen( torch_pred );
+    obj.forward( eigen_data, eigen_pred );
 
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
     
@@ -59,7 +61,7 @@ TEST_CASE("CausalDilatedConv1d Test", "[CausalDilatedConv1d]")
     auto torch_res = module.forward( inputs ).toTensor();
     auto target = torch_to_eigen( torch_res );
 
-    REQUIRE( (pred - target).norm() < 1e-5 );
+    REQUIRE( (eigen_pred - target).norm() < 1e-5 );
 }
 
 TEST_CASE("FiLM Test", "[FiLM]")
@@ -81,7 +83,9 @@ TEST_CASE("FiLM Test", "[FiLM]")
     auto eigen_data = torch_to_eigen( torch_data );
     auto torch_data2 = torch::randn({ long(batchSize), long(controlDim) });
     auto eigen_data2 = torch_to_eigen( torch_data2 );
-    auto pred = obj.forward( eigen_data, eigen_data2 );
+    auto torch_pred = torch::zeros({ long(batchSize), long(featureDim) });
+    auto eigen_pred = torch_to_eigen( torch_pred );
+    obj.forward( eigen_data, eigen_data2, eigen_pred );
 
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
     
@@ -95,7 +99,7 @@ TEST_CASE("FiLM Test", "[FiLM]")
     auto torch_res = module.forward( inputs ).toTensor();
     auto target = torch_to_eigen( torch_res );
 
-    REQUIRE( (pred - target).norm() < 1e-5 );
+    REQUIRE( (eigen_pred - target).norm() < 1e-5 );
 }
 
 TEST_CASE("MicroTCNBlock Test", "[MicroTCNBlock]")
@@ -117,7 +121,9 @@ TEST_CASE("MicroTCNBlock Test", "[MicroTCNBlock]")
 
     auto torch_data = torch::randn({ long(inChannels), long(seqLength) });
     auto eigen_data = torch_to_eigen( torch_data );
-    auto pred = obj.forward( eigen_data );
+    auto torch_pred = torch::zeros({ long(outChannels), long(seqLength) });
+    auto eigen_pred = torch_to_eigen( torch_pred );
+    obj.forward( eigen_data, eigen_pred );
 
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
     
@@ -130,7 +136,7 @@ TEST_CASE("MicroTCNBlock Test", "[MicroTCNBlock]")
     auto torch_res = module.forward( inputs ).toTensor();
     auto target = torch_to_eigen( torch_res.squeeze(0) );
     
-    REQUIRE( (pred - target).norm() < 1e-5 );
+    REQUIRE( (eigen_pred - target).norm() < 1e-5 );
 }
 
 TEST_CASE("PlainSequential Test", "[PlainSequential]")
@@ -152,12 +158,14 @@ TEST_CASE("PlainSequential Test", "[PlainSequential]")
 
     auto torch_data = torch::randn({ long(batchSize), long(inChannels)});
     auto eigen_data = torch_to_eigen( torch_data );
-    auto pred = obj.forward( eigen_data );
+    auto torch_pred = torch::zeros({ long(batchSize), long(outChannels) });
+    auto eigen_pred = torch_to_eigen( torch_pred );
+    obj.forward( eigen_data, eigen_pred );
 
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
     
     std::vector<torch::jit::IValue> inputs;
-    inputs.push_back(torch_data);
+    inputs.push_back( torch_data );
 
     torch::NoGradGuard no_grad;
     module.eval();
@@ -165,7 +173,7 @@ TEST_CASE("PlainSequential Test", "[PlainSequential]")
     auto torch_res = module.forward( inputs ).toTensor();
     auto target = torch_to_eigen( torch_res );
 
-    REQUIRE( (pred - target).norm() < 1e-5 );
+    REQUIRE( (eigen_pred - target).norm() < 1e-5 );
 }
 
 TEST_CASE("ResidualBlock Test", "[ResidualBlock]")
@@ -187,7 +195,11 @@ TEST_CASE("ResidualBlock Test", "[ResidualBlock]")
 
     auto torch_data = torch::randn({ long(numChannels), long(seqLength)});
     auto eigen_data = torch_to_eigen( torch_data );
-    auto pred = obj.forward( eigen_data ).second;
+    auto torch_skip = torch::zeros({ long(numChannels), long(seqLength)});
+    auto eigen_skip = torch_to_eigen( torch_skip );
+    auto torch_residual = torch::zeros({ long(numChannels), long(seqLength)});
+    auto eigen_residual = torch_to_eigen( torch_residual );
+    obj.forward( eigen_data, eigen_residual, eigen_skip );
 
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
     
@@ -200,7 +212,7 @@ TEST_CASE("ResidualBlock Test", "[ResidualBlock]")
     auto torch_res = module.forward( inputs ).toTuple()->elements();
     auto target = torch_to_eigen( torch_res[1].toTensor().squeeze(0) );
     
-    REQUIRE( (pred - target).norm() < 1e-5 );
+    REQUIRE( (eigen_skip - target).norm() < 1e-5 );
 }
 
 TEST_CASE("TCNBlock Test", "[TCNBlock]")
@@ -222,7 +234,9 @@ TEST_CASE("TCNBlock Test", "[TCNBlock]")
 
     auto torch_data = torch::randn({ long(inChannels), long(seqLength) });
     auto eigen_data = torch_to_eigen( torch_data );
-    auto pred = obj.forward( eigen_data );
+    auto torch_pred = torch::zeros({ long(outChannels), long(seqLength) });
+    auto eigen_pred = torch_to_eigen( torch_pred );
+    obj.forward( eigen_data, eigen_pred );
 
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
     
@@ -235,7 +249,7 @@ TEST_CASE("TCNBlock Test", "[TCNBlock]")
     auto torch_res = module.forward( inputs ).toTensor();
     auto target = torch_to_eigen( torch_res.squeeze(0) );
     
-    REQUIRE( (pred - target).norm() < 1e-5 );
+    REQUIRE( (eigen_pred - target).norm() < 1e-5 );
 }
 
 TEST_CASE("convolve1d Test", "[convolve1d]")

@@ -20,7 +20,7 @@ namespace Nanoflare
         {}
         ~ResidualBlock() = default;
 
-        inline std::pair<RowMatrixXf,RowMatrixXf> forward( const Eigen::Ref<const RowMatrixXf>& x ) const noexcept
+        inline void forward( const Eigen::Ref<const RowMatrixXf>& x, RowMatrixXf& residual, RowMatrixXf& skip ) const noexcept
         {
             if (m_z.rows() != m_numChannels || m_z.cols() != x.cols())
                 m_z.resize(m_numChannels, x.cols());
@@ -29,7 +29,7 @@ namespace Nanoflare
                 m_y_inner.resize(m_gated ? 2*m_numChannels : m_numChannels, x.cols());
             
             // Dilated causal conv
-            m_y_inner = m_inputConv.forward( x );
+            m_inputConv.forward( x, m_y_inner );
 
             if(m_gated)
             {
@@ -40,10 +40,25 @@ namespace Nanoflare
             else
                 m_z.array() = m_y_inner.array().tanh();
 
-            // project to residual and skip
-            RowMatrixXf residual = m_residualConv.forward(m_z) + x;
-            RowMatrixXf skip = m_skipConv.forward(m_z);
-            return std::make_pair(residual, skip);
+            // skip connection
+            if (skip.rows() != x.rows() || skip.cols() != x.cols())
+                skip.resize(x.rows(), x.cols());
+                
+            m_skipConv.forward(m_z, skip);
+
+            // residual connection
+            if(x.data() == residual.data())
+            {
+                RowMatrixXf temp(x.rows(), x.cols());
+                m_residualConv.forward(m_z, temp);
+                temp += x;
+                residual = std::move(temp);
+            }
+            else
+            {
+                m_residualConv.forward(m_z, residual);
+                residual += x;
+            }   
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)

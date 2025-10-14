@@ -20,26 +20,44 @@ namespace Nanoflare
         }
         ~CausalDilatedConv1d() = default;
 
-        inline RowMatrixXf forward( const Eigen::Ref<const RowMatrixXf>& x ) const noexcept
+        inline void forward( const Eigen::Ref<const RowMatrixXf>& x, RowMatrixXf& y ) const noexcept
         {   
-            if (m_y.rows() != m_outChannels || m_y.cols() != x.cols())
-                m_y.resize(m_outChannels, x.cols());
-            
-            if (m_out.size() != m_y.cols())
-                m_out.resize( m_y.cols() );
-
-            m_y.setZero();
-            for(auto i = 0; i < m_outChannels; i++)
+            if(x.data() == y.data())
             {
-                for(auto j = 0; j < m_inChannels; j++)
+                RowMatrixXf temp(m_outChannels, x.cols());
+                if (m_out.size() != temp.cols())
+                    m_out.resize( temp.cols() );
+                temp.setZero();
+                for(auto i = 0; i < m_outChannels; i++)
                 {
-                    dilatedcausalconvolve1d( x.row(j), m_w[i].row(j), m_dilation, m_out );
-                    m_y.row(i) += m_out;
+                    for(auto j = 0; j < m_inChannels; j++)
+                    {
+                        dilatedcausalconvolve1d( x.row(j), m_w[i].row(j), m_dilation, m_out );
+                        temp.row(i) += m_out;
+                    }
+                    if( m_bias )
+                        temp.row(i).array() += m_b(i);
                 }
-                if( m_bias )
-                    m_y.row(i).array() += m_b(i);
+                y = std::move(temp);
             }
-            return m_y;
+            else
+            {
+                if (y.rows() != m_outChannels || y.cols() != x.cols())
+                    y.resize(m_outChannels, x.cols());
+                if (m_out.size() != y.cols())
+                    m_out.resize( y.cols() );
+                y.setZero();
+                for(auto i = 0; i < m_outChannels; i++)
+                {
+                    for(auto j = 0; j < m_inChannels; j++)
+                    {
+                        dilatedcausalconvolve1d( x.row(j), m_w[i].row(j), m_dilation, m_out );
+                        y.row(i) += m_out;
+                    }
+                    if( m_bias )
+                        y.row(i).array() += m_b(i);
+                }
+            }
         }
 
         size_t getInChannels() const { return m_inChannels; }
@@ -77,7 +95,6 @@ namespace Nanoflare
 
         std::vector<RowMatrixXf> m_w; // W = [Outs, Ins, Kernel]
         Eigen::RowVectorXf m_b; // B = [Outs]
-        mutable RowMatrixXf m_y;
         mutable Eigen::RowVectorXf m_out;
     };
 

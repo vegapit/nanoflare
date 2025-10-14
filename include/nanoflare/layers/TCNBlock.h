@@ -23,24 +23,48 @@ namespace Nanoflare
         {}
         ~TCNBlock() = default;
 
-        inline RowMatrixXf forward( const Eigen::Ref<const RowMatrixXf>& x ) noexcept
+        inline void forward( const Eigen::Ref<const RowMatrixXf>& x, RowMatrixXf& y ) noexcept
         {
-            if (m_y.rows() != m_outChannels || m_y.cols() != x.cols())
-                m_y.resize( m_outChannels, x.cols());
-
-            m_y = m_conv1.forward( x );
-            m_bn1.apply( m_y );
-            m_f1.apply( m_y );
-            
-            
-            m_y = m_conv2.forward( m_y );
-            m_bn2.apply( m_y );
-            m_f2.apply( m_y );
-            
-            if(m_inChannels == m_outChannels)
-                return x + m_y;
-            else 
-                return m_conv.forward( x ) + m_y;
+            if(x.data() == y.data())
+            {
+                RowMatrixXf temp(m_outChannels, x.cols());
+                m_conv1.forward( x, temp );
+                m_bn1.apply( temp );
+                m_f1.apply( temp );
+                m_conv2.forward( temp, temp );
+                m_bn2.apply( temp );
+                m_f2.apply( temp );
+                if(m_inChannels == m_outChannels)
+                    temp += x;
+                else
+                {
+                    if (m_temp.rows() != m_outChannels || m_temp.cols() != x.cols())
+                        m_temp.resize(m_outChannels, x.cols());
+                    m_conv.forward( x, m_temp );
+                    temp += m_temp;
+                }
+                y = std::move(temp);
+            }
+            else
+            {
+                if (y.rows() != m_outChannels || y.cols() != x.cols())
+                    y.resize( m_outChannels, x.cols());
+                m_conv1.forward( x, y );
+                m_bn1.apply( y );
+                m_f1.apply( y );
+                m_conv2.forward( y, y );
+                m_bn2.apply( y );
+                m_f2.apply( y );
+                if(m_inChannels == m_outChannels)
+                    y += x;
+                else
+                {
+                    if (m_temp.rows() != m_outChannels || m_temp.cols() != x.cols())
+                        m_temp.resize(m_outChannels, x.cols());
+                    m_conv.forward( x, m_temp );
+                    y += m_temp;
+                }
+            }
         }
         
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)
@@ -67,6 +91,6 @@ namespace Nanoflare
         PReLU m_f1, m_f2;
         Conv1d m_conv;
         size_t m_inChannels, m_outChannels;
-        RowMatrixXf m_y;
+        RowMatrixXf m_temp;
     };
 }

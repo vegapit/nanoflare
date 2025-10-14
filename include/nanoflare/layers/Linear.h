@@ -18,32 +18,45 @@ namespace Nanoflare
         {}
         ~Linear() = default;
         
-        inline RowMatrixXf forward( const Eigen::Ref<const RowMatrixXf>& x ) const noexcept
+        inline void forward( const Eigen::Ref<const RowMatrixXf>& x, RowMatrixXf& y ) const noexcept
         {
-            if (m_y.rows() != x.rows() || m_y.cols() != m_transW.cols())
-                m_y.resize(x.rows(), m_transW.cols());
-            
-            // Matrix multiplication 
-            m_y.noalias() = x * m_transW;
-            
-            if( m_bias )
-                m_y.rowwise() += m_b;
-            return m_y;
+            if(x.data() == y.data())
+            {
+                RowMatrixXf temp(x.rows(), m_transW.cols());
+                temp.noalias() = x * m_transW;
+                if( m_bias )
+                    temp.rowwise() += m_b;
+                y = std::move(temp);
+            }
+            else
+            {
+                if (y.rows() != x.rows() || y.cols() != m_transW.cols())
+                    y.resize(x.rows(), m_transW.cols());
+                y.noalias() = x * m_transW;
+                if( m_bias )
+                    y.rowwise() += m_b;
+            }
         }
 
-        inline RowMatrixXf forwardTranspose(const Eigen::Ref<const RowMatrixXf>& x) const noexcept
+        inline void forwardTranspose(const Eigen::Ref<const RowMatrixXf>& x, RowMatrixXf& y ) const noexcept
         {
-            // ensure scratch buffer
-            if (m_y.rows() != m_outChannels || m_y.cols() != x.cols())
-                m_y.resize(m_outChannels, x.cols());
+            if(x.data() == y.data())
+            {
+                RowMatrixXf temp(m_w.rows(), x.cols());
+                temp.noalias() = m_w * x;
+                if( m_bias )
+                    temp.colwise() += m_b.transpose();
+                y = std::move(temp);
+            }
+            else
+            {
+                if (y.rows() != m_w.rows() || y.cols() != x.cols())
+                    y.resize(m_w.rows(), x.cols());
+                y.noalias() = m_w * x;
+                if (m_bias)
+                    y.colwise() += m_b.transpose(); // broadcast bias across time
+            }
 
-            // multiply directly: W * x
-            // m_w is [out, in], x is [in, time] if channels==in
-            m_y.noalias() = m_w * x;
-
-            if (m_bias)
-                m_y.colwise() += m_b.transpose(); // broadcast bias across time
-            return m_y;
         }
 
         size_t getInChannels() const { return m_inChannels; }
@@ -77,7 +90,6 @@ namespace Nanoflare
             m_b = v;
         }
 
-        mutable RowMatrixXf m_y;
         RowMatrixXf m_w, m_transW;
         Eigen::RowVectorXf m_b;
 

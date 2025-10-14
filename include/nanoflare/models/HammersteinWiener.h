@@ -47,11 +47,17 @@ namespace Nanoflare
         {
             m_norm_x = x;
             normalise( m_norm_x );
-            m_norm_x = m_inputLinear.forwardTranspose( m_norm_x ).array().unaryExpr(&leakyReLU);
+            m_inputLinear.forwardTranspose( m_norm_x, m_norm_x );
+            m_norm_x = m_norm_x.array().unaryExpr(&leakyReLU);
             for(auto& block: m_blockStack )
-                m_norm_x = block.forward( m_norm_x );
-            m_norm_x = m_hiddenLinear.forward( m_norm_x.transpose() ).array().unaryExpr(&leakyReLU);
-            return m_skipLinear.forwardTranspose( x ) + m_outputLinear.forward( m_norm_x ).transpose();
+                block.forward( m_norm_x, m_norm_x );
+            m_hiddenLinear.forward( m_norm_x.transpose(), m_norm_x );
+            m_norm_x = m_norm_x.array().unaryExpr(&leakyReLU);
+
+            RowMatrixXf y = RowMatrixXf::Zero( x.rows(), x.cols() );
+            m_skipLinear.forwardTranspose( x, y );
+            m_outputLinear.forward( m_norm_x, m_norm_x );
+            return y + m_norm_x.transpose();
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override final
@@ -87,7 +93,7 @@ namespace Nanoflare
         size_t m_kernelSize, m_stackSize, m_hiddenSize;
         Linear m_inputLinear, m_hiddenLinear, m_outputLinear, m_skipLinear;
         std::vector<TCNBlock> m_blockStack;
-        mutable RowMatrixXf m_norm_x;
+        RowMatrixXf m_norm_x;
     };
 
 }

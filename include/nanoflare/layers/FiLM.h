@@ -13,9 +13,14 @@ namespace Nanoflare
             m_shift(control_dim, feature_dim, true) {}
         ~FiLM() = default;
 
-        inline RowMatrixXf forward(const Eigen::Ref<RowMatrixXf>& x, const Eigen::Ref<RowMatrixXf>& params ) noexcept
+        inline void forward(const Eigen::Ref<RowMatrixXf>& x, const Eigen::Ref<RowMatrixXf>& params, RowMatrixXf& y ) const noexcept
         {
-            return m_scale.forward( params ).cwiseProduct( x ) + m_shift.forward( params );
+            m_scale.forward( params, y );
+            y = y.cwiseProduct( x );
+
+            RowMatrixXf shift = RowMatrixXf::Zero( params.rows(), x.cols() );
+            m_shift.forward( params, shift );
+            y += shift;
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)

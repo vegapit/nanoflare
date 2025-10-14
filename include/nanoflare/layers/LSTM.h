@@ -22,17 +22,16 @@ namespace Nanoflare
             m_c.setZero();
         }
 
-        inline RowMatrixXf forward( const Eigen::Ref<const RowMatrixXf>& x ) noexcept
+        inline void forward( const Eigen::Ref<const RowMatrixXf>& x, RowMatrixXf& y ) noexcept
         {
-            if (m_y.rows() != x.rows() || m_y.cols() != m_cell.getHiddenSize())
-                m_y.resize(x.rows(), m_cell.getHiddenSize());
+            if (y.rows() != x.rows() || y.cols() != m_cell.getHiddenSize())
+                y.resize(x.rows(), m_cell.getHiddenSize());
 
             for(auto i = 0; i < x.rows(); i++)
             {
                 m_cell.forward( x.row(i), m_h, m_c );
-                m_y.row(i) = m_h; // Assign h to output
+                y.row(i) = m_h; // Assign h to output
             }
-            return m_y;
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)

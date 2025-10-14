@@ -59,15 +59,16 @@ namespace Nanoflare
             if (m_skip_y.rows() != m_numChannels || m_skip_y.cols() != x.cols())
                 m_skip_y.resize(m_numChannels, x.cols());
 
-            m_y = m_inputConv.forward( m_norm_x );
+            m_inputConv.forward( m_norm_x, m_y );
             m_skip_sum.setZero();
             for(auto k = 0; k < m_stackSize; k++)
                 for(auto i = 0; i < dilations_size; i++)
                 {
-                    std::tie( m_y, m_skip_y ) = m_blockStack[k * dilations_size + i].forward( m_y );
+                    m_blockStack[k * dilations_size + i].forward( m_y, m_y, m_skip_y );
                     m_skip_sum += m_skip_y;
                 }
-            RowMatrixXf out = m_plainSequential.forwardTranspose( m_skip_sum.cwiseMax( 0.f ) );
+            RowMatrixXf out( x.rows(), x.cols() );
+            m_plainSequential.forwardTranspose( m_skip_sum.cwiseMax( 0.f ), out );
             denormalise( out );
             return out;
         }
