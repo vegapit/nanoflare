@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include "nanoflare/layers/Conv1d.h"
 #include "nanoflare/layers/CausalDilatedConv1d.h"
 #include "nanoflare/Functional.h"
@@ -22,7 +23,10 @@ namespace Nanoflare
         ~ResidualBlock() = default;
 
         inline void forward( const Eigen::Ref<const RowMatrixXf>& x, Eigen::Ref<RowMatrixXf> residual, Eigen::Ref<RowMatrixXf> skip ) noexcept
-        {
+        {   
+            assert((skip.rows() == m_numChannels && y.cols() == x.cols()) && "ResidualBlock.forward: Wrong skip shape");
+            assert((residual.rows() == m_outChannels && residual.cols() == x.cols()) && "ResidualBlock.forward: Wrong residual shape");
+
             if (m_z.rows() != m_numChannels || m_z.cols() != x.cols())
                 m_z.resize(m_numChannels, x.cols());
 
@@ -36,19 +40,12 @@ namespace Nanoflare
             {
                 auto y_f = m_y_inner.topRows(m_numChannels);
                 auto y_g = m_y_inner.bottomRows(m_numChannels);
-                Functional::Tanh( y_f );
-                Functional::Sigmoid( y_g );
-                m_z.array() = y_f.array() * y_g.array();
+                m_z.array() = y_f.array().tanh() * y_g.array().logistic();
             }
             else
-            {
-                Functional::Tanh( m_y_inner );
-                m_z = m_y_inner;
-            }
-            // skip connection
-            if (skip.rows() != m_numChannels || skip.cols() != x.cols())
-                skip.resize(m_numChannels, x.cols());
-                
+                m_z.array() = m_y_inner.array().tanh();
+            
+            // skip connection                
             m_skipConv.forward(m_z, skip);
 
             // residual connection
@@ -62,8 +59,6 @@ namespace Nanoflare
             }
             else
             {
-                if (residual.rows() != m_numChannels || residual.cols() != x.cols())
-                    residual.resize(m_numChannels, x.cols());
                 m_residualConv.forward(m_z, residual);
                 residual += x;
             }   

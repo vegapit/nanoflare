@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Eigen/Dense>
-#include <assert.h>
+#include <cassert>
 #include "nanoflare/utils.h"
 
 namespace Nanoflare
@@ -20,9 +20,12 @@ namespace Nanoflare
         
         inline void forward( const Eigen::Ref<const RowMatrixXf>& x, Eigen::Ref<RowMatrixXf> y ) const noexcept
         {
+            assert(x.cols() == m_transW.rows() && "Linear.forward: Wrong input shape");
+            assert((y.rows() == x.rows() && y.cols() == m_transW.cols()) && "Linear.forward: Wrong output shape");
+
             if(x.data() == y.data())
             {
-                RowMatrixXf temp(x.rows(), m_transW.cols());
+                RowMatrixXf temp(y.rows(), y.cols());
                 temp.noalias() = x * m_transW;
                 if( m_bias )
                     temp.rowwise() += m_b;
@@ -30,8 +33,6 @@ namespace Nanoflare
             }
             else
             {
-                if (y.rows() != x.rows() || y.cols() != m_transW.cols())
-                    y.resize(x.rows(), m_transW.cols());
                 y.noalias() = x * m_transW;
                 if( m_bias )
                     y.rowwise() += m_b;
@@ -40,9 +41,12 @@ namespace Nanoflare
 
         inline void forwardTranspose(const Eigen::Ref<const RowMatrixXf>& x, Eigen::Ref<RowMatrixXf> y ) const noexcept
         {
+            assert(x.rows() == m_w.cols() && "Linear.forwardTranspose: Wrong input shape");
+            assert((y.rows() == m_w.rows() && y.cols() == x.cols()) && "Linear.forwardTranspose: Wrong output shape");
+
             if(x.data() == y.data())
             {
-                RowMatrixXf temp(m_w.rows(), x.cols());
+                RowMatrixXf temp(y.rows(), y.cols());
                 temp.noalias() = m_w * x;
                 if( m_bias )
                     temp.colwise() += m_b.transpose();
@@ -50,13 +54,10 @@ namespace Nanoflare
             }
             else
             {
-                if (y.rows() != m_w.rows() || y.cols() != x.cols())
-                    y.resize(m_w.rows(), x.cols());
                 y.noalias() = m_w * x;
                 if (m_bias)
                     y.colwise() += m_b.transpose(); // broadcast bias across time
             }
-
         }
 
         size_t getInChannels() const { return m_inChannels; }

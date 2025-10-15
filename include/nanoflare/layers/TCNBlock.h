@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include "nanoflare/layers/Conv1d.h"
 #include "nanoflare/layers/CausalDilatedConv1d.h"
 #include "nanoflare/layers/BatchNorm1d.h"
@@ -22,6 +23,9 @@ namespace Nanoflare
 
         inline void forward( const Eigen::Ref<const RowMatrixXf>& x, Eigen::Ref<RowMatrixXf> y ) noexcept
         {
+            assert(x.rows() == m_inChannels && "TCNBlock.forward: Wrong input shape");
+            assert((y.rows() == m_outChannels && y.cols() == x.cols()) && "TCNBlock.forward: Wrong output shape");
+
             if(x.data() == y.data())
             {
                 RowMatrixXf temp( m_outChannels, x.cols());
@@ -29,11 +33,7 @@ namespace Nanoflare
                 y = std::move( temp );
             }
             else
-            {
-                if (y.rows() != m_outChannels || y.cols() != x.cols())
-                    y.resize( m_outChannels, x.cols());
                 process( x, y );
-            }
         }
         
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)

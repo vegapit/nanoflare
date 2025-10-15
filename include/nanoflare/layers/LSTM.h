@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Dense>
+#include <cassert>
 #include "nanoflare/layers/LSTMCell.h"
 
 namespace Nanoflare
@@ -11,8 +12,10 @@ namespace Nanoflare
     public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-        LSTM(size_t input_size, size_t hidden_size, bool bias) : m_cell(input_size, hidden_size, bias), 
-            m_h(Eigen::VectorXf::Zero(hidden_size)), m_c(Eigen::VectorXf::Zero(hidden_size))
+        LSTM(size_t input_size, size_t hidden_size, bool bias) : 
+            m_cell(input_size, hidden_size, bias), 
+            m_h(Eigen::VectorXf::Zero(hidden_size)),
+            m_c(Eigen::VectorXf::Zero(hidden_size))
         {}
         ~LSTM() = default;
 
@@ -24,8 +27,7 @@ namespace Nanoflare
 
         inline void forward( const Eigen::Ref<const RowMatrixXf>& x, Eigen::Ref<RowMatrixXf> y ) noexcept
         {
-            if (y.rows() != x.rows() || y.cols() != m_cell.getHiddenSize())
-                y.resize(x.rows(), m_cell.getHiddenSize());
+            assert((y.rows() == x.rows() && y.cols() == m_cell.getHiddenSize()) && "LSTM.forward: Wrong output shape");
 
             for(auto i = 0; i < x.rows(); i++)
             {

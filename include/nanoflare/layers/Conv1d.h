@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Dense>
+#include <cassert>
 #include "nanoflare/utils.h"
 
 namespace Nanoflare
@@ -12,8 +13,10 @@ namespace Nanoflare
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
         Conv1d(size_t in_channels, size_t out_channels, size_t kernel_size, bool bias) : 
-            m_inChannels(in_channels), m_outChannels(out_channels), m_w(std::vector<RowMatrixXf>(out_channels)),
-            m_kernelSize(kernel_size), m_bias(bias), m_b(Eigen::RowVectorXf::Zero(out_channels))
+            m_inChannels(in_channels), m_outChannels(out_channels), 
+            m_kernelSize(kernel_size), m_bias(bias), 
+            m_w(std::vector<RowMatrixXf>(out_channels)),
+            m_b(Eigen::RowVectorXf::Zero(out_channels))
         {
             for(auto i = 0; i < out_channels; i++)
                 m_w[i] = RowMatrixXf::Zero(in_channels, kernel_size);
@@ -24,16 +27,17 @@ namespace Nanoflare
 
         inline void forward( const Eigen::Ref<const RowMatrixXf>& x, Eigen::Ref<RowMatrixXf> y ) noexcept
         {
+            assert(x.rows() == m_inChannels && "Conv1d.forward: Wrong input shape");
+            assert((y.rows() == m_outChannels && y.cols() == getOutputLength( x.cols() )) && "Conv1d.forward: Wrong output shape");
+
             if(x.data() == y.data())
             {
-                RowMatrixXf temp = RowMatrixXf::Zero( m_outChannels, getOutputLength(x.cols()));
+                RowMatrixXf temp = RowMatrixXf::Zero( y.rows(), y.cols() );
                 process( x, temp );
                 y = std::move( temp );
             }
             else
             {
-                if (y.rows() != m_outChannels || y.cols() != getOutputLength( x.cols() ))
-                    y.resize(m_outChannels, getOutputLength( x.cols() ));
                 y.setZero();
                 process( x, y );
             }

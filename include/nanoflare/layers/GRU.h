@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Dense>
+#include <cassert>
 #include "nanoflare/layers/GRUCell.h"
 
 namespace Nanoflare
@@ -18,8 +19,7 @@ namespace Nanoflare
 
         inline void forward( const Eigen::Ref<const RowMatrixXf>& x, Eigen::Ref<RowMatrixXf> y ) noexcept
         {
-            if (y.rows() != x.rows() || y.cols() != m_cell.getHiddenSize())
-                y.resize(x.rows(), m_cell.getHiddenSize());
+            assert((y.rows() == x.rows() && y.cols() == m_cell.getHiddenSize()) && "GRU.forward: Wrong output shape");
 
             for(auto i = 0; i < x.rows(); i++)
             {

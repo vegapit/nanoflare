@@ -2,6 +2,7 @@
 
 #include <Eigen/Dense>
 #include <nlohmann/json.hpp>
+#include <string>
 
 namespace Nanoflare
 {
@@ -45,6 +46,12 @@ namespace Nanoflare
         auto values = data.at("values").get<std::vector<float>>();
         return Eigen::Map<Eigen::VectorXf>( values.data(), shape[0] );
     } 
+
+    template<typename T>
+    std::string format_matrix_shape(const T& rows, const T& cols)
+    {
+        return "[" + std::to_string(rows) + "," + std::to_string(cols) + "]";
+    }
 
     inline void convolve1d(const Eigen::Ref<const Eigen::RowVectorXf>& in, const Eigen::Ref<const Eigen::RowVectorXf>& weights, Eigen::Ref<Eigen::RowVectorXf> out) noexcept
     {

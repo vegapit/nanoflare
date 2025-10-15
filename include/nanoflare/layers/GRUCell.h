@@ -68,9 +68,8 @@ namespace Nanoflare
                 nh_inner += m_bhh.tail(m_hiddenSize);
             }
             
-            Functional::Sigmoid( r_inner );
+            auto n_inner = nx_inner.array() + r_inner.array().logistic() * nh_inner.array();    
             Functional::Sigmoid( z_inner );
-            auto n_inner = nx_inner.array() + r_inner.array() * nh_inner.array();
             h.array() = (1.f - z_inner.array()) * n_inner.array().tanh() + z_inner.array() * h.array();
         }
 

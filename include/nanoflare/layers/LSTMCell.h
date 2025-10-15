@@ -2,8 +2,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/Dense>
-#include <assert.h>
-#include "nanoflare/Functional.h"
+#include <cassert>
 #include "nanoflare/utils.h"
 
 namespace Nanoflare
@@ -95,12 +94,8 @@ namespace Nanoflare
             auto o_gate = m_gates.tail(m_hiddenSize);
 
             // LSTM computations
-            Functional::Sigmoid( i_gate );
-            Functional::Sigmoid( f_gate );
-            Functional::Tanh( g_gate );
-            Functional::Sigmoid( o_gate );
-            c.array() = f_gate.array() * c.array() + i_gate.array() * g_gate.array();
-            h.array() = o_gate.array() * c.array().tanh();
+            c.array() = f_gate.array().logistic() * c.array() + i_gate.array().logistic() * g_gate.array().tanh();
+            h.array() = o_gate.array().logistic() * c.array().tanh();
         }
 
     private:

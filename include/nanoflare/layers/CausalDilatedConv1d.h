@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Dense>
+#include <cassert>
 #include "nanoflare/utils.h"
 
 namespace Nanoflare
@@ -13,7 +14,8 @@ namespace Nanoflare
         
         CausalDilatedConv1d(size_t in_channels, size_t out_channels, size_t kernel_size, bool bias, size_t dilation) : m_inChannels(in_channels), m_outChannels(out_channels), 
             m_kernelSize(kernel_size), m_bias(bias), m_dilation(dilation), 
-            m_w(std::vector<RowMatrixXf>(out_channels)), m_b(Eigen::RowVectorXf::Zero(out_channels))
+            m_w(std::vector<RowMatrixXf>(out_channels)),
+            m_b(Eigen::RowVectorXf::Zero(out_channels))
         {
             for(auto i = 0; i < out_channels; i++)
                 m_w[i] = RowMatrixXf::Zero(in_channels, kernel_size);
@@ -22,6 +24,9 @@ namespace Nanoflare
 
         inline void forward( const Eigen::Ref<const RowMatrixXf>& x, Eigen::Ref<RowMatrixXf> y ) noexcept
         {   
+            assert(x.rows() == m_inChannels && "CausalDilatedConv1d.forward: Wrong input shape");
+            assert((y.rows() == m_outChannels && y.cols() == x.cols()) && "CausalDilatedConv1d.forward: Wrong output shape");
+
             if(x.data() == y.data())
             {
                 RowMatrixXf temp = RowMatrixXf::Zero(m_outChannels, x.cols());
@@ -30,8 +35,6 @@ namespace Nanoflare
             }
             else
             {
-                if (y.rows() != m_outChannels || y.cols() != x.cols())
-                    y.resize(m_outChannels, x.cols());
                 y.setZero();
                 process( x, y );
             }
