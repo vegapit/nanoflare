@@ -81,6 +81,6 @@ namespace Nanoflare
         BatchNorm1d m_bn1, m_bn2;
         Conv1d m_conv;
         size_t m_inChannels, m_outChannels;
-        RowMatrixXf m_temp;
+        RowMatrixXf m_temp, m_block_temp;
     };
 }

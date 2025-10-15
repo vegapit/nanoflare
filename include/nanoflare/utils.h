@@ -79,4 +79,25 @@ namespace Nanoflare
         }
     }
 
+    // Image To Columns 
+    inline RowMatrixXf im2col(const Eigen::RowVectorXf& in, size_t kernel_size) noexcept
+    {
+        const size_t out_size = in.size() - kernel_size + 1;
+        RowMatrixXf out(out_size, kernel_size);
+        for (size_t i = 0; i < out_size; ++i)
+            out.row(i) = in.segment(i, kernel_size);
+        return out;
+    }
+
+    inline RowMatrixXf im2col_dilated(const Eigen::RowVectorXf& in, int kernel_size, int dilation) noexcept
+    {
+        const size_t left_padding = dilation * ( kernel_size - 1 );
+        const size_t out_size = in.size();
+        RowMatrixXf out = RowMatrixXf::Zero(out_size, kernel_size);
+        for(auto i = 0; i < out_size; i++)
+            for(auto k = 0; k < kernel_size; k++)
+                if(i + k * dilation >= left_padding) // Avoid adding zero inputs
+                    out(i, k) = in(i - left_padding + k * dilation);
+        return out;
+    }
 }

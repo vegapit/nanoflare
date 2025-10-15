@@ -20,7 +20,7 @@ layers = {
 mu, sigma = 0.1, 0.9
 
 models = {
-    'hammersteinwiener': HammersteinWiener( 1, 8, 8, 3, 7, 8, 1, mu, sigma ),
+    'hammersteinwiener': HammersteinWiener( 1, 16, 16, 3, 8, 16, 1, mu, sigma ),
     'microtcn': MicroTCN(1, 8, 1, 3, 8, 16, 3, mu, sigma),
     'resgru': ResGRU(1, 64, 1, 8, 3, mu, sigma),
     'reslstm': ResLSTM(1, 64, 1, 8, 3, mu, sigma),

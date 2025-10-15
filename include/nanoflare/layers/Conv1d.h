@@ -60,18 +60,23 @@ namespace Nanoflare
     private:
 
         inline void process( const Eigen::Ref<const RowMatrixXf>& x, Eigen::Ref<RowMatrixXf> mat ) noexcept
-        {
-            if (m_out.size() != mat.cols())
-                m_out.resize( mat.cols() );
-            for(auto i = 0; i < m_outChannels; i++)
+        {           
+            const int out_len = x.cols() - m_kernelSize + 1;
+            assert(mat.cols() == out_len && mat.rows() == m_outChannels);
+            
+            // Build im2col matrices for each input channel
+            std::vector<Eigen::MatrixXf> i2c_mat;
+            i2c_mat.reserve(m_inChannels);
+            for (int j = 0; j < m_inChannels; ++j)
+                i2c_mat.emplace_back( im2col(x.row(j), m_kernelSize) ); // (out_len, kernel_size)
+
+            // For each output channel
+            for (int i = 0; i < m_outChannels; ++i)
             {
-                for(auto j = 0; j < m_inChannels; j++)
-                {
-                    convolve1d( x.row(j), m_w[i].row(j), m_out );
-                    mat.row(i) += m_out;
-                }
-                if( m_bias )
-                    mat.row(i).array() += m_b(i);
+                mat.row(i).setConstant(m_bias ? m_b(i) : 0.f);
+                // Accumulate contributions from each input channel
+                for (int j = 0; j < m_inChannels; ++j)
+                    mat.row(i).noalias() += i2c_mat[j] * m_w[i].row(j).transpose();
             }
         }
 
@@ -93,7 +98,7 @@ namespace Nanoflare
         bool m_bias;
 
         std::vector<RowMatrixXf> m_w; // W = [Outs, Ins, Kernel]
-        Eigen::RowVectorXf m_b, m_out; // B = [Outs]
+        Eigen::RowVectorXf m_b; // B = [Outs]
     };
 
 }
