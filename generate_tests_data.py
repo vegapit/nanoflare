@@ -20,12 +20,12 @@ layers = {
 mu, sigma = 0.1, 0.9
 
 models = {
-    'hammersteinwiener': HammersteinWiener( 1, 16, 16, 3, 8, 16, 1, mu, sigma ),
+    'hammersteinwiener': HammersteinWiener( 1, 16, 16, 5, 8, 16, 1, mu, sigma ),
     'microtcn': MicroTCN(1, 8, 1, 3, 8, 16, 3, mu, sigma),
     'resgru': ResGRU(1, 64, 1, 8, 3, mu, sigma),
     'reslstm': ResLSTM(1, 64, 1, 8, 3, mu, sigma),
     'tcn': TCN(1, 7, 1, 4, 8, 8, 3, mu, sigma),
-    'wavenet': WaveNet(1, 7, 1, 4, [1, 2, 4, 8, 16, 32], 1, False, 8, mu, sigma)
+    'wavenet': WaveNet(1, 16, 1, 5, [1, 2, 4, 8, 16, 32, 64], 1, False, 16, mu, sigma)
 }
 
 if __name__ == "__main__":

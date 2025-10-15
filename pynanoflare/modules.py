@@ -4,12 +4,10 @@ from torch import nn
 class BaseModel( nn.Module ):
     def __init__(self, norm_mean: float, norm_std: float):
         super().__init__()
-        self.norm_mean = torch.nn.parameter.Parameter( data= torch.FloatTensor([norm_mean]), requires_grad=False )
-        self.norm_std = torch.nn.parameter.Parameter( data= torch.FloatTensor([norm_std]), requires_grad=False )
-    @torch.no_grad()
+        self.register_buffer('norm_mean', torch.tensor([norm_mean]))
+        self.register_buffer('norm_std', torch.tensor([norm_std]))
     def normalise(self, x: torch.Tensor) -> torch.Tensor:
         return (x - self.norm_mean) / self.norm_std
-    @torch.no_grad()
     def denormalise(self, x: torch.Tensor) -> torch.Tensor:
         return x * self.norm_std + self.norm_mean
     

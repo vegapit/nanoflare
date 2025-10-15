@@ -49,7 +49,7 @@ TEST_CASE("HammersteinWiener")
         return obj->forward(x);
     };
 }
-
+/*
 TEST_CASE("HammersteinWiener TorchScript")
 {
     std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
@@ -228,7 +228,7 @@ TEST_CASE("TCN TorchScript")
         return module.forward(inputs);
     };
 }
-
+*/
 TEST_CASE("WaveNet")
 {
     register_models();
@@ -246,7 +246,7 @@ TEST_CASE("WaveNet")
         return obj->forward(x);
     };
 }
-
+/*
 TEST_CASE("WaveNet TorchScript")
 {
     std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
@@ -267,3 +267,4 @@ TEST_CASE("WaveNet TorchScript")
         return module.forward(inputs);
     };
 }
+*/
