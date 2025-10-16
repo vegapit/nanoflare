@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <nlohmann/json.hpp>
 #include <Eigen/Dense>
 #include "nanoflare/models/BaseModel.h"
@@ -34,7 +35,8 @@ namespace Nanoflare
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
         
         WaveNet(size_t input_size, size_t num_channels, size_t output_size, size_t kernel_size, std::vector<size_t> dilations, size_t stack_size, bool gated, size_t hidden_size, float norm_mean, float norm_std) : 
-            BaseModel(norm_mean, norm_std), m_numChannels(num_channels), m_dilations(dilations), m_stackSize(stack_size), m_gated(gated),
+            BaseModel(norm_mean, norm_std, input_size, output_size), 
+            m_numChannels(num_channels), m_dilations(dilations), m_stackSize(stack_size), m_gated(gated),
             m_inputConv(input_size, num_channels, kernel_size, true, 1),
             m_postConv1(num_channels, hidden_size, 1, true),
             m_postConv2(hidden_size, output_size, 1, true)
@@ -45,8 +47,10 @@ namespace Nanoflare
         }
         ~WaveNet() = default;
 
-        inline RowMatrixXf forward( const Eigen::Ref<const RowMatrixXf>& x ) noexcept override final
+        inline void forward( const Eigen::Ref<const RowMatrixXf>& x, Eigen::Ref<RowMatrixXf> y ) noexcept override final
         {
+            assert((y.rows() == m_postConv2.getOutChannels() && y.cols() == x.cols()) && "WaveNet.forward: Wrong output shape");
+
             auto dilations_size = m_dilations.size();
             auto skip_scale = 1.f / std::sqrt( static_cast<float>(m_stackSize * dilations_size) );
 
@@ -78,12 +82,8 @@ namespace Nanoflare
             m_postConv1.forward( m_skip_sum, m_temp_hidden );
             Functional::ReLU( m_temp_hidden );
             
-            if (m_y.rows() != m_postConv2.getOutChannels() || m_y.cols() != x.cols())
-                m_y.resize(m_postConv2.getOutChannels(), x.cols());
-            m_postConv2.forward( m_temp_hidden, m_y );
-            denormalise( m_y );
-            
-            return m_y;
+            m_postConv2.forward( m_temp_hidden, y );
+            denormalise( y );
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override final
@@ -122,7 +122,7 @@ namespace Nanoflare
         CausalDilatedConv1d m_inputConv;
         Conv1d m_postConv1, m_postConv2;
         std::vector<ResidualBlock> m_blockStack;
-        mutable RowMatrixXf m_temp, m_skip_temp, m_skip_sum, m_norm_x, m_temp_hidden, m_y;
+        mutable RowMatrixXf m_temp, m_skip_temp, m_skip_sum, m_norm_x, m_temp_hidden;
     };
 
 }

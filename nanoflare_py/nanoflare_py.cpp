@@ -51,7 +51,8 @@ public:
             buf.shape[1]
         );
 
-        Nanoflare::RowMatrixXf out_mat = m_model->forward(in_mat);
+        Nanoflare::RowMatrixXf out_mat = Nanoflare::RowMatrixXf::Zero(m_model->getOutChannels(), in_mat.cols());
+        m_model->forward(in_mat, out_mat);
 
         // Allocate a new py::array and copy
         py::array_t<float> result({out_mat.rows(), out_mat.cols()});

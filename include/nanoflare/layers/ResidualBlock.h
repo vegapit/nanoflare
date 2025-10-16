@@ -40,10 +40,10 @@ namespace Nanoflare
             {
                 auto y_f = m_y_inner.topRows(m_numChannels);
                 auto y_g = m_y_inner.bottomRows(m_numChannels);
-                m_z.array() = y_f.array().tanh() * y_g.array().logistic();
+                m_z = y_f.array().tanh() * y_g.array().logistic();
             }
             else
-                m_z.array() = m_y_inner.array().tanh();
+                m_z = m_y_inner.array().tanh();
             
             // skip connection                
             m_skipConv.forward(m_z, skip);

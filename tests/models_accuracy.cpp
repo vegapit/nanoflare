@@ -55,7 +55,8 @@ TEST_CASE("HammersteinWiener Test", "[HammersteinWiener]")
 
     auto torch_data = torch::randn({1, num_samples});
     auto eigen_data = torch_to_eigen( torch_data );
-    auto pred = obj->forward( eigen_data );
+    RowMatrixXf pred = RowMatrixXf::Zero(1, num_samples);
+    obj->forward( eigen_data, pred );
 
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
 
@@ -86,7 +87,8 @@ TEST_CASE("MicroTCN Test", "[MicroTCN]")
 
     auto torch_data = torch::randn({1, num_samples});
     auto eigen_data = torch_to_eigen( torch_data );
-    auto pred = obj->forward( eigen_data );
+    RowMatrixXf pred = RowMatrixXf::Zero(1, num_samples);
+    obj->forward( eigen_data, pred );
 
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
     
@@ -117,7 +119,8 @@ TEST_CASE("ResGRU Test", "[ResGRU]")
 
     auto torch_data = torch::randn({1, num_samples});
     auto eigen_data = torch_to_eigen( torch_data );
-    auto pred = obj->forward( eigen_data );
+    RowMatrixXf pred = RowMatrixXf::Zero(1, num_samples);
+    obj->forward( eigen_data, pred );
 
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
     
@@ -150,7 +153,8 @@ TEST_CASE("ResLSTM Test", "[ResLSTM]")
 
     auto torch_data = torch::randn({1, num_samples});
     auto eigen_data = torch_to_eigen( torch_data );
-    auto pred = obj->forward( eigen_data );
+    RowMatrixXf pred = RowMatrixXf::Zero(1, num_samples);
+    obj->forward( eigen_data, pred );
 
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
     
@@ -185,7 +189,8 @@ TEST_CASE("TCN Test", "[TCN]")
 
     auto torch_data = torch::randn({1, num_samples});
     auto eigen_data = torch_to_eigen( torch_data );
-    auto pred = obj->forward( eigen_data );
+    RowMatrixXf pred = RowMatrixXf::Zero(1, num_samples);
+    obj->forward( eigen_data, pred );
 
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
     
@@ -216,7 +221,8 @@ TEST_CASE("WaveNet Test", "[WaveNet]")
 
     auto torch_data = torch::randn({1, num_samples});
     auto eigen_data = torch_to_eigen( torch_data );
-    auto pred = obj->forward( eigen_data );
+    RowMatrixXf pred = RowMatrixXf::Zero(1, num_samples);
+    obj->forward( eigen_data, pred );
 
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
     

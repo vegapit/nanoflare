@@ -2,7 +2,7 @@
 
 #include <nlohmann/json.hpp>
 #include <Eigen/Dense>
-#include <assert.h>
+#include <cassert>
 #include <fstream>
 #include "nanoflare/utils.h"
 
@@ -24,11 +24,16 @@ namespace Nanoflare
     class BaseModel
     {
     public:
-        BaseModel(): m_normMean(0.f), m_normStd(1.f) {}
-        BaseModel(float norm_mean, float norm_std): m_normMean(norm_mean), m_normStd(norm_std) { assert( norm_std > 0.f); }
+        BaseModel(): m_normMean(0.f), m_normStd(1.f), m_inChannels(1), m_outChannels(1) {}
+        BaseModel(float norm_mean, float norm_std, size_t inChannels, size_t outChannels): 
+            m_normMean(norm_mean), m_normStd(norm_std),
+            m_inChannels(inChannels), m_outChannels(outChannels)
+        {
+            assert( norm_std > 0.f);
+        }
         virtual ~BaseModel() = default;
 
-        virtual inline RowMatrixXf forward( const Eigen::Ref<const RowMatrixXf>& x ) noexcept = 0;
+        virtual inline void forward( const Eigen::Ref<const RowMatrixXf>& x, Eigen::Ref<RowMatrixXf> y ) noexcept = 0;
         virtual void loadStateDict(std::map<std::string, nlohmann::json> state_dict) = 0;
 
         inline void normalise( Eigen::Ref<RowMatrixXf> x ) noexcept
@@ -50,11 +55,15 @@ namespace Nanoflare
         float getNormMean() const { return m_normMean; }
         float getNormStd() const { return m_normStd; }
 
+        size_t getInChannels() { return m_inChannels; }
+        size_t getOutChannels() { return m_outChannels; }
+
         void setNormMean( float value ) { m_normMean = value; }
         void setNormStd( float value ) { assert( value > 0.f ); m_normStd = value; }
 
     private:
         float m_normMean, m_normStd;
+        size_t m_inChannels, m_outChannels;
     };
 
 }

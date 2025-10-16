@@ -61,7 +61,7 @@ namespace Nanoflare
         {
             const int out_len = x.cols() - m_kernelSize + 1;
             assert(mat.cols() == out_len && mat.rows() == m_outChannels);
-
+            
             // Build im2col matrices for each input channel
             std::vector<Eigen::MatrixXf> i2c_mat;
             i2c_mat.reserve(m_inChannels);
@@ -95,7 +95,7 @@ namespace Nanoflare
         bool m_bias;
 
         std::vector<RowMatrixXf> m_w; // W = [Outs, Ins, Kernel]
-        Eigen::RowVectorXf m_b; // B = [Outs]
+        Eigen::RowVectorXf m_b, m_out; // B = [Outs]
     };
 
 }

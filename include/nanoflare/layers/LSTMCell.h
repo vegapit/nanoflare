@@ -94,8 +94,8 @@ namespace Nanoflare
             auto o_gate = m_gates.tail(m_hiddenSize);
 
             // LSTM computations
-            c.array() = f_gate.array().logistic() * c.array() + i_gate.array().logistic() * g_gate.array().tanh();
-            h.array() = o_gate.array().logistic() * c.array().tanh();
+            c = f_gate.array().logistic() * c.array() + i_gate.array().logistic() * g_gate.array().tanh();
+            h = o_gate.array().logistic() * c.array().tanh();
         }
 
     private:

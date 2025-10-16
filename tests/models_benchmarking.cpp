@@ -43,13 +43,14 @@ TEST_CASE("HammersteinWiener")
     nlohmann::json data = nlohmann::json::parse(fstream);
     ModelBuilder::getInstance().buildModel(data, obj );
 
-    RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
+    RowMatrixXf x = RowMatrixXf::Random(1, num_samples);
+    RowMatrixXf y = RowMatrixXf::Zero(1, num_samples);
 
     BENCHMARK("HammersteinWiener") {
-        return obj->forward(x);
+        obj->forward(x, y);
     };
 }
-/*
+
 TEST_CASE("HammersteinWiener TorchScript")
 {
     std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
@@ -83,9 +84,11 @@ TEST_CASE("MicroTCN")
     nlohmann::json data = nlohmann::json::parse(fstream);
     ModelBuilder::getInstance().buildModel(data, obj );
     
-    RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
+    RowMatrixXf x = RowMatrixXf::Random(1, num_samples);
+    RowMatrixXf y = RowMatrixXf::Zero(1, num_samples);
+
     BENCHMARK("MicroTCN") {
-        return obj->forward(x);
+        obj->forward(x, y);
     };
 }
 
@@ -120,9 +123,11 @@ TEST_CASE("ResGRU")
     nlohmann::json data = nlohmann::json::parse(fstream);
     ModelBuilder::getInstance().buildModel(data, obj );
 
-    RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
+    RowMatrixXf x = RowMatrixXf::Random(1, num_samples);
+    RowMatrixXf y = RowMatrixXf::Zero(1, num_samples);
+
     BENCHMARK("ResGRU") {
-        return obj->forward(x);
+        obj->forward(x, y);
     };
 }
 
@@ -160,9 +165,11 @@ TEST_CASE("ResLSTM")
     nlohmann::json data = nlohmann::json::parse(fstream);
     ModelBuilder::getInstance().buildModel(data, obj );
 
-    RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
+    RowMatrixXf x = RowMatrixXf::Random(1, num_samples);
+    RowMatrixXf y = RowMatrixXf::Zero(1, num_samples);
+
     BENCHMARK("ResLSTM") {
-        return obj->forward(x);
+        obj->forward(x, y);
     };
 }
 
@@ -202,9 +209,11 @@ TEST_CASE("TCN")
     nlohmann::json data = nlohmann::json::parse(fstream);
     ModelBuilder::getInstance().buildModel(data, obj );
     
-    RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
+    RowMatrixXf x = RowMatrixXf::Random(1, num_samples);
+    RowMatrixXf y = RowMatrixXf::Zero(1, num_samples);
+
     BENCHMARK("TCN") {
-        return obj->forward(x);
+        obj->forward(x, y);
     };
 }
 
@@ -228,7 +237,7 @@ TEST_CASE("TCN TorchScript")
         return module.forward(inputs);
     };
 }
-*/
+
 TEST_CASE("WaveNet")
 {
     register_models();
@@ -241,12 +250,14 @@ TEST_CASE("WaveNet")
     nlohmann::json data = nlohmann::json::parse(fstream);
     ModelBuilder::getInstance().buildModel(data, obj );
 
-    RowMatrixXf x = Eigen::MatrixXf::Random(1, num_samples);
+    RowMatrixXf x = RowMatrixXf::Random(1, num_samples);
+    RowMatrixXf y = RowMatrixXf::Zero(1, num_samples);
+
     BENCHMARK("WaveNet") {
-        return obj->forward(x);
+        obj->forward(x, y);
     };
 }
-/*
+
 TEST_CASE("WaveNet TorchScript")
 {
     std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
@@ -267,4 +278,3 @@ TEST_CASE("WaveNet TorchScript")
         return module.forward(inputs);
     };
 }
-*/

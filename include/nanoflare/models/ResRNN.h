@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <nlohmann/json.hpp>
 #include <Eigen/Dense>
 #include "nanoflare/models/BaseModel.h"
@@ -27,14 +28,17 @@ namespace Nanoflare
     public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-        ResRNN(size_t input_size, size_t hidden_size, size_t output_size,  size_t ps_hidden_size, size_t ps_num_hidden_layers, float norm_mean, float norm_std) : BaseModel(norm_mean, norm_std), 
+        ResRNN(size_t input_size, size_t hidden_size, size_t output_size,  size_t ps_hidden_size, size_t ps_num_hidden_layers, float norm_mean, float norm_std) : 
+            BaseModel(norm_mean, norm_std, input_size, output_size), 
             m_rnn(input_size, hidden_size, true), 
             m_plainSequential( hidden_size, output_size, ps_hidden_size, ps_num_hidden_layers)
         {}
         ~ResRNN() = default;
 
-        inline RowMatrixXf forward( const Eigen::Ref<const RowMatrixXf>& x ) noexcept override final
+        inline void forward( const Eigen::Ref<const RowMatrixXf>& x, Eigen::Ref<RowMatrixXf> y ) noexcept override final
         {
+            assert((y.rows() == m_plainSequential.getOutChannels() && y.cols() == x.cols()) && "ResRNN.forward: Wrong output shape");
+
             m_norm_x = x;
             normalise( m_norm_x );
 
@@ -43,16 +47,12 @@ namespace Nanoflare
                 m_temp.resize( x.cols(), m_plainSequential.getInChannels() );
             m_rnn.forward(m_norm_x.transpose(), m_temp);
 
-            // PlainSequential: input (time, C_hidden), output (time, C_out)
-            if (m_y.rows() != x.cols() || m_y.cols() != m_plainSequential.getOutChannels())
-                m_y.resize( x.cols(), m_plainSequential.getOutChannels() );
-            m_plainSequential.forward(m_temp, m_y);
+            // PlainSequential: input (C_hidden, time), output (C_out, time)
+            m_plainSequential.forwardTranspose(m_temp.transpose(), y);
 
             // Residual only if shapes match
-            if(x.rows() == m_y.cols())
-                return x + m_y.transpose();
-            else
-                return m_y.transpose();
+            if(x.rows() == y.rows())
+                y += x;
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override final
@@ -79,7 +79,7 @@ namespace Nanoflare
     private:
         T m_rnn;
         PlainSequential m_plainSequential;
-        RowMatrixXf m_norm_x, m_temp, m_y;
+        RowMatrixXf m_norm_x, m_temp;
     };
 
 }

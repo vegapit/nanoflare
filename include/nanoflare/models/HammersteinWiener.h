@@ -1,7 +1,9 @@
 #pragma once
 
+#include <cassert>
 #include <nlohmann/json.hpp>
 #include <Eigen/Dense>
+
 #include "nanoflare/models/BaseModel.h"
 #include "nanoflare/layers/Linear.h"
 #include "nanoflare/layers/TCNBlock.h"
@@ -30,7 +32,8 @@ namespace Nanoflare
     public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-        HammersteinWiener(size_t input_size, size_t linear_input_size, size_t linear_output_size, size_t kernel_size, size_t stack_size, size_t hidden_size, size_t output_size, float norm_mean, float norm_std) : BaseModel(norm_mean, norm_std), 
+        HammersteinWiener(size_t input_size, size_t linear_input_size, size_t linear_output_size, size_t kernel_size, size_t stack_size, size_t hidden_size, size_t output_size, float norm_mean, float norm_std) : 
+            BaseModel(norm_mean, norm_std, input_size, output_size), 
             m_inputLinear(input_size, linear_input_size, true),
             m_hiddenLinear(linear_output_size, hidden_size, true), 
             m_outputLinear(hidden_size, output_size, true),
@@ -44,8 +47,10 @@ namespace Nanoflare
         }
         ~HammersteinWiener() = default;
 
-        inline RowMatrixXf forward( const Eigen::Ref<const RowMatrixXf>& x ) noexcept override final
+        inline void forward( const Eigen::Ref<const RowMatrixXf>& x, Eigen::Ref<RowMatrixXf> y ) noexcept override final
         {
+            assert((y.rows() == m_outputLinear.getOutChannels() && y.cols() == x.cols()) && "HammersteinWiener.forward: Wrong output shape");
+
             m_norm_x = x;
             normalise( m_norm_x );
 
@@ -78,11 +83,8 @@ namespace Nanoflare
             m_skipLinear.forwardTranspose( x, m_skip_temp );
 
             // Linear(FwdTranspose): input(C_hidden, time) output(C_out, time)
-            if (m_y.rows() != m_outputLinear.getOutChannels() || m_y.cols() != x.cols())
-                m_y.resize( m_outputLinear.getOutChannels(), x.cols() );
-            m_outputLinear.forwardTranspose( m_hidden_temp, m_y );
-
-            return m_y + m_skip_temp;
+            m_outputLinear.forwardTranspose( m_hidden_temp, y );
+            y += m_skip_temp;
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override final
@@ -117,7 +119,7 @@ namespace Nanoflare
         size_t m_kernelSize, m_stackSize, m_hiddenSize;
         Linear m_inputLinear, m_hiddenLinear, m_outputLinear, m_skipLinear;
         std::vector<TCNBlock> m_blockStack;
-        RowMatrixXf m_norm_x, m_temp, m_block_temp, m_hidden_temp, m_skip_temp, m_y;
+        RowMatrixXf m_norm_x, m_temp, m_block_temp, m_hidden_temp, m_skip_temp;
     };
 
 }

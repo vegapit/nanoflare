@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <nlohmann/json.hpp>
 #include <Eigen/Dense>
 #include "nanoflare/models/BaseModel.h"
@@ -30,7 +31,8 @@ namespace Nanoflare
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
         TCN(size_t input_size, size_t hidden_size, size_t output_size, size_t kernel_size, size_t stack_size, size_t ps_hidden_size, size_t ps_num_hidden_layers, float norm_mean, float norm_std) : 
-            BaseModel(norm_mean, norm_std), m_hiddenSize(hidden_size), m_stackSize(stack_size),
+            BaseModel(norm_mean, norm_std, input_size, output_size), 
+            m_hiddenSize(hidden_size), m_stackSize(stack_size),
             m_plainSequential(hidden_size, output_size, ps_hidden_size, ps_num_hidden_layers)
         {
             for(auto k = 0; k < stack_size; k++)
@@ -38,8 +40,10 @@ namespace Nanoflare
         }
         ~TCN() = default;
         
-        inline RowMatrixXf forward( const Eigen::Ref<const RowMatrixXf>& x ) noexcept override final
+        inline void forward( const Eigen::Ref<const RowMatrixXf>& x, Eigen::Ref<RowMatrixXf> y ) noexcept override final
         {
+            assert((y.rows() == m_plainSequential.getOutChannels() && y.cols() == x.cols()) && "TCN.forward: Wrong output shape");
+
             m_norm_x = x;
             normalise( m_norm_x );
 
@@ -55,11 +59,7 @@ namespace Nanoflare
             }
 
             // PlainSequential(FwdTranspose): input(C_hidden, time) output(C_out, time)
-            if (m_y.rows() != m_plainSequential.getOutChannels() || m_temp.cols() != x.cols())
-                m_y.resize( m_plainSequential.getOutChannels(), x.cols() );
-            m_plainSequential.forwardTranspose( m_temp, m_y );
-
-            return m_y;
+            m_plainSequential.forwardTranspose( m_temp, y );
         }
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override final
@@ -88,7 +88,7 @@ namespace Nanoflare
         size_t m_hiddenSize, m_stackSize;
         std::vector<TCNBlock> m_blockStack;
         PlainSequential m_plainSequential;
-        RowMatrixXf m_norm_x, m_temp, m_y;
+        RowMatrixXf m_norm_x, m_temp;
     };
 
 }

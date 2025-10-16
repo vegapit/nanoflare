@@ -70,11 +70,9 @@ namespace Nanoflare
             for (int j = 0; j < m_inChannels; ++j)
                 i2c_mat.emplace_back( im2col(x.row(j), m_kernelSize) ); // (out_len, kernel_size)
 
-            // For each output channel
             for (int i = 0; i < m_outChannels; ++i)
             {
                 mat.row(i).setConstant(m_bias ? m_b(i) : 0.f);
-                // Accumulate contributions from each input channel
                 for (int j = 0; j < m_inChannels; ++j)
                     mat.row(i).noalias() += i2c_mat[j] * m_w[i].row(j).transpose();
             }
