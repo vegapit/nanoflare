@@ -29,5 +29,19 @@ namespace Nanoflare
         {
             x.array() = x.array().tanh();
         }
+
+        static inline void LayerNorm( Eigen::Ref<RowMatrixXf> x ) noexcept
+        {
+            // Compute mean and variance per column
+            Eigen::RowVectorXf m1 = x.colwise().mean();
+            Eigen::RowVectorXf m2 = x.array().square().colwise().mean();
+            Eigen::RowVectorXf var = m2.array() - m1.array().square();
+
+            // Inverse std per column
+            Eigen::RowVectorXf inv_std = (var.array() + 1e-5f).rsqrt();
+
+            // Normalize in place: (x - mean) / std
+            x = (x.rowwise() - m1).array().rowwise() * inv_std.array();
+        }
     };
 }

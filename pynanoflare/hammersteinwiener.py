@@ -16,6 +16,7 @@ class HammersteinWiener( BaseModel ):
         # Nonlinear input stage (Hammerstein)
         self.input_linear = nn.Linear(input_size, linear_input_size)
         self.f_in = nn.LeakyReLU(negative_slope=0.2)
+        self.norm_in = nn.LayerNorm(linear_input_size, elementwise_affine=False)
         
         # Dynamic linear stage (memory)
         self.block_stack = nn.ModuleList([
@@ -27,6 +28,7 @@ class HammersteinWiener( BaseModel ):
                 False) 
             for i in range(stack_size)
         ])
+        self.norm_out = nn.LayerNorm(linear_output_size, elementwise_affine=False)
 
         # Nonlinear output stage (Wiener)
         self.hidden_linear = nn.Linear(linear_output_size, hidden_size)
@@ -43,11 +45,13 @@ class HammersteinWiener( BaseModel ):
         x_t = x.transpose(1,2)  # (batch, time, features)
         y = self.normalise( x_t )
         y = self.f_in( self.input_linear( y ) )
-
+        y = self.norm_in( y )
+    
         y = y.transpose(1, 2)  # (batch, features, time)
         for block in self.block_stack:
             y = block( y )
         y = y.transpose(1, 2)
+        y = self.norm_out( y )
 
         y = self.f_out( self.hidden_linear( y ) )
         # Residual skip: dry passthrough + learned coloration

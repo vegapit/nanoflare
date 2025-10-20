@@ -59,6 +59,7 @@ namespace Nanoflare
                 m_temp.resize( m_blockStack[0].getInChannels(), x.cols() );
             m_inputLinear.forwardTranspose( m_norm_x, m_temp );
             Functional::LeakyReLU( m_temp, 0.2f );
+            Functional::LayerNorm( m_temp );
 
             // TCN Block: input (C_block_in, time) output (C_block_out, time)
             if (m_block_temp.rows() != m_blockStack[0].getOutChannels() || m_block_temp.cols() != x.cols())
@@ -70,7 +71,8 @@ namespace Nanoflare
                 else
                     m_blockStack[i].forward( m_block_temp, m_block_temp );
             }
-            
+            Functional::LayerNorm( m_block_temp );
+
             // Linear(FwdTranspose): input(C_block_out, time) output(C_hidden, time)
             if (m_hidden_temp.rows() != m_hiddenLinear.getOutChannels() || m_hidden_temp.cols() != x.cols())
                 m_hidden_temp.resize( m_hiddenLinear.getOutChannels(), x.cols() );
