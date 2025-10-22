@@ -24,8 +24,8 @@ namespace Nanoflare
 
         inline void forward( const Eigen::Ref<const RowMatrixXf>& x, Eigen::Ref<RowMatrixXf> residual, Eigen::Ref<RowMatrixXf> skip ) noexcept
         {   
-            assert((skip.rows() == m_numChannels && y.cols() == x.cols()) && "ResidualBlock.forward: Wrong skip shape");
-            assert((residual.rows() == m_outChannels && residual.cols() == x.cols()) && "ResidualBlock.forward: Wrong residual shape");
+            assert((skip.rows() == m_numChannels && skip.cols() == x.cols()) && "ResidualBlock.forward: Wrong skip shape");
+            assert((residual.rows() == m_numChannels && residual.cols() == x.cols()) && "ResidualBlock.forward: Wrong residual shape");
 
             if (m_z.rows() != m_numChannels || m_z.cols() != x.cols())
                 m_z.resize(m_numChannels, x.cols());
