@@ -44,6 +44,9 @@ namespace Nanoflare
             auto bn1_state_dict = state_dict[std::string("bn1")].get<std::map<std::string, nlohmann::json>>();
             m_bn1.loadStateDict( bn1_state_dict );
         }
+        
+        size_t getInChannels() { return m_inChannels; }
+        size_t getOutChannels() { return m_outChannels; }
 
     private:
 

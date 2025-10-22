@@ -32,7 +32,7 @@ namespace Nanoflare
 
         static inline void LayerNorm( Eigen::Ref<RowMatrixXf> x ) noexcept
         {
-            // Compute mean and variance per column
+            // Compute mean and variance per channel (channel, time)
             Eigen::RowVectorXf m1 = x.colwise().mean();
             Eigen::RowVectorXf m2 = x.array().square().colwise().mean();
             Eigen::RowVectorXf var = m2.array() - m1.array().square();

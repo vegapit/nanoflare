@@ -36,6 +36,8 @@ namespace Nanoflare
         virtual inline void forward( const Eigen::Ref<const RowMatrixXf>& x, Eigen::Ref<RowMatrixXf> y ) noexcept = 0;
         virtual void loadStateDict(std::map<std::string, nlohmann::json> state_dict) = 0;
 
+        virtual void conditionedForward( const Eigen::Ref<const RowMatrixXf>& x, const Eigen::Ref<const Eigen::RowVectorXf>& cond, Eigen::Ref<RowMatrixXf> y ) noexcept { forward(x, y); }
+        
         inline void normalise( Eigen::Ref<RowMatrixXf> x ) noexcept
         {
             if(m_normMean != 0.f)

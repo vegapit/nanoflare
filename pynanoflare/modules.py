@@ -41,7 +41,10 @@ class FiLM( nn.Module ):
         self.scale = nn.Linear(control_dim, feature_dim)
         self.shift = nn.Linear(control_dim, feature_dim)
     def forward(self, x, params):
-        return x * self.scale( params ) + self.shift( params )
+        # x : [batch,time,features]
+        gamma = self.scale(params).unsqueeze(1)
+        beta  = self.shift(params).unsqueeze(1)
+        return x * gamma + beta
     def generate_doc(self):
         state_dict = self.state_dict()
         doc = {

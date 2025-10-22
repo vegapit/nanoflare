@@ -1,0 +1,192 @@
+#pragma once
+
+#include <cassert>
+#include <nlohmann/json.hpp>
+#include <Eigen/Dense>
+
+#include "nanoflare/models/BaseModel.h"
+#include "nanoflare/layers/Linear.h"
+#include "nanoflare/layers/MicroTCNBlock.h"
+#include "nanoflare/layers/FiLM.h"
+#include "nanoflare/Functional.h"
+#include "nanoflare/utils.h"
+
+namespace Nanoflare
+{
+    struct HammersteinWienerLightParameters
+    {
+        size_t input_size, linear_input_size, linear_output_size, kernel_size, stack_size, hidden_size, output_size, cond_size;
+    };
+
+    inline void from_json(const nlohmann::json& j, HammersteinWienerLightParameters& obj) {
+        j.at("input_size").get_to(obj.input_size);
+        j.at("linear_input_size").get_to(obj.linear_input_size);
+        j.at("linear_output_size").get_to(obj.linear_output_size);
+        j.at("kernel_size").get_to(obj.kernel_size);
+        j.at("stack_size").get_to(obj.stack_size);
+        j.at("hidden_size").get_to(obj.hidden_size);
+        j.at("output_size").get_to(obj.output_size);
+        j.at("cond_size").get_to(obj.cond_size);
+    }
+
+    class HammersteinWienerLight : public BaseModel
+    {
+    public:
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+        HammersteinWienerLight(size_t input_size, size_t linear_input_size, size_t linear_output_size, size_t kernel_size, size_t stack_size, size_t hidden_size, size_t output_size, size_t cond_size, float norm_mean, float norm_std) : 
+            BaseModel(norm_mean, norm_std, input_size, output_size), 
+            m_inputLinear(input_size, linear_input_size, true),
+            m_hiddenLinear(linear_output_size, hidden_size, true), 
+            m_outputLinear(hidden_size, output_size, true),
+            m_skipLinear(input_size, output_size, false),
+            m_filmIn(linear_input_size, cond_size),
+            m_filmOut(hidden_size, cond_size),
+            m_kernelSize(kernel_size), 
+            m_stackSize(stack_size), 
+            m_hiddenSize(hidden_size),
+            m_condSize(cond_size)
+        {
+            for(auto k = 0; k < stack_size; k++)
+            {
+                m_blockStack.emplace_back((k == 0) ? linear_input_size : linear_output_size, linear_output_size, kernel_size, std::pow(2, k), false);    
+                m_filmStack.emplace_back(linear_output_size, cond_size);
+            }
+        }
+        ~HammersteinWienerLight() = default;
+
+        inline void forward( const Eigen::Ref<const RowMatrixXf>& x, Eigen::Ref<RowMatrixXf> y ) noexcept override final
+        {
+            assert((y.rows() == m_outputLinear.getOutChannels() && y.cols() == x.cols()) && "HammersteinWiener.forward: Wrong output shape");
+
+            m_norm_x = x;
+            normalise( m_norm_x );
+
+            // Linear(FwdTranspose): input(C_in, time) output(c_block_in, time)
+            if (m_temp.rows() != m_inputLinear.getOutChannels() || m_temp.cols() != x.cols())
+                m_temp.resize( m_inputLinear.getOutChannels(), x.cols() );
+            m_inputLinear.forwardTranspose( m_norm_x, m_temp );
+            Functional::LeakyReLU( m_temp, 0.2f );
+            Functional::LayerNorm( m_temp );
+
+            // TCN Block: input (C_block_in, time) output (C_block_out, time)
+            if (m_block_temp.rows() != m_blockStack[0].getOutChannels() || m_block_temp.cols() != x.cols())
+                m_block_temp.resize( m_blockStack[0].getOutChannels(), x.cols() );
+            for(auto i = 0; i < m_blockStack.size(); ++i)
+            {
+                if(i == 0)
+                    m_blockStack[i].forward( m_temp, m_block_temp );
+                else
+                    m_blockStack[i].forward( m_block_temp, m_block_temp );
+            }
+            Functional::LayerNorm( m_block_temp );
+
+            // Linear(FwdTranspose): input(C_block_out, time) output(C_hidden, time)
+            if (m_hidden_temp.rows() != m_hiddenLinear.getOutChannels() || m_hidden_temp.cols() != x.cols())
+                m_hidden_temp.resize( m_hiddenLinear.getOutChannels(), x.cols() );
+            m_hiddenLinear.forwardTranspose( m_block_temp, m_hidden_temp );
+            Functional::LeakyReLU( m_hidden_temp, 0.2f );
+
+            // Linear(FwdTranspose): input(C_in, time) output(C_out, time)
+            if (m_skip_temp.rows() != m_outputLinear.getOutChannels() || m_skip_temp.cols() != x.cols())
+                m_skip_temp.resize( m_outputLinear.getOutChannels(), x.cols() );
+            m_skipLinear.forwardTranspose( x, m_skip_temp );
+
+            // Linear(FwdTranspose): input(C_hidden, time) output(C_out, time)
+            m_outputLinear.forwardTranspose( m_hidden_temp, y );
+            y += m_skip_temp;
+        }
+
+        inline void conditionedForward( const Eigen::Ref<const RowMatrixXf>& x, const Eigen::Ref<const Eigen::RowVectorXf>& cond, Eigen::Ref<RowMatrixXf> y ) noexcept override final
+        {
+            assert((y.rows() == m_outputLinear.getOutChannels() && y.cols() == x.cols()) && "HammersteinWienerLight.forward: Wrong output shape");
+
+            m_norm_x = x;
+            normalise( m_norm_x );
+
+            // Linear(FwdTranspose): input(C_in, time) output(c_block_in, time)
+            if (m_temp.rows() != m_inputLinear.getOutChannels() || m_temp.cols() != x.cols())
+                m_temp.resize( m_inputLinear.getOutChannels(), x.cols() );
+            m_inputLinear.forwardTranspose( m_norm_x, m_temp );
+            m_filmIn.forwardTranspose( m_temp, cond, m_temp );
+
+            Functional::LeakyReLU( m_temp, 0.2f );
+            Functional::LayerNorm( m_temp );
+
+            // TCN Block: input (C_block_in, time) output (C_block_out, time)
+            if (m_block_temp.rows() != m_blockStack[0].getOutChannels() || m_block_temp.cols() != x.cols())
+                m_block_temp.resize( m_blockStack[0].getOutChannels(), x.cols() );
+            for(auto i = 0; i < m_blockStack.size(); ++i)
+            {
+                if(i == 0)
+                    m_blockStack[i].forward( m_temp, m_block_temp );
+                else
+                    m_blockStack[i].forward( m_block_temp, m_block_temp );
+                m_filmStack[i].forwardTranspose( m_block_temp, cond, m_block_temp );
+            }
+            Functional::LayerNorm( m_block_temp );
+
+            // Linear(FwdTranspose): input(C_block_out, time) output(C_hidden, time)
+            if (m_hidden_temp.rows() != m_hiddenLinear.getOutChannels() || m_hidden_temp.cols() != x.cols())
+                m_hidden_temp.resize( m_hiddenLinear.getOutChannels(), x.cols() );
+            m_hiddenLinear.forwardTranspose( m_block_temp, m_hidden_temp );
+            m_filmOut.forwardTranspose( m_hidden_temp, cond, m_hidden_temp );
+            Functional::LeakyReLU( m_hidden_temp, 0.2f );
+
+            // Linear(FwdTranspose): input(C_in, time) output(C_out, time)
+            if (m_skip_temp.rows() != m_outputLinear.getOutChannels() || m_skip_temp.cols() != x.cols())
+                m_skip_temp.resize( m_outputLinear.getOutChannels(), x.cols() );
+            m_skipLinear.forwardTranspose( x, m_skip_temp );
+
+            // Linear(FwdTranspose): input(C_hidden, time) output(C_out, time)
+            m_outputLinear.forwardTranspose( m_hidden_temp, y );
+            y += m_skip_temp;
+        }
+
+        void loadStateDict(std::map<std::string, nlohmann::json> state_dict) override final
+        {
+            auto input_linear_state_dict = state_dict[std::string("input_linear")].get<std::map<std::string, nlohmann::json>>();
+            m_inputLinear.loadStateDict( input_linear_state_dict );
+            for(auto k = 0; k < m_stackSize; k++)
+            {
+                auto block_state_dict = state_dict[std::string("block_stack.") + std::to_string(k)].get<std::map<std::string, nlohmann::json>>();
+                m_blockStack[k].loadStateDict( block_state_dict );
+            }
+            auto hidden_linear_state_dict = state_dict[std::string("hidden_linear")].get<std::map<std::string, nlohmann::json>>();
+            m_hiddenLinear.loadStateDict( hidden_linear_state_dict );
+            auto output_linear_state_dict = state_dict[std::string("output_linear")].get<std::map<std::string, nlohmann::json>>();
+            m_outputLinear.loadStateDict( output_linear_state_dict );
+            auto skip_linear_state_dict = state_dict[std::string("skip_linear")].get<std::map<std::string, nlohmann::json>>();
+            m_skipLinear.loadStateDict( skip_linear_state_dict );
+            auto filmin_state_dict = state_dict[std::string("film_in")].get<std::map<std::string, nlohmann::json>>();
+            m_filmIn.loadStateDict( filmin_state_dict );
+            auto filmout_state_dict = state_dict[std::string("film_out")].get<std::map<std::string, nlohmann::json>>();
+            m_filmOut.loadStateDict( filmout_state_dict );
+            for(auto k = 0; k < m_stackSize; k++)
+            {
+                auto film_state_dict = state_dict[std::string("film_stack.") + std::to_string(k)].get<std::map<std::string, nlohmann::json>>();
+                m_filmStack[k].loadStateDict( film_state_dict );
+            }
+        }
+
+        static void build(const nlohmann::json& data, std::shared_ptr<BaseModel>& model)
+        {
+            auto doc = data.get<std::map<std::string, nlohmann::json>>();
+            auto config = data.at("config").template get<ModelConfig>();
+            auto state_dict = data.at("state_dict").get<std::map<std::string, nlohmann::json>>();
+            auto parameters = data.at("parameters").template get<HammersteinWienerLightParameters>();
+            model = std::make_shared<HammersteinWienerLight>(parameters.input_size, parameters.linear_input_size, parameters.linear_output_size, parameters.kernel_size, parameters.stack_size, parameters.hidden_size, parameters.output_size, parameters.cond_size, config.norm_mean, config.norm_std);
+            model->loadStateDict( state_dict );
+        }
+
+    private:
+
+        size_t m_kernelSize, m_stackSize, m_hiddenSize, m_condSize;
+        Linear m_inputLinear, m_hiddenLinear, m_outputLinear, m_skipLinear;
+        std::vector<MicroTCNBlock> m_blockStack;
+        FiLM m_filmIn, m_filmOut;
+        std::vector<FiLM> m_filmStack;
+        RowMatrixXf m_norm_x, m_temp, m_block_temp, m_hidden_temp, m_skip_temp;
+    };
+
+}

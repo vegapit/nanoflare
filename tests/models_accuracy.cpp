@@ -4,6 +4,7 @@
 #include "nanoflare/models/MicroTCN.h"
 #include "nanoflare/models/ResRNN.h"
 #include "nanoflare/models/HammersteinWiener.h"
+#include "nanoflare/models/HammersteinWienerLight.h"
 #include "nanoflare/models/TCN.h"
 #include "nanoflare/models/WaveNet.h"
 #include "nanoflare/layers/LSTM.h"
@@ -14,11 +15,12 @@
 #include <torch/torch.h>
 #include <vector>
 #include <filesystem>
+#include <iostream>
 
 using namespace Nanoflare;
 using Catch::Approx;
 
-inline RowMatrixXf torch_to_eigen(const torch::Tensor& t)
+inline RowMatrixXf torch_to_eigen_matrix(const torch::Tensor& t)
 {
     auto acc = t.accessor<float, 2>();
     RowMatrixXf res( acc.size(0), acc.size(1) );
@@ -28,11 +30,21 @@ inline RowMatrixXf torch_to_eigen(const torch::Tensor& t)
     return res;
 }
 
+inline Eigen::RowVectorXf torch_to_eigen_vector(const torch::Tensor& t)
+{
+    auto acc = t.accessor<float, 1>();
+    Eigen::RowVectorXf res( acc.size(0) );
+    for(auto i = 0; i < acc.size(0); i++)
+        res(i) = acc[i];
+    return res;
+}
+
 constexpr int num_samples = 2048;
 
 void register_models()
 {
     registerModel<HammersteinWiener>("HammersteinWiener");
+    registerModel<HammersteinWienerLight>("HammersteinWienerLight");
     registerModel<MicroTCN>("MicroTCN");
     registerModel<ResRNN<GRU>>("ResGRU");
     registerModel<ResRNN<LSTM>>("ResLSTM");
@@ -54,7 +66,7 @@ TEST_CASE("HammersteinWiener Test", "[HammersteinWiener]")
     ModelBuilder::getInstance().buildModel(nlohmann::json::parse(model_file), obj );
 
     auto torch_data = torch::randn({1, num_samples});
-    auto eigen_data = torch_to_eigen( torch_data );
+    auto eigen_data = torch_to_eigen_matrix( torch_data );
     RowMatrixXf pred = RowMatrixXf::Zero(1, num_samples);
     obj->forward( eigen_data, pred );
 
@@ -67,7 +79,42 @@ TEST_CASE("HammersteinWiener Test", "[HammersteinWiener]")
     module.eval();
 
     auto torch_res = module.forward( inputs ).toTensor();
-    auto target = torch_to_eigen( torch_res.squeeze(0) );
+    auto target = torch_to_eigen_matrix( torch_res.squeeze(0) );
+
+    REQUIRE( (pred - target).norm() == Approx(0.0).margin(1e-4) );
+}
+
+TEST_CASE("HammersteinWienerLight Test", "[HammersteinWienerLight]")
+{   
+    register_models();
+
+    std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
+    modelPath /= std::filesystem::path("tests/data/hammersteinwienerlight.json");
+    std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
+    tsPath /= std::filesystem::path("tests/data/hammersteinwienerlight.torchscript");
+
+    std::shared_ptr<BaseModel> obj;
+    std::ifstream model_file( modelPath.c_str() );
+    ModelBuilder::getInstance().buildModel(nlohmann::json::parse(model_file), obj );
+
+    auto torch_data = torch::randn({1, num_samples});
+    auto eigen_data = torch_to_eigen_matrix( torch_data );
+    auto torch_data2 = torch::randn({3}); // cond_size = 3
+    auto eigen_data2 = torch_to_eigen_vector( torch_data2 );
+    RowMatrixXf pred = RowMatrixXf::Zero(1, num_samples);
+    obj->conditionedForward( eigen_data, eigen_data2, pred );
+
+    torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
+
+    std::vector<torch::jit::IValue> inputs;
+    inputs.push_back( torch_data.unsqueeze(0) );
+    inputs.push_back( torch_data2.unsqueeze(0) );
+
+    torch::NoGradGuard no_grad;
+    module.eval();
+
+    auto torch_res = module.forward( inputs ).toTensor();
+    auto target = torch_to_eigen_matrix( torch_res.squeeze(0) );
 
     REQUIRE( (pred - target).norm() == Approx(0.0).margin(1e-4) );
 }
@@ -86,7 +133,7 @@ TEST_CASE("MicroTCN Test", "[MicroTCN]")
     ModelBuilder::getInstance().buildModel(nlohmann::json::parse(model_file), obj );
 
     auto torch_data = torch::randn({1, num_samples});
-    auto eigen_data = torch_to_eigen( torch_data );
+    auto eigen_data = torch_to_eigen_matrix( torch_data );
     RowMatrixXf pred = RowMatrixXf::Zero(1, num_samples);
     obj->forward( eigen_data, pred );
 
@@ -99,7 +146,7 @@ TEST_CASE("MicroTCN Test", "[MicroTCN]")
     module.eval();
 
     auto torch_res = module.forward( inputs ).toTensor();
-    auto target = torch_to_eigen( torch_res.squeeze(0) );
+    auto target = torch_to_eigen_matrix( torch_res.squeeze(0) );
 
     REQUIRE( (pred - target).norm() == Approx(0.0).margin(1e-4) );
 }
@@ -118,7 +165,7 @@ TEST_CASE("ResGRU Test", "[ResGRU]")
     ModelBuilder::getInstance().buildModel(nlohmann::json::parse(model_file), obj );
 
     auto torch_data = torch::randn({1, num_samples});
-    auto eigen_data = torch_to_eigen( torch_data );
+    auto eigen_data = torch_to_eigen_matrix( torch_data );
     RowMatrixXf pred = RowMatrixXf::Zero(1, num_samples);
     obj->forward( eigen_data, pred );
 
@@ -133,7 +180,7 @@ TEST_CASE("ResGRU Test", "[ResGRU]")
 
     auto outputs = module.forward( inputs ).toTuple();
     auto torch_res = outputs->elements()[0].toTensor();
-    auto target = torch_to_eigen( torch_res.squeeze(0) );
+    auto target = torch_to_eigen_matrix( torch_res.squeeze(0) );
 
     REQUIRE( (pred - target).norm() == Approx(0.0).margin(1e-4) );
 }
@@ -152,7 +199,7 @@ TEST_CASE("ResLSTM Test", "[ResLSTM]")
     ModelBuilder::getInstance().buildModel(nlohmann::json::parse(model_file), obj );
 
     auto torch_data = torch::randn({1, num_samples});
-    auto eigen_data = torch_to_eigen( torch_data );
+    auto eigen_data = torch_to_eigen_matrix( torch_data );
     RowMatrixXf pred = RowMatrixXf::Zero(1, num_samples);
     obj->forward( eigen_data, pred );
 
@@ -169,7 +216,7 @@ TEST_CASE("ResLSTM Test", "[ResLSTM]")
 
     auto outputs = module.forward( inputs ).toTuple();
     auto torch_res = outputs->elements()[0].toTensor();
-    auto target = torch_to_eigen( torch_res.squeeze(0) );
+    auto target = torch_to_eigen_matrix( torch_res.squeeze(0) );
 
     REQUIRE( (pred - target).norm() == Approx(0.0).margin(1e-4) );
 }
@@ -188,7 +235,7 @@ TEST_CASE("TCN Test", "[TCN]")
     ModelBuilder::getInstance().buildModel(nlohmann::json::parse(model_file), obj );
 
     auto torch_data = torch::randn({1, num_samples});
-    auto eigen_data = torch_to_eigen( torch_data );
+    auto eigen_data = torch_to_eigen_matrix( torch_data );
     RowMatrixXf pred = RowMatrixXf::Zero(1, num_samples);
     obj->forward( eigen_data, pred );
 
@@ -201,7 +248,7 @@ TEST_CASE("TCN Test", "[TCN]")
     module.eval();
 
     auto torch_res = module.forward( inputs ).toTensor();
-    auto target = torch_to_eigen( torch_res.squeeze(0) );
+    auto target = torch_to_eigen_matrix( torch_res.squeeze(0) );
 
     REQUIRE( (pred - target).norm() == Approx(0.0).margin(1e-4) );
 }
@@ -220,7 +267,7 @@ TEST_CASE("WaveNet Test", "[WaveNet]")
     ModelBuilder::getInstance().buildModel(nlohmann::json::parse(model_file), obj );
 
     auto torch_data = torch::randn({1, num_samples});
-    auto eigen_data = torch_to_eigen( torch_data );
+    auto eigen_data = torch_to_eigen_matrix( torch_data );
     RowMatrixXf pred = RowMatrixXf::Zero(1, num_samples);
     obj->forward( eigen_data, pred );
 
@@ -233,7 +280,7 @@ TEST_CASE("WaveNet Test", "[WaveNet]")
     module.eval();
 
     auto torch_res = module.forward( inputs ).toTensor();
-    auto target = torch_to_eigen( torch_res.squeeze(0) );
+    auto target = torch_to_eigen_matrix( torch_res.squeeze(0) );
     
     REQUIRE( (pred - target).norm() == Approx(0.0).margin(1e-4) );
 }

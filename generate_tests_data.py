@@ -3,7 +3,7 @@ import json
 
 from pynanoflare.modules import PlainSequential, CausalDilatedConv1d, ResidualBlock, TCNBlock, MicroTCNBlock, FiLM
 from pynanoflare.rnn import ResGRU, ResLSTM
-from pynanoflare.hammersteinwiener import HammersteinWiener
+from pynanoflare.hammersteinwiener import HammersteinWiener, HammersteinWienerLight
 from pynanoflare.tcn import TCN, MicroTCN
 from pynanoflare.wavenet import WaveNet
 
@@ -21,7 +21,8 @@ mu, sigma = 0.1, 0.9
 
 models = {
     'hammersteinwiener': HammersteinWiener(1, 16, 8, 3, 8, 16, 1, mu, sigma),
-    'microtcn': MicroTCN(1, 8, 1, 3, 8, 16, 3, mu, sigma),
+    'hammersteinwienerlight': HammersteinWienerLight(1, 16, 16, 3, 8, 16, 1, 3, mu, sigma),
+    'microtcn': MicroTCN(1, 8, 1, 3, 8, 24, 3, mu, sigma),
     'resgru': ResGRU(1, 64, 1, 8, 3, mu, sigma),
     'reslstm': ResLSTM(1, 64, 1, 8, 3, mu, sigma),
     'tcn': TCN(1, 7, 1, 4, 8, 8, 3, mu, sigma),

@@ -43,7 +43,7 @@ namespace Nanoflare
             m_hiddenSize(hidden_size)
         {
             for(auto k = 0; k < stack_size; k++)
-                m_blockStack.push_back( TCNBlock((k == 0) ? linear_input_size : linear_output_size, linear_output_size, kernel_size, std::pow(2, k), false) );
+                m_blockStack.emplace_back((k == 0) ? linear_input_size : linear_output_size, linear_output_size, kernel_size, std::pow(2, k), false);
         }
         ~HammersteinWiener() = default;
 

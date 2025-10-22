@@ -36,7 +36,7 @@ namespace Nanoflare
             m_plainSequential(hidden_size, output_size, ps_hidden_size, ps_num_hidden_layers)
         {
             for(auto k = 0; k < stack_size; k++)
-                m_blockStack.push_back( TCNBlock((k == 0) ? input_size : hidden_size, hidden_size, kernel_size, std::pow(2, k), false) );
+                m_blockStack.emplace_back((k == 0) ? input_size : hidden_size, hidden_size, kernel_size, std::pow(2, k), false);
         }
         ~TCN() = default;
         

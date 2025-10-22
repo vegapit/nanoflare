@@ -16,7 +16,7 @@ namespace Nanoflare
             m_outputLinear(hidden_channels, out_channels, true)
         {
             for(int i = 0; i < num_hidden_layers; i++)
-                m_hiddenLinear.push_back( Linear(hidden_channels, hidden_channels, true) );
+                m_hiddenLinear.emplace_back(hidden_channels, hidden_channels, true);
         }
         ~PlainSequential() = default;
 

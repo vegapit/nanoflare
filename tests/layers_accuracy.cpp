@@ -17,13 +17,22 @@
 
 using namespace Nanoflare;
 
-inline RowMatrixXf torch_to_eigen(const torch::Tensor& t)
+inline RowMatrixXf torch_to_eigen_matrix(const torch::Tensor& t)
 {
     auto acc = t.accessor<float, 2>();
     RowMatrixXf res( acc.size(0), acc.size(1) );
     for(auto i = 0; i < acc.size(0); i++)
         for(auto j = 0; j < acc.size(1); j++)
             res(i,j) = acc[i][j];
+    return res;
+}
+
+inline Eigen::RowVectorXf torch_to_eigen_vector(const torch::Tensor& t)
+{
+    auto acc = t.accessor<float, 1>();
+    Eigen::RowVectorXf res( acc.size(0) );
+    for(auto i = 0; i < acc.size(0); i++)
+        res(i) = acc[i];
     return res;
 }
 
@@ -45,9 +54,9 @@ TEST_CASE("CausalDilatedConv1d Test", "[CausalDilatedConv1d]")
     obj.loadStateDict( nlohmann::json::parse(model_file) );
 
     auto torch_data = torch::randn({ long(inChannels), long(seqLength) });
-    auto eigen_data = torch_to_eigen( torch_data );
+    auto eigen_data = torch_to_eigen_matrix( torch_data );
     auto torch_pred = torch::zeros({ long(outChannels), long(seqLength) });
-    auto eigen_pred = torch_to_eigen( torch_pred );
+    auto eigen_pred = torch_to_eigen_matrix( torch_pred );
     obj.forward( eigen_data, eigen_pred );
 
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
@@ -59,7 +68,7 @@ TEST_CASE("CausalDilatedConv1d Test", "[CausalDilatedConv1d]")
     module.eval();
 
     auto torch_res = module.forward( inputs ).toTensor();
-    auto target = torch_to_eigen( torch_res );
+    auto target = torch_to_eigen_matrix( torch_res );
 
     REQUIRE( (eigen_pred - target).norm() < 1e-5 );
 }
@@ -67,8 +76,8 @@ TEST_CASE("CausalDilatedConv1d Test", "[CausalDilatedConv1d]")
 TEST_CASE("FiLM Test", "[FiLM]")
 {
     size_t featureDim = 7;
-    size_t controlDim = 3;
-    size_t batchSize = 5;
+    size_t controlDim = 3;    
+    size_t seqLen = 5;
 
     std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= std::filesystem::path("tests/data/film.json");
@@ -79,25 +88,25 @@ TEST_CASE("FiLM Test", "[FiLM]")
     std::ifstream model_file( modelPath.c_str() );
     obj.loadStateDict( nlohmann::json::parse(model_file) );
 
-    auto torch_data = torch::randn({ long(batchSize), long(featureDim) });
-    auto eigen_data = torch_to_eigen( torch_data );
-    auto torch_data2 = torch::randn({ long(batchSize), long(controlDim) });
-    auto eigen_data2 = torch_to_eigen( torch_data2 );
-    auto torch_pred = torch::zeros({ long(batchSize), long(featureDim) });
-    auto eigen_pred = torch_to_eigen( torch_pred );
+    auto torch_data = torch::randn({ long(seqLen), long(featureDim) });
+    auto eigen_data = torch_to_eigen_matrix( torch_data );
+    auto torch_data2 = torch::randn({ long(controlDim) });
+    auto eigen_data2 = torch_to_eigen_vector( torch_data2 );
+    auto torch_pred = torch::zeros({ long(seqLen), long(featureDim) });
+    auto eigen_pred = torch_to_eigen_matrix( torch_pred );
     obj.forward( eigen_data, eigen_data2, eigen_pred );
 
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
     
     std::vector<torch::jit::IValue> inputs;
-    inputs.push_back(torch_data);
-    inputs.push_back(torch_data2);
+    inputs.push_back( torch_data.unsqueeze(0) );
+    inputs.push_back( torch_data2.unsqueeze(0) );
 
     torch::NoGradGuard no_grad;
     module.eval();
 
     auto torch_res = module.forward( inputs ).toTensor();
-    auto target = torch_to_eigen( torch_res );
+    auto target = torch_to_eigen_matrix( torch_res.squeeze(0));
 
     REQUIRE( (eigen_pred - target).norm() < 1e-5 );
 }
@@ -121,9 +130,9 @@ TEST_CASE("MicroTCNBlock Test", "[MicroTCNBlock]")
     obj.loadStateDict( nlohmann::json::parse(model_file) );
 
     auto torch_data = torch::randn({ long(inChannels), long(seqLength) });
-    auto eigen_data = torch_to_eigen( torch_data );
+    auto eigen_data = torch_to_eigen_matrix( torch_data );
     auto torch_pred = torch::zeros({ long(outChannels), long(seqLength) });
-    auto eigen_pred = torch_to_eigen( torch_pred );
+    auto eigen_pred = torch_to_eigen_matrix( torch_pred );
     obj.forward( eigen_data, eigen_pred );
 
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
@@ -135,7 +144,7 @@ TEST_CASE("MicroTCNBlock Test", "[MicroTCNBlock]")
     module.eval();
 
     auto torch_res = module.forward( inputs ).toTensor();
-    auto target = torch_to_eigen( torch_res.squeeze(0) );
+    auto target = torch_to_eigen_matrix( torch_res.squeeze(0) );
     
     REQUIRE( (eigen_pred - target).norm() < 1e-5 );
 }
@@ -158,9 +167,9 @@ TEST_CASE("PlainSequential Test", "[PlainSequential]")
     obj.loadStateDict( nlohmann::json::parse(model_file) );
 
     auto torch_data = torch::randn({ long(batchSize), long(inChannels)});
-    auto eigen_data = torch_to_eigen( torch_data );
+    auto eigen_data = torch_to_eigen_matrix( torch_data );
     auto torch_pred = torch::zeros({ long(batchSize), long(outChannels) });
-    auto eigen_pred = torch_to_eigen( torch_pred );
+    auto eigen_pred = torch_to_eigen_matrix( torch_pred );
     obj.forward( eigen_data, eigen_pred );
 
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
@@ -172,7 +181,7 @@ TEST_CASE("PlainSequential Test", "[PlainSequential]")
     module.eval();
 
     auto torch_res = module.forward( inputs ).toTensor();
-    auto target = torch_to_eigen( torch_res );
+    auto target = torch_to_eigen_matrix( torch_res );
 
     REQUIRE( (eigen_pred - target).norm() < 1e-5 );
 }
@@ -195,11 +204,11 @@ TEST_CASE("ResidualBlock Test", "[ResidualBlock]")
     obj.loadStateDict( nlohmann::json::parse(model_file) );
 
     auto torch_data = torch::randn({ long(numChannels), long(seqLength)});
-    auto eigen_data = torch_to_eigen( torch_data );
+    auto eigen_data = torch_to_eigen_matrix( torch_data );
     auto torch_skip = torch::zeros({ long(numChannels), long(seqLength)});
-    auto eigen_skip = torch_to_eigen( torch_skip );
+    auto eigen_skip = torch_to_eigen_matrix( torch_skip );
     auto torch_residual = torch::zeros({ long(numChannels), long(seqLength)});
-    auto eigen_residual = torch_to_eigen( torch_residual );
+    auto eigen_residual = torch_to_eigen_matrix( torch_residual );
     obj.forward( eigen_data, eigen_residual, eigen_skip );
 
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
@@ -211,7 +220,7 @@ TEST_CASE("ResidualBlock Test", "[ResidualBlock]")
     module.eval();
 
     auto torch_res = module.forward( inputs ).toTuple()->elements();
-    auto target = torch_to_eigen( torch_res[1].toTensor().squeeze(0) );
+    auto target = torch_to_eigen_matrix( torch_res[1].toTensor().squeeze(0) );
     
     REQUIRE( (eigen_skip - target).norm() < 1e-5 );
 }
@@ -235,9 +244,9 @@ TEST_CASE("TCNBlock Test", "[TCNBlock]")
     obj.loadStateDict( nlohmann::json::parse(model_file) );
 
     auto torch_data = torch::randn({ long(inChannels), long(seqLength) });
-    auto eigen_data = torch_to_eigen( torch_data );
+    auto eigen_data = torch_to_eigen_matrix( torch_data );
     auto torch_pred = torch::zeros({ long(outChannels), long(seqLength) });
-    auto eigen_pred = torch_to_eigen( torch_pred );
+    auto eigen_pred = torch_to_eigen_matrix( torch_pred );
     obj.forward( eigen_data, eigen_pred );
 
     torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
@@ -249,7 +258,7 @@ TEST_CASE("TCNBlock Test", "[TCNBlock]")
     module.eval();
 
     auto torch_res = module.forward( inputs ).toTensor();
-    auto target = torch_to_eigen( torch_res.squeeze(0) );
+    auto target = torch_to_eigen_matrix( torch_res.squeeze(0) );
     
     REQUIRE( (eigen_pred - target).norm() < 1e-5 );
 }

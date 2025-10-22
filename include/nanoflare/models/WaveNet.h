@@ -43,7 +43,7 @@ namespace Nanoflare
         {
             for(size_t k = 0; k < stack_size; k++)
                 for(auto dilation: dilations)
-                    m_blockStack.push_back( ResidualBlock(num_channels, kernel_size, dilation, gated) );
+                    m_blockStack.emplace_back(num_channels, kernel_size, dilation, gated);
         }
         ~WaveNet() = default;
 

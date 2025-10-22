@@ -11,6 +11,7 @@
 #include "nanoflare/models/MicroTCN.h"
 #include "nanoflare/models/ResRNN.h"
 #include "nanoflare/models/HammersteinWiener.h"
+#include "nanoflare/models/HammersteinWienerLight.h"
 #include "nanoflare/models/TCN.h"
 #include "nanoflare/models/WaveNet.h"
 #include "nanoflare/layers/LSTM.h"
@@ -24,6 +25,7 @@ constexpr int num_samples = 512;
 void register_models()
 {
     registerModel<HammersteinWiener>("HammersteinWiener");
+    registerModel<HammersteinWienerLight>("HammersteinWienerLight");
     registerModel<MicroTCN>("MicroTCN");
     registerModel<ResRNN<GRU>>("ResGRU");
     registerModel<ResRNN<LSTM>>("ResLSTM");
@@ -68,6 +70,49 @@ TEST_CASE("HammersteinWiener TorchScript")
         module.forward(inputs);
     
     BENCHMARK("HammersteinWiener TorchScript") {
+        return module.forward(inputs);
+    };
+}
+
+TEST_CASE("HammersteinWienerLight")
+{
+    register_models();
+
+    std::shared_ptr<BaseModel> obj;
+    std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
+    modelPath /= std::filesystem::path("tests/data/hammersteinwienerlight.json");
+
+    std::ifstream fstream( modelPath.c_str() );
+    nlohmann::json data = nlohmann::json::parse(fstream);
+    ModelBuilder::getInstance().buildModel(data, obj );
+
+    RowMatrixXf x = RowMatrixXf::Random(1, num_samples);
+    Eigen::RowVectorXf cond = Eigen::RowVectorXf::Random(3);
+    RowMatrixXf y = RowMatrixXf::Zero(1, num_samples);
+
+    BENCHMARK("HammersteinWienerLight") {
+        obj->conditionedForward(x, cond, y);
+    };
+}
+
+TEST_CASE("HammersteinWienerLight TorchScript")
+{
+    std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
+    tsPath /= std::filesystem::path( "tests/data/hammersteinwienerlight.torchscript" );
+
+    torch::set_num_threads(1);
+    torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
+    module.eval();
+    
+    std::vector<torch::jit::IValue> inputs;
+    inputs.push_back(torch::rand({1, 1, num_samples}));
+    inputs.push_back(torch::rand({1, 3}));
+
+    // Warm-up
+    for(auto i = 0; i < 10; ++i)
+        module.forward(inputs);
+    
+    BENCHMARK("HammersteinWienerLight TorchScript") {
         return module.forward(inputs);
     };
 }
