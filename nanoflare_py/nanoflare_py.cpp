@@ -10,6 +10,7 @@
 #include "nanoflare/models/MicroTCN.h"
 #include "nanoflare/models/ResRNN.h"
 #include "nanoflare/models/HammersteinWiener.h"
+#include "nanoflare/models/HammersteinWienerLight.h"
 #include "nanoflare/models/TCN.h"
 #include "nanoflare/models/WaveNet.h"
 #include "nanoflare/layers/LSTM.h"
@@ -21,6 +22,7 @@ void register_models()
 {
     using namespace Nanoflare;
     registerModel<HammersteinWiener>("HammersteinWiener");
+    registerModel<HammersteinWienerLight>("HammersteinWienerLight");
     registerModel<MicroTCN>("MicroTCN");
     registerModel<ResRNN<GRU>>("ResGRU");
     registerModel<ResRNN<LSTM>>("ResLSTM");
@@ -68,6 +70,38 @@ public:
         return result;
     }
 
+    py::array_t<float> conditioned_infer(py::array_t<float> input, py::array_t<float> condition)
+    {
+        auto buf = input.request();
+        Eigen::Map<const Nanoflare::RowMatrixXf> in_mat(
+            static_cast<float*>(buf.ptr),
+            buf.shape[0],
+            buf.shape[1]
+        );
+
+        auto cbuf = condition.request();
+        Eigen::Map<const Eigen::RowVectorXf> cond_vec(
+            static_cast<float*>(cbuf.ptr),
+            cbuf.shape[0]
+        );
+
+        Nanoflare::RowMatrixXf out_mat = Nanoflare::RowMatrixXf::Zero(m_model->getOutChannels(), in_mat.cols());
+        m_model->conditionedForward(in_mat, cond_vec, out_mat);
+
+        // Allocate a new py::array and copy
+        py::array_t<float> result({out_mat.rows(), out_mat.cols()});
+
+        // Map the result buffer and copy using Eigen
+        Eigen::Map<Nanoflare::RowMatrixXf> result_map(
+            result.mutable_data(),
+            out_mat.rows(),
+            out_mat.cols()
+        );
+        result_map = out_mat;
+
+        return result;
+    }
+
     private:
         std::shared_ptr<Nanoflare::BaseModel> m_model;
 };
@@ -78,7 +112,8 @@ PYBIND11_MODULE(nanoflare_py, m)
 
     py::class_<PyNanoflareModel>(m, "NanoflareModel")
         .def(py::init<const std::string&>(), py::arg("json_path"))
-        .def("infer", &PyNanoflareModel::infer, py::arg("input"));
+        .def("infer", &PyNanoflareModel::infer, py::arg("input"))
+        .def("conditioned_infer", &PyNanoflareModel::conditioned_infer, py::arg("input"), py::arg("condition"));
 
     m.def("register_models", &register_models, "Register available Nanoflare models");
 }

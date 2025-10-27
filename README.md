@@ -87,11 +87,27 @@ The benchmarks comparing the processing speed of the library with Libtorch is ru
 ./tests/models_benchmarking
 ```
 
-Libtorch can be quite slow for the first few runs post-load so to make it fairer, a few preliminary warm-up runs are performed before measuring its performance.
+Libtorch can be quite slow for the first few runs post-load so to make it fairer, a few preliminary warm-up runs are performed before measuring its performance. The `generate_test_data.py` scripts generates a new set of data used in the accuracy testing.
 
-> On the testing machine, Nanoflare is about **25-30% faster** than Libtorch/TorchscriptJIT across all neural network architectures available.
+On the testing machine, Nanoflare is substantially faster than Libtorch/TorchscriptJIT across all neural network architectures available.
 
-The `generate_test_data.py` scripts generates a new set of data used in the accuracy testing.
+| Benchmark Name                     | Mean Time | Std Dev |
+|------------------------------------|-----------|---------|
+| HammersteinWiener                  | 3.11 ms   | 0.06 ms |
+| HammersteinWiener TorchScript      | 4.24 ms   | 0.30 ms |
+| HammersteinWienerLight             | 3.23 ms   | 0.10 ms |
+| HammersteinWienerLight TorchScript | 5.10 ms   | 0.22 ms |
+| MicroTCN                           | 0.81 ms   | 0.03 ms |
+| MicroTCN TorchScript               | 2.05 ms   | 0.06 ms |
+| ResGRU                             | 2.98 ms   | 0.06 ms |
+| ResGRU TorchScript                 | 73.29 ms  | 2.24 ms |
+| ResLSTM                            | 2.84 ms   | 0.24 ms |
+| ResLSTM TorchScript                | 3.82 ms   | 0.24 ms |
+| TCN                                | 1.10 ms   | 0.01 ms |
+| TCN TorchScript                    | 2.51 ms   | 0.08 ms |
+| WaveNet                            | 1.37 ms   | 0.02 ms |
+| WaveNet TorchScript                | 2.41 ms   | 0.05 ms |
+
 
 ## Use Nanoflare Builder in Python
 
