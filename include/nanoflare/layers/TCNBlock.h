@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include "nanoflare/Functional.h"
 #include "nanoflare/layers/Conv1d.h"
 #include "nanoflare/layers/CausalDilatedConv1d.h"
 #include "nanoflare/layers/BatchNorm1d.h"

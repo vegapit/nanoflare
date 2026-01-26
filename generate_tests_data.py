@@ -1,7 +1,7 @@
 import torch
 import json
 
-from pynanoflare.modules import PlainSequential, CausalDilatedConv1d, ResidualBlock, TCNBlock, MicroTCNBlock, FiLM
+from pynanoflare.modules import Biquad, PlainSequential, CausalDilatedConv1d, ResidualBlock, TCNBlock, MicroTCNBlock, FiLM
 from pynanoflare.rnn import ResGRU, ResLSTM
 from pynanoflare.hammersteinwiener import HammersteinWiener, HammersteinWienerLight
 from pynanoflare.tcn import TCN, MicroTCN
@@ -9,6 +9,7 @@ from pynanoflare.wavenet import WaveNet
 
 layers = {
     # Layers
+    'biquad': Biquad(),
     'causaldilatedconv1d': CausalDilatedConv1d(7, 11, 3, 2),
     'microtcnblock': MicroTCNBlock(7, 11, 3, 2, True),
     'plainsequential': PlainSequential(7, 11, 8, 3),

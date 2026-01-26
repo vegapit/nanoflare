@@ -6,6 +6,7 @@
 #include <torch/torch.h>
 #include <filesystem>
 
+#include "nanoflare/layers/Biquad.h"
 #include "nanoflare/layers/CausalDilatedConv1d.h"
 #include "nanoflare/layers/FiLM.h"
 #include "nanoflare/layers/GRU.h"
@@ -34,6 +35,40 @@ inline Eigen::RowVectorXf torch_to_eigen_vector(const torch::Tensor& t)
     for(auto i = 0; i < acc.size(0); i++)
         res(i) = acc[i];
     return res;
+}
+
+TEST_CASE("BiQuad Test", "[Biquad]")
+{
+    size_t numChannels = 7;
+    size_t seqLength = 5;
+
+    std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
+    modelPath /= std::filesystem::path("tests/data/biquad.json");
+    std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
+    tsPath /= std::filesystem::path("tests/data/biquad.torchscript");
+
+    Biquad obj;
+    std::ifstream model_file( modelPath.c_str() );
+    obj.loadStateDict( nlohmann::json::parse(model_file) );
+
+    auto torch_data = torch::randn({ long(numChannels), long(seqLength) });
+    auto eigen_data = torch_to_eigen_matrix( torch_data );
+    auto torch_pred = torch::zeros({ long(numChannels), long(seqLength) });
+    auto eigen_pred = torch_to_eigen_matrix( torch_pred );
+    obj.forward( eigen_data, eigen_pred );
+
+    torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
+    
+    std::vector<torch::jit::IValue> inputs;
+    inputs.push_back(torch_data);
+
+    torch::NoGradGuard no_grad;
+    module.eval();
+
+    auto torch_res = module.forward( inputs ).toTensor();
+    auto target = torch_to_eigen_matrix( torch_res );
+
+    REQUIRE( (eigen_pred - target).norm() < 1e-5 );
 }
 
 TEST_CASE("CausalDilatedConv1d Test", "[CausalDilatedConv1d]")

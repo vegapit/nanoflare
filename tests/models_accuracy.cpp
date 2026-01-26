@@ -1,14 +1,7 @@
 #include <catch2/catch_all.hpp>
 #include "nanoflare/ModelBuilder.h"
-#include <nanoflare/models/BaseModel.h>
-#include "nanoflare/models/MicroTCN.h"
-#include "nanoflare/models/ResRNN.h"
-#include "nanoflare/models/HammersteinWiener.h"
-#include "nanoflare/models/HammersteinWienerLight.h"
-#include "nanoflare/models/TCN.h"
-#include "nanoflare/models/WaveNet.h"
-#include "nanoflare/layers/LSTM.h"
-#include "nanoflare/layers/GRU.h"
+#include "nanoflare/BuiltinModels.h"
+#include "nanoflare/models/BaseModel.h"
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <torch/script.h>
@@ -41,21 +34,8 @@ inline Eigen::RowVectorXf torch_to_eigen_vector(const torch::Tensor& t)
 
 constexpr int num_samples = 2048;
 
-void register_models()
-{
-    registerModel<HammersteinWiener>("HammersteinWiener");
-    registerModel<HammersteinWienerLight>("HammersteinWienerLight");
-    registerModel<MicroTCN>("MicroTCN");
-    registerModel<ResRNN<GRU>>("ResGRU");
-    registerModel<ResRNN<LSTM>>("ResLSTM");
-    registerModel<TCN>("TCN");
-    registerModel<WaveNet>("WaveNet");
-}
-
 TEST_CASE("HammersteinWiener Test", "[HammersteinWiener]")
 {   
-    register_models();
-
     std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= std::filesystem::path("tests/data/hammersteinwiener.json");
     std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
@@ -84,46 +64,9 @@ TEST_CASE("HammersteinWiener Test", "[HammersteinWiener]")
     REQUIRE( (pred - target).norm() == Approx(0.0).margin(1e-4) );
 }
 
-TEST_CASE("HammersteinWienerLight Test", "[HammersteinWienerLight]")
-{   
-    register_models();
-
-    std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= std::filesystem::path("tests/data/hammersteinwienerlight.json");
-    std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= std::filesystem::path("tests/data/hammersteinwienerlight.torchscript");
-
-    std::shared_ptr<BaseModel> obj;
-    std::ifstream model_file( modelPath.c_str() );
-    ModelBuilder::getInstance().buildModel(nlohmann::json::parse(model_file), obj );
-
-    auto torch_data = torch::randn({1, num_samples});
-    auto eigen_data = torch_to_eigen_matrix( torch_data );
-    auto torch_data2 = torch::randn({3}); // cond_size = 3
-    auto eigen_data2 = torch_to_eigen_vector( torch_data2 );
-    RowMatrixXf pred = RowMatrixXf::Zero(1, num_samples);
-    obj->conditionedForward( eigen_data, eigen_data2, pred );
-
-    torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
-
-    std::vector<torch::jit::IValue> inputs;
-    inputs.push_back( torch_data.unsqueeze(0) );
-    inputs.push_back( torch_data2.unsqueeze(0) );
-
-    torch::NoGradGuard no_grad;
-    module.eval();
-
-    auto torch_res = module.forward( inputs ).toTensor();
-    auto target = torch_to_eigen_matrix( torch_res.squeeze(0) );
-
-    REQUIRE( (pred - target).norm() == Approx(0.0).margin(1e-4) );
-}
-
 TEST_CASE("MicroTCN Test", "[MicroTCN]")
 {
-    register_models();
-    
-    std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
+        std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= std::filesystem::path("tests/data/microtcn.json");
     std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
     tsPath /= std::filesystem::path("tests/data/microtcn.torchscript");
@@ -153,8 +96,6 @@ TEST_CASE("MicroTCN Test", "[MicroTCN]")
 
 TEST_CASE("ResGRU Test", "[ResGRU]")
 {
-    register_models();
-
     std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= std::filesystem::path("tests/data/resgru.json");
     std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
@@ -187,8 +128,6 @@ TEST_CASE("ResGRU Test", "[ResGRU]")
 
 TEST_CASE("ResLSTM Test", "[ResLSTM]")
 {
-    register_models();
-
     std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= std::filesystem::path("tests/data/reslstm.json");
     std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
@@ -223,8 +162,6 @@ TEST_CASE("ResLSTM Test", "[ResLSTM]")
 
 TEST_CASE("TCN Test", "[TCN]")
 {
-    register_models();
-
     std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= std::filesystem::path("tests/data/tcn.json");
     std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
@@ -255,8 +192,6 @@ TEST_CASE("TCN Test", "[TCN]")
 
 TEST_CASE("WaveNet Test", "[WaveNet]")
 {
-    register_models();
-
     std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= std::filesystem::path("tests/data/wavenet.json");
     std::filesystem::path tsPath( PROJECT_SOURCE_DIR );

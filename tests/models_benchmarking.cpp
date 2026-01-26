@@ -7,36 +7,17 @@
 #include <vector>
 
 #include "nanoflare/ModelBuilder.h"
-#include <nanoflare/models/BaseModel.h>
-#include "nanoflare/models/MicroTCN.h"
-#include "nanoflare/models/ResRNN.h"
-#include "nanoflare/models/HammersteinWiener.h"
-#include "nanoflare/models/HammersteinWienerLight.h"
-#include "nanoflare/models/TCN.h"
-#include "nanoflare/models/WaveNet.h"
-#include "nanoflare/layers/LSTM.h"
-#include "nanoflare/layers/GRU.h"
+#include "nanoflare/BuiltinModels.h"
+#include "nanoflare/models/BaseModel.h"
 #include <filesystem>
 
 using namespace Nanoflare;
 
 constexpr int num_samples = 512;
 
-void register_models()
-{
-    registerModel<HammersteinWiener>("HammersteinWiener");
-    registerModel<HammersteinWienerLight>("HammersteinWienerLight");
-    registerModel<MicroTCN>("MicroTCN");
-    registerModel<ResRNN<GRU>>("ResGRU");
-    registerModel<ResRNN<LSTM>>("ResLSTM");
-    registerModel<TCN>("TCN");
-    registerModel<WaveNet>("WaveNet");
-}
 
 TEST_CASE("HammersteinWiener")
 {
-    register_models();
-
     std::shared_ptr<BaseModel> obj;
     std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= std::filesystem::path("tests/data/hammersteinwiener.json");
@@ -74,53 +55,8 @@ TEST_CASE("HammersteinWiener TorchScript")
     };
 }
 
-TEST_CASE("HammersteinWienerLight")
-{
-    register_models();
-
-    std::shared_ptr<BaseModel> obj;
-    std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= std::filesystem::path("tests/data/hammersteinwienerlight.json");
-
-    std::ifstream fstream( modelPath.c_str() );
-    nlohmann::json data = nlohmann::json::parse(fstream);
-    ModelBuilder::getInstance().buildModel(data, obj );
-
-    RowMatrixXf x = RowMatrixXf::Random(1, num_samples);
-    Eigen::RowVectorXf cond = Eigen::RowVectorXf::Random(3);
-    RowMatrixXf y = RowMatrixXf::Zero(1, num_samples);
-
-    BENCHMARK("HammersteinWienerLight") {
-        obj->conditionedForward(x, cond, y);
-    };
-}
-
-TEST_CASE("HammersteinWienerLight TorchScript")
-{
-    std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= std::filesystem::path( "tests/data/hammersteinwienerlight.torchscript" );
-
-    torch::set_num_threads(1);
-    torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
-    module.eval();
-    
-    std::vector<torch::jit::IValue> inputs;
-    inputs.push_back(torch::rand({1, 1, num_samples}));
-    inputs.push_back(torch::rand({1, 3}));
-
-    // Warm-up
-    for(auto i = 0; i < 10; ++i)
-        module.forward(inputs);
-    
-    BENCHMARK("HammersteinWienerLight TorchScript") {
-        return module.forward(inputs);
-    };
-}
-
 TEST_CASE("MicroTCN")
 {
-    register_models();
-
     std::shared_ptr<BaseModel> obj;
     std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= std::filesystem::path("tests/data/microtcn.json");
@@ -200,8 +136,6 @@ TEST_CASE("ResGRU TorchScript")
 
 TEST_CASE("ResLSTM")
 {
-    register_models();
-
     std::shared_ptr<BaseModel> obj;
     std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= std::filesystem::path("tests/data/reslstm.json");
@@ -244,8 +178,6 @@ TEST_CASE("ResLSTM TorchScript")
 
 TEST_CASE("TCN")
 {
-    register_models();
-
     std::shared_ptr<BaseModel> obj;
     std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= std::filesystem::path("tests/data/tcn.json");
@@ -285,8 +217,6 @@ TEST_CASE("TCN TorchScript")
 
 TEST_CASE("WaveNet")
 {
-    register_models();
-
     std::shared_ptr<BaseModel> obj;
     std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
     modelPath /= std::filesystem::path("tests/data/wavenet.json");

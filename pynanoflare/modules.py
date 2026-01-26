@@ -10,16 +10,16 @@ class BaseModel( nn.Module ):
         return (x - self.norm_mean) / self.norm_std
     def denormalise(self, x: torch.Tensor) -> torch.Tensor:
         return x * self.norm_std + self.norm_mean
-    
+
 class CausalDilatedConv1d(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, dilation):
         super().__init__()
         self.padding = (kernel_size - 1) * dilation # Add required padding on both sides of the input
-        self.conv1d = nn.Conv1d(in_channels, out_channels, kernel_size, dilation=dilation, padding=self.padding)
+        self.conv1d = nn.Conv1d(in_channels, out_channels, kernel_size, dilation=dilation, padding=0)
 
     def forward(self, x : torch.Tensor) -> torch.Tensor:
-        y = self.conv1d(x)
-        return y[ ..., :-self.padding] # Add remove padding on right-hande side of the output
+        x = torch.nn.functional.pad(x, (self.padding, 0))
+        return self.conv1d(x)
         
     def generate_doc(self):
         state_dict = self.state_dict()
@@ -332,5 +332,72 @@ class TCNBlock(nn.Module):
                     'values': state_dict['bn2.running_var'].flatten().cpu().numpy().tolist()
                 }
             }
+        }
+        return doc
+
+class Biquad(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.params = nn.Parameter(torch.randn(5) * 0.1)
+        # Register buffers for state (z1, z2 per channel)
+        # State will be initialized in forward based on input channels
+
+    def extract_coefs(self):
+        """Converts stable polar coordinates to biquad coefficients."""
+        # Force pole radius to be < 1.0 for absolute stability
+        p_r = torch.tanh(self.params[0]) * 0.98
+        p_theta = torch.sigmoid(self.params[1]) * torch.pi
+        z_r = torch.tanh(self.params[2]) * 0.99
+        z_theta = torch.sigmoid(self.params[3]) * torch.pi
+        gain = torch.exp(self.params[4])
+
+        # Standard conversion from Polar to biquad coefficients
+        a1 = -2 * p_r * torch.cos(p_theta)
+        a2 = p_r ** 2
+        b0 = gain
+        b1 = -2 * gain * z_r * torch.cos(z_theta)
+        b2 = gain * z_r ** 2
+
+        return b0, b1, b2, 1.0, a1, a2
+
+    def forward(self, x):
+        """
+        Apply biquad filter using Direct Form II Transposed.
+        x: [channels, samples]
+        """
+        b0, b1, b2, a0, a1, a2 = self.extract_coefs()
+
+        # Manual biquad implementation
+        # y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2] - a1*y[n-1] - a2*y[n-2]
+        # Direct Form II Transposed: y[n] = b0*x[n] + z1[n-1]
+        #                             z1[n] = b1*x[n] + z2[n-1] - a1*y[n]
+        #                             z2[n] = b2*x[n] - a2*y[n]
+
+        channels, samples = x.shape
+        y = torch.zeros_like(x)
+
+        # State variables (delay line)
+        z1 = torch.zeros(channels, device=x.device, dtype=x.dtype)
+        z2 = torch.zeros(channels, device=x.device, dtype=x.dtype)
+
+        for n in range(samples):
+            y[:, n] = b0 * x[:, n] + z1
+            z1 = b1 * x[:, n] + z2 - a1 * y[:, n]
+            z2 = b2 * x[:, n] - a2 * y[:, n]
+
+        return y
+
+    def generate_doc(self):
+        # Compute final biquad coefficients for export
+        b0, b1, b2, a0, a1, a2 = self.extract_coefs()
+
+        # Convert to numpy and export as list
+        doc = {
+            'b0': float(b0.item()),
+            'b1': float(b1.item()),
+            'b2': float(b2.item()),
+            'a0': float(a0),  # Always 1.0
+            'a1': float(a1.item()),
+            'a2': float(a2.item())
         }
         return doc

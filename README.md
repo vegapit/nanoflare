@@ -26,6 +26,7 @@ Models are registered to `Nanoflare::ModelBuilder` at runtime, so new models can
 The basic layer types currently available are:
 
 * BatchNorm1d
+* Biquad
 * Conv1d
 * GRU
 * GRUCell
@@ -67,11 +68,11 @@ include_directories(${NANOFLARE_INCLUDE_DIRS})
 
 The tests are handled by the [Catch2](https://github.com/catchorg/Catch2.git) testing framework also defined as a Git submodule and use Libtorch as reference.
 
-When configuring the tests, pass the path to the Libtorch directory to CMake as a `LIBTORCH_DIR` variable and define the `NANOFLARE_TESTING` variable:
+When configuring the tests, pass the path to the Libtorch directory to CMake as a `CMAKE_PREFIX_PATH` variable and define the `NANOFLARE_TESTING` variable:
 
 ```shell
 mkdir build && cd build
-cmake .. -DNANOFLARE_TESTING=ON -DLIBTORCH_DIR=<path/to/libtorch>
+cmake .. -DNANOFLARE_TESTING=ON -DCMAKE_PREFIX_PATH=<path/to/libtorch>
 ```
 
 Launch the build and run accuracy tests:
@@ -95,8 +96,6 @@ On the testing machine, Nanoflare is substantially faster than Libtorch/Torchscr
 |------------------------------------|-----------|---------|
 | HammersteinWiener                  | 3.11 ms   | 0.06 ms |
 | HammersteinWiener TorchScript      | 4.24 ms   | 0.30 ms |
-| HammersteinWienerLight             | 3.23 ms   | 0.10 ms |
-| HammersteinWienerLight TorchScript | 5.10 ms   | 0.22 ms |
 | MicroTCN                           | 0.81 ms   | 0.03 ms |
 | MicroTCN TorchScript               | 2.05 ms   | 0.06 ms |
 | ResGRU                             | 2.98 ms   | 0.06 ms |
@@ -109,16 +108,85 @@ On the testing machine, Nanoflare is substantially faster than Libtorch/Torchscr
 | WaveNet TorchScript                | 2.41 ms   | 0.05 ms |
 
 
-## Use Nanoflare Builder in Python
+## Extending Nanoflare with Custom Models
 
-It is possible to directly use Nanoflare in Python. Simply add the cmake option `-D PYTHON_EXPORT=ON` on. A python module called `nanoflare_py` would then be created. You could use it the following way:
+Nanoflare uses static initialization to register models automatically. This allows you to add custom models in separate repositories without modifying nanoflare's code. This is useful for proprietary models or research projects.
 
-```python
-from nanoflare_py import NanoflareModel, register_models
+### Creating a Private Model Repository
 
-if __name__ == "__main__":
-    register_models()  # Ensure models are registered
-    # Load model from JSON
-    model = NanoflareModel("/path/to/nanoflareJSON.json")
-    output = model.infer(input) #input is a numpy array of shape [channels, time]
+**1. Repository Structure:**
+
+```
+your-private-models/
+├── CMakeLists.txt
+├── models/
+│   ├── YourModel.h              # C++ implementation
+│   └── PrivateModels.h          # Registration header
+├── python/
+│   ├── your_model.py            # Python implementation
+│   └── __init__.py
+└── nanoflare/                   # Git submodule pointing to this repo
+```
+
+**2. C++ Model Registration:**
+
+Create a header file that registers your models using static initialization:
+
+```cpp
+// models/PrivateModels.h
+#pragma once
+
+#include "nanoflare/ModelBuilder.h"
+#include "YourModel.h"
+#include "AnotherModel.h"
+
+namespace YourNamespace
+{
+    namespace {
+        inline bool registerPrivateModels()
+        {
+            // Register your custom models
+            Nanoflare::registerModel<YourModel>("YourModel");
+            Nanoflare::registerModel<AnotherModel>("AnotherModel");
+            return true;
+        }
+
+        // Auto-register during static initialization (before main())
+        static const bool _privateModelsRegistered = registerPrivateModels();
+    }
+}
+```
+
+**3. CMake Integration:**
+
+In your private repository's `CMakeLists.txt`:
+
+```cmake
+cmake_minimum_required(VERSION 3.24)
+project(YourPrivateModels)
+
+# Add nanoflare as subdirectory (git submodule)
+add_subdirectory(nanoflare)
+
+# Create your models library
+add_library(your_models INTERFACE)
+target_link_libraries(your_models INTERFACE nanoflare)
+target_include_directories(your_models INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/models
+)
+```
+
+**4. Using Custom Models in C++:**
+
+Simply include your registration header before using `ModelBuilder`:
+
+```cpp
+#include "nanoflare/ModelBuilder.h"
+#include "models/PrivateModels.h"  // Auto-registers via static initialization
+
+// Now your models are registered and can be loaded from JSON
+std::ifstream model_file("your_model.json");
+std::shared_ptr<Nanoflare::BaseModel> model;
+nlohmann::json j = nlohmann::json::parse(model_file);
+Nanoflare::ModelBuilder::getInstance().buildModel(j, model);
 ```
