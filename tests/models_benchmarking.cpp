@@ -15,46 +15,6 @@ using namespace Nanoflare;
 
 constexpr int num_samples = 512;
 
-
-TEST_CASE("HammersteinWiener")
-{
-    std::shared_ptr<BaseModel> obj;
-    std::filesystem::path modelPath( PROJECT_SOURCE_DIR );
-    modelPath /= std::filesystem::path("tests/data/hammersteinwiener.json");
-
-    std::ifstream fstream( modelPath.c_str() );
-    nlohmann::json data = nlohmann::json::parse(fstream);
-    ModelBuilder::getInstance().buildModel(data, obj );
-
-    RowMatrixXf x = RowMatrixXf::Random(1, num_samples);
-    RowMatrixXf y = RowMatrixXf::Zero(1, num_samples);
-
-    BENCHMARK("HammersteinWiener") {
-        obj->forward(x, y);
-    };
-}
-
-TEST_CASE("HammersteinWiener TorchScript")
-{
-    std::filesystem::path tsPath( PROJECT_SOURCE_DIR );
-    tsPath /= std::filesystem::path( "tests/data/hammersteinwiener.torchscript" );
-
-    torch::set_num_threads(1);
-    torch::jit::script::Module module = torch::jit::load( tsPath.c_str() );
-    module.eval();
-    
-    std::vector<torch::jit::IValue> inputs;
-    inputs.push_back(torch::rand({1, 1, num_samples}));
-
-    // Warm-up
-    for(auto i = 0; i < 10; ++i)
-        module.forward(inputs);
-    
-    BENCHMARK("HammersteinWiener TorchScript") {
-        return module.forward(inputs);
-    };
-}
-
 TEST_CASE("MicroTCN")
 {
     std::shared_ptr<BaseModel> obj;

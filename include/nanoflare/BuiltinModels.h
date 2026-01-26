@@ -1,7 +1,6 @@
 #pragma once
 
 #include "nanoflare/ModelBuilder.h"
-#include "nanoflare/models/HammersteinWiener.h"
 #include "nanoflare/models/MicroTCN.h"
 #include "nanoflare/models/ResRNN.h"
 #include "nanoflare/models/TCN.h"
@@ -16,14 +15,11 @@ namespace Nanoflare
     namespace {
         inline bool registerBuiltinModels()
         {
-            registerModel<HammersteinWiener>("HammersteinWiener");
             registerModel<MicroTCN>("MicroTCN");
             registerModel<ResRNN<GRU>>("ResGRU");
             registerModel<ResRNN<LSTM>>("ResLSTM");
             registerModel<TCN>("TCN");
             registerModel<WaveNet>("WaveNet");
-            registerModel<ResRNN<GRU>>("ResGRU");
-            registerModel<ResRNN<LSTM>>("ResLSTM");
             return true;
         }
 
