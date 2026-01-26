@@ -339,8 +339,9 @@ class Biquad(nn.Module):
     def __init__(self):
         super().__init__()
         self.params = nn.Parameter(torch.randn(5) * 0.1)
-        # Register buffers for state (z1, z2 per channel)
-        # State will be initialized in forward based on input channels
+        # Default impulse response size for FFT-based filtering
+        # This gives a good balance between accuracy and performance
+        self.ir_size = 2048
 
     def extract_coefs(self):
         """Converts stable polar coordinates to biquad coefficients."""
@@ -358,68 +359,94 @@ class Biquad(nn.Module):
         b1 = -2 * gain * z_r * torch.cos(z_theta)
         b2 = gain * z_r ** 2
 
-        return b0, b1, b2, 1.0, a1, a2
+        return b0, b1, b2, a1, a2
 
     def forward(self, x):
         """
-        Apply biquad filter using Direct Form II Transposed.
+        Apply biquad filter using an FFT-based implementation.
         Supports both 2D [channels, samples] and 3D [batch, channels, samples] inputs.
+        Uses frequency-domain filtering for better performance.
         """
-        b0, b1, b2, a0, a1, a2 = self.extract_coefs()
-
-        # Manual biquad implementation
-        # y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2] - a1*y[n-1] - a2*y[n-2]
-        # Direct Form II Transposed: y[n] = b0*x[n] + z1[n-1]
-        #                             z1[n] = b1*x[n] + z2[n-1] - a1*y[n]
-        #                             z2[n] = b2*x[n] - a2*y[n]
-
+        b0, b1, b2, a1, a2 = self.extract_coefs()
+        
         # Handle both 2D and 3D inputs
         if x.dim() == 2:
             # 2D input: [channels, samples]
-            channels, samples = x.shape
-            batch_size = 1
-            # Add batch dimension for uniform processing
             x = x.unsqueeze(0)  # [1, channels, samples]
             was_2d = True
         elif x.dim() == 3:
             # 3D input: [batch, channels, samples]
-            batch_size, channels, samples = x.shape
             was_2d = False
         else:
             raise ValueError(f"Input must be 2D or 3D, got {x.dim()}D")
-
-        y = torch.zeros_like(x)
-
-        # State variables (delay line) with shape [batch, channels]
-        z1 = torch.zeros(batch_size, channels, device=x.device, dtype=x.dtype)
-        z2 = torch.zeros(batch_size, channels, device=x.device, dtype=x.dtype)
-
-        for n in range(samples):
-            # Process all batches and channels simultaneously
-            # Use .clone() to avoid in-place operation issues
-            y_n = b0 * x[:, :, n] + z1
-            y[:, :, n] = y_n
-            
-            # Update state variables
-            z1 = b1 * x[:, :, n] + z2 - a1 * y_n
-            z2 = b2 * x[:, :, n] - a2 * y_n
-
+        
+        batch_size, channels, samples = x.shape
+        
+        # Choose FFT size: next power of 2 that's at least samples + ir_size - 1
+        # for proper linear convolution
+        conv_len = samples + self.ir_size - 1
+        n_fft = 1
+        while n_fft < conv_len:
+            n_fft *= 2
+        
+        # Compute frequency response of the biquad filter
+        # H(z) = (b0 + b1*z^-1 + b2*z^-2) / (1 + a1*z^-1 + a2*z^-2)
+        # Evaluate on the unit circle (z = e^jw)
+        k = torch.fft.rfftfreq(n_fft, d=1.0, device=x.device)
+        w = 2 * torch.pi * k
+        
+        # Create complex exponentials: z^-1 = e^-jw
+        cos_w = torch.cos(-w)
+        sin_w = torch.sin(-w)
+        
+        # z1 = e^-jw
+        z1_real = cos_w
+        z1_imag = sin_w
+        
+        # z2 = e^-j2w = (e^-jw)^2
+        z2_real = cos_w * cos_w - sin_w * sin_w
+        z2_imag = 2 * cos_w * sin_w
+        
+        # Create complex tensors using torch.view_as_complex for TorchScript compatibility
+        z1 = torch.view_as_complex(torch.stack([z1_real, z1_imag], dim=-1))
+        z2 = torch.view_as_complex(torch.stack([z2_real, z2_imag], dim=-1))
+        
+        # Compute frequency response
+        num = b0 + b1 * z1 + b2 * z2
+        den = 1.0 + a1 * z1 + a2 * z2
+        H = num / den
+        
+        # Reshape H for broadcasting: [n_fft//2 + 1] -> [1, 1, n_fft//2 + 1]
+        H = H.view(1, 1, -1)
+        
+        # Pad input for linear convolution
+        pad_size = n_fft - samples
+        x_padded = torch.nn.functional.pad(x, (0, pad_size))
+        
+        # Apply filter in frequency domain
+        X = torch.fft.rfft(x_padded, n=n_fft)
+        Y = X * H
+        y_padded = torch.fft.irfft(Y, n=n_fft)
+        
+        # Take only the valid part (linear convolution)
+        y = y_padded[..., :samples]
+        
         # Remove batch dimension if input was 2D
         if was_2d:
             y = y.squeeze(0)  # [channels, samples]
-
+        
         return y
 
     def generate_doc(self):
         # Compute final biquad coefficients for export
-        b0, b1, b2, a0, a1, a2 = self.extract_coefs()
+        b0, b1, b2, a1, a2 = self.extract_coefs()
 
         # Convert to numpy and export as list
         doc = {
             'b0': float(b0.item()),
             'b1': float(b1.item()),
             'b2': float(b2.item()),
-            'a0': float(a0),  # Always 1.0
+            'a0': 1.0,  # Always 1.0
             'a1': float(a1.item()),
             'a2': float(a2.item())
         }
