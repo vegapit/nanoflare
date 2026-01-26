@@ -363,7 +363,7 @@ class Biquad(nn.Module):
     def forward(self, x):
         """
         Apply biquad filter using Direct Form II Transposed.
-        x: [channels, samples]
+        Supports both 2D [channels, samples] and 3D [batch, channels, samples] inputs.
         """
         b0, b1, b2, a0, a1, a2 = self.extract_coefs()
 
@@ -373,17 +373,40 @@ class Biquad(nn.Module):
         #                             z1[n] = b1*x[n] + z2[n-1] - a1*y[n]
         #                             z2[n] = b2*x[n] - a2*y[n]
 
-        channels, samples = x.shape
+        # Handle both 2D and 3D inputs
+        if x.dim() == 2:
+            # 2D input: [channels, samples]
+            channels, samples = x.shape
+            batch_size = 1
+            # Add batch dimension for uniform processing
+            x = x.unsqueeze(0)  # [1, channels, samples]
+            was_2d = True
+        elif x.dim() == 3:
+            # 3D input: [batch, channels, samples]
+            batch_size, channels, samples = x.shape
+            was_2d = False
+        else:
+            raise ValueError(f"Input must be 2D or 3D, got {x.dim()}D")
+
         y = torch.zeros_like(x)
 
-        # State variables (delay line)
-        z1 = torch.zeros(channels, device=x.device, dtype=x.dtype)
-        z2 = torch.zeros(channels, device=x.device, dtype=x.dtype)
+        # State variables (delay line) with shape [batch, channels]
+        z1 = torch.zeros(batch_size, channels, device=x.device, dtype=x.dtype)
+        z2 = torch.zeros(batch_size, channels, device=x.device, dtype=x.dtype)
 
         for n in range(samples):
-            y[:, n] = b0 * x[:, n] + z1
-            z1 = b1 * x[:, n] + z2 - a1 * y[:, n]
-            z2 = b2 * x[:, n] - a2 * y[:, n]
+            # Process all batches and channels simultaneously
+            # Use .clone() to avoid in-place operation issues
+            y_n = b0 * x[:, :, n] + z1
+            y[:, :, n] = y_n
+            
+            # Update state variables
+            z1 = b1 * x[:, :, n] + z2 - a1 * y_n
+            z2 = b2 * x[:, :, n] - a2 * y_n
+
+        # Remove batch dimension if input was 2D
+        if was_2d:
+            y = y.squeeze(0)  # [channels, samples]
 
         return y
 
