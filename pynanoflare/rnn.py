@@ -31,24 +31,23 @@ class ResLSTM( BaseModel ):
                 'ps_num_hidden_layers': self.plain_sequential.num_hidden_layers
             }
         }
-        state_dict = self.state_dict()
         doc['state_dict'] = {
             'rnn': {
                 'weight_hh_l0': {
-                    'shape': list(state_dict['rnn.weight_hh_l0'].shape),
-                    'values': state_dict['rnn.weight_hh_l0'].flatten().cpu().numpy().tolist()
+                    'shape': list(self.rnn.weight_hh_l0.shape),
+                    'values': self.rnn.weight_hh_l0.detach().flatten().cpu().numpy().tolist()
                 },
                 'weight_ih_l0': {
-                    'shape': list(state_dict['rnn.weight_ih_l0'].shape),
-                    'values': state_dict['rnn.weight_ih_l0'].flatten().cpu().numpy().tolist()
+                    'shape': list(self.rnn.weight_ih_l0.shape),
+                    'values': self.rnn.weight_ih_l0.detach().flatten().cpu().numpy().tolist()
                 },
                 'bias_hh_l0' : {
-                    'shape': list(state_dict['rnn.bias_hh_l0'].shape),
-                    'values': state_dict['rnn.bias_hh_l0'].flatten().cpu().numpy().tolist()
+                    'shape': list(self.rnn.bias_hh_l0.shape),
+                    'values': self.rnn.bias_hh_l0.detach().flatten().cpu().numpy().tolist()
                 },
                 'bias_ih_l0' : {
-                    'shape': list(state_dict['rnn.bias_ih_l0'].shape),
-                    'values': state_dict['rnn.bias_ih_l0'].flatten().cpu().numpy().tolist()
+                    'shape': list(self.rnn.bias_ih_l0.shape),
+                    'values': self.rnn.bias_ih_l0.detach().flatten().cpu().numpy().tolist()
                 }
             },
             'plain_sequential': self.plain_sequential.generate_doc()
@@ -88,20 +87,20 @@ class ResGRU( BaseModel ):
         doc['state_dict'] = {
             'rnn': {
                 'weight_hh_l0': {
-                    'shape': list(state_dict['rnn.weight_hh_l0'].shape),
-                    'values': state_dict['rnn.weight_hh_l0'].flatten().cpu().numpy().tolist()
+                    'shape': list(self.rnn.weight_hh_l0.shape),
+                    'values': self.rnn.weight_hh_l0.detach().flatten().cpu().numpy().tolist()
                 },
                 'weight_ih_l0': {
-                    'shape': list(state_dict['rnn.weight_ih_l0'].shape),
-                    'values': state_dict['rnn.weight_ih_l0'].flatten().cpu().numpy().tolist()
+                    'shape': list(self.rnn.weight_ih_l0.shape),
+                    'values': self.rnn.weight_ih_l0.detach().flatten().cpu().numpy().tolist()
                 },
                 'bias_hh_l0' : {
-                    'shape': list(state_dict['rnn.bias_hh_l0'].shape),
-                    'values': state_dict['rnn.bias_hh_l0'].flatten().cpu().numpy().tolist()
+                    'shape': list(self.rnn.bias_hh_l0.shape),
+                    'values': self.rnn.bias_hh_l0.detach().flatten().cpu().numpy().tolist()
                 },
                 'bias_ih_l0' : {
-                    'shape': list(state_dict['rnn.bias_ih_l0'].shape),
-                    'values': state_dict['rnn.bias_ih_l0'].flatten().cpu().numpy().tolist()
+                    'shape': list(self.rnn.bias_ih_l0.shape),
+                    'values': self.rnn.bias_ih_l0.detach().flatten().cpu().numpy().tolist()
                 }
             },
             'plain_sequential': self.plain_sequential.generate_doc()

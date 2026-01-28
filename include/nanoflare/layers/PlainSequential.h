@@ -9,11 +9,12 @@ namespace Nanoflare
     class PlainSequential
     {
     public:
-        PlainSequential(size_t in_channels, size_t out_channels, size_t hidden_channels, size_t num_hidden_layers) 
+        PlainSequential(size_t in_channels, size_t out_channels, size_t hidden_channels, size_t num_hidden_layers, float negative_slope = 0.01f) 
             : m_inChannels(in_channels), m_outChannels(out_channels), m_hiddenChannels(hidden_channels),
             m_directLinear(in_channels, out_channels, false),
             m_inputLinear(in_channels, hidden_channels, true),
-            m_outputLinear(hidden_channels, out_channels, true)
+            m_outputLinear(hidden_channels, out_channels, true),
+            m_negativeSlope(negative_slope)
         {
             for(int i = 0; i < num_hidden_layers; i++)
                 m_hiddenLinear.emplace_back(hidden_channels, hidden_channels, true);
@@ -26,11 +27,11 @@ namespace Nanoflare
                 m_temp.resize(x.rows(), m_hiddenChannels);
 
             m_inputLinear.forward( x, m_temp );
-            Functional::ReLU( m_temp );
+            Functional::LeakyReLU( m_temp, m_negativeSlope );
             for(auto& linear: m_hiddenLinear)
             {
                 linear.forward( m_temp, m_temp );
-                Functional::ReLU( m_temp );
+                Functional::LeakyReLU( m_temp, m_negativeSlope );
             }
 
             if(m_y.rows() != x.rows() || m_y.cols() != m_outChannels)
@@ -57,11 +58,11 @@ namespace Nanoflare
                 m_temp.resize(m_hiddenChannels, x.cols());
 
             m_inputLinear.forwardTranspose( x, m_temp );
-            Functional::ReLU( m_temp );
+            Functional::LeakyReLU( m_temp, m_negativeSlope );
             for(auto& linear: m_hiddenLinear)
             {
                 linear.forwardTranspose( m_temp, m_temp );
-                Functional::ReLU( m_temp );
+                Functional::LeakyReLU( m_temp, m_negativeSlope );
             }
 
             if(m_y.rows() != m_outChannels || m_y.cols() != x.cols())
@@ -84,6 +85,7 @@ namespace Nanoflare
 
         void loadStateDict(std::map<std::string, nlohmann::json> state_dict)
         {
+            state_dict.at("negative_slope").get_to(m_negativeSlope);
             auto direct_linear_state_dict = state_dict[std::string("direct_linear")].get<std::map<std::string, nlohmann::json>>();
             m_directLinear.loadStateDict( direct_linear_state_dict );
             auto input_linear_state_dict = state_dict[std::string("input_linear")].get<std::map<std::string, nlohmann::json>>();
@@ -104,6 +106,7 @@ namespace Nanoflare
         Linear m_directLinear, m_inputLinear, m_outputLinear;
         std::vector<Linear> m_hiddenLinear;
         size_t m_inChannels, m_outChannels, m_hiddenChannels;
+        float m_negativeSlope;
         RowMatrixXf m_temp, m_y;
     };
 }

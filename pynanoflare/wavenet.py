@@ -63,27 +63,26 @@ class WaveNet( BaseModel ):
                 'hidden_size': self.hidden_size,
             }
         }
-        state_dict = self.state_dict()
         doc['state_dict'] = {
             'input_conv': self.input_conv.generate_doc(),
             'post_conv1': {
                 'weight': {
-                    'shape': list(state_dict['post_conv1.weight'].shape),
-                    'values': state_dict['post_conv1.weight'].flatten().cpu().numpy().tolist()
+                    'shape': list(self.post_conv1.weight.shape),
+                    'values': self.post_conv1.weight.detach().flatten().cpu().numpy().tolist()
                 },
                 'bias': {
-                    'shape': list(state_dict['post_conv1.bias'].shape),
-                    'values': state_dict['post_conv1.bias'].flatten().cpu().numpy().tolist()
+                    'shape': list(self.post_conv1.bias.shape),
+                    'values': self.post_conv1.bias.detach().flatten().cpu().numpy().tolist()
                 }
             },
             'post_conv2': {
                 'weight': {
-                    'shape': list(state_dict['post_conv2.weight'].shape),
-                    'values': state_dict['post_conv2.weight'].flatten().cpu().numpy().tolist()
+                    'shape': list(self.post_conv2.weight.shape),
+                    'values': self.post_conv2.weight.detach().flatten().cpu().numpy().tolist()
                 },
                 'bias': {
-                    'shape': list(state_dict['post_conv2.bias'].shape),
-                    'values': state_dict['post_conv2.bias'].flatten().cpu().numpy().tolist()
+                    'shape': list(self.post_conv2.bias.shape),
+                    'values': self.post_conv2.bias.detach().flatten().cpu().numpy().tolist()
                 }
             }
         }

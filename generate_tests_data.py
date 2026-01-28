@@ -11,7 +11,7 @@ layers = {
     'biquad': Biquad(),
     'causaldilatedconv1d': CausalDilatedConv1d(7, 11, 3, 2),
     'microtcnblock': MicroTCNBlock(7, 11, 3, 2, True),
-    'plainsequential': PlainSequential(7, 11, 8, 3),
+    'plainsequential': PlainSequential(7, 11, 8, 3, 0.1),
     'residualblock': ResidualBlock(7, 3, 2, True),
     'tcnblock': TCNBlock(7, 11, 3, 2, True),
     'film': FiLM(7, 3)
@@ -36,6 +36,8 @@ if __name__ == "__main__":
             json.dump(doc, file)
         script_module = torch.jit.script(layer)
         script_module.save(f'tests/data/{layer_name}.torchscript')
+        print(f"  ✓ {layer_name}.json")
+        print(f"  ✓ {layer_name}.torchscript")
 
     for model_name, model in models.items():
         print(model_name)
@@ -44,3 +46,5 @@ if __name__ == "__main__":
             json.dump(doc, file)
         script_module = torch.jit.script(model)
         script_module.save(f'tests/data/{model_name}.torchscript')
+        print(f"  ✓ {model_name}.json")
+        print(f"  ✓ {model_name}.torchscript")
