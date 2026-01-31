@@ -19,10 +19,17 @@ namespace Nanoflare
             auto a = x.array();
             a = (a > 0).select(a, a * negative_slope);
         }
-        
+
         static inline void Sigmoid( Eigen::Ref<RowMatrixXf> x ) noexcept
         {
             x.array() = x.array().logistic();
+        }
+
+        static inline void Softmax( Eigen::Ref<RowMatrixXf> x) noexcept
+        {
+            float max_val = x.maxCoeff();
+            x.array() = (x.array() - max_val).exp();
+            x /= x.sum();
         }
 
         static inline void Tanh( Eigen::Ref<RowMatrixXf> x ) noexcept
