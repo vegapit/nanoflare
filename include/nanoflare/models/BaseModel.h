@@ -37,6 +37,8 @@ namespace Nanoflare
         virtual void loadStateDict(std::map<std::string, nlohmann::json> state_dict) = 0;
 
         virtual void conditionedForward( const Eigen::Ref<const RowMatrixXf>& x, const Eigen::Ref<const Eigen::RowVectorXf>& cond, Eigen::Ref<RowMatrixXf> y ) noexcept { forward(x, y); }
+
+        virtual size_t getContextSize() const { return 0; }
         
         inline void normalise( Eigen::Ref<RowMatrixXf> x ) noexcept
         {

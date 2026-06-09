@@ -94,8 +94,6 @@ On the testing machine, Nanoflare is substantially faster than Libtorch/Torchscr
 
 | Benchmark Name                     | Mean Time | Std Dev |
 |------------------------------------|-----------|---------|
-| HammersteinWiener                  | 3.11 ms   | 0.06 ms |
-| HammersteinWiener TorchScript      | 4.24 ms   | 0.30 ms |
 | MicroTCN                           | 0.81 ms   | 0.03 ms |
 | MicroTCN TorchScript               | 2.05 ms   | 0.06 ms |
 | ResGRU                             | 2.98 ms   | 0.06 ms |
