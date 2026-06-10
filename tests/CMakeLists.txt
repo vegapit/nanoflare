@@ -29,12 +29,3 @@ target_link_libraries(
 )
 add_test(NAME models_accuracy COMMAND models_accuracy)
 
-add_executable(models_benchmarking models_benchmarking.cpp)
-target_link_libraries(
-    models_benchmarking
-    PRIVATE
-    nanoflare
-    Catch2::Catch2WithMain
-    nlohmann_json::nlohmann_json
-    "${TORCH_LIBRARIES}"
-)

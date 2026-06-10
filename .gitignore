@@ -1,8 +1,6 @@
 .DS_Store
 __pycache__
-/.vscode
 /build
-/Testing
-/venv
+/.venv
 *.xml
 *.egg-info

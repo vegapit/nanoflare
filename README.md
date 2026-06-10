@@ -46,7 +46,6 @@ They were used to define the following custom block types:
 
 Which were in turn used to define the following models:
 
-* HammersteinWiener
 * MicroTCN
 * ResRNN e.g. ResGRU or ResLSTM
 * TCN
@@ -64,46 +63,32 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/nanoflare)
 include_directories(${NANOFLARE_INCLUDE_DIRS})
 ```
 
-## Tests and Benchmark
+## Tests
 
-The tests are handled by the [Catch2](https://github.com/catchorg/Catch2.git) testing framework also defined as a Git submodule and use Libtorch as reference.
+The tests are handled by the [Catch2](https://github.com/catchorg/Catch2.git) testing framework also defined as a Git submodule.
 
-When configuring the tests, pass the path to the Libtorch directory to CMake as a `CMAKE_PREFIX_PATH` variable and define the `NANOFLARE_TESTING` variable:
+The accuracy tests use [Libtorch](https://pytorch.org/get-started/locally/) as a reference to verify numerical correctness. When configuring, pass the path to the Libtorch directory via `CMAKE_PREFIX_PATH`:
 
 ```shell
 mkdir build && cd build
 cmake .. -DNANOFLARE_TESTING=ON -DCMAKE_PREFIX_PATH=<path/to/libtorch>
+cmake --build . --config Release 
 ```
 
-Launch the build and run accuracy tests:
+Run accuracy tests:
 
 ```shell
-cmake --build .
 make test
 ```
 
-The benchmarks comparing the processing speed of the library with Libtorch is run through:
+The `generate_tests_data.py` script generates the test data used by the accuracy tests. Install the Python dependencies first with [uv](https://github.com/astral-sh/uv), then run the script:
 
 ```shell
-./tests/models_benchmarking
+uv sync
+uv run generate_tests_data.py
 ```
 
-Libtorch can be quite slow for the first few runs post-load so to make it fairer, a few preliminary warm-up runs are performed before measuring its performance. The `generate_test_data.py` scripts generates a new set of data used in the accuracy testing.
-
-On the testing machine, Nanoflare is substantially faster than Libtorch/TorchscriptJIT across all neural network architectures available.
-
-| Benchmark Name                     | Mean Time | Std Dev |
-|------------------------------------|-----------|---------|
-| MicroTCN                           | 0.81 ms   | 0.03 ms |
-| MicroTCN TorchScript               | 2.05 ms   | 0.06 ms |
-| ResGRU                             | 2.98 ms   | 0.06 ms |
-| ResGRU TorchScript                 | 73.29 ms  | 2.24 ms |
-| ResLSTM                            | 2.84 ms   | 0.24 ms |
-| ResLSTM TorchScript                | 3.82 ms   | 0.24 ms |
-| TCN                                | 1.10 ms   | 0.01 ms |
-| TCN TorchScript                    | 2.51 ms   | 0.08 ms |
-| WaveNet                            | 1.37 ms   | 0.02 ms |
-| WaveNet TorchScript                | 2.41 ms   | 0.05 ms |
+Benchmarks comparing Nanoflare against TorchScript/Libtorch are located in the `nanoflare_research` repository.
 
 
 ## Extending Nanoflare with Custom Models

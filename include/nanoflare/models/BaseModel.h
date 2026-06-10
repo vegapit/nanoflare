@@ -38,7 +38,7 @@ namespace Nanoflare
 
         virtual void conditionedForward( const Eigen::Ref<const RowMatrixXf>& x, const Eigen::Ref<const Eigen::RowVectorXf>& cond, Eigen::Ref<RowMatrixXf> y ) noexcept { forward(x, y); }
 
-        virtual size_t getContextSize() const { return 0; }
+        virtual size_t getReceptiveField() const { return 1; }
         
         inline void normalise( Eigen::Ref<RowMatrixXf> x ) noexcept
         {
