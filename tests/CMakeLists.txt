@@ -29,3 +29,10 @@ target_link_libraries(
 )
 add_test(NAME models_accuracy COMMAND models_accuracy)
 
+add_executable(layers_benchmarking layers_benchmarking.cpp)
+target_link_libraries(
+    layers_benchmarking
+    PRIVATE
+    nanoflare
+    Catch2::Catch2WithMain
+)
